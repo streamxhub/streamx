@@ -24,6 +24,9 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.streamxhub.streamx.common.conf.ConfigConst._
 import com.streamxhub.streamx.common.enums.{DevelopmentMode, ExecutionMode, ResolveOrder}
 import com.streamxhub.streamx.common.util.{DeflaterUtils, HdfsUtils, PropertiesUtils}
+import com.streamxhub.streamx.flink.kubernetes.model.K8sPodTemplates
+import com.streamxhub.streamx.flink.packer.docker.DockerAuthConf
+import com.streamxhub.streamx.flink.packer.maven.JarPackDeps
 import com.streamxhub.streamx.flink.submit.`trait`.WorkspaceEnv
 import org.apache.flink.client.cli.CliFrontend
 import org.apache.flink.client.cli.CliFrontend.loadCustomCommandLines
@@ -35,15 +38,13 @@ import java.util.{Map => JavaMap}
 import javax.annotation.Nullable
 import scala.collection.JavaConversions._
 
-
 case class KubernetesSubmitParam(clusterId: String,
-                                 flinkDockerImage: String,
+                                 flinkBaseImage: String,
                                  kubernetesNamespace: String,
-                                 dockerRegisterAddress: String,
-                                 dockerRegisterUser: String,
-                                 dockerRegisterPassword: String)
+                                 jarPackDeps: JarPackDeps,
+                                 @Nullable dockerAuthConfig: DockerAuthConf,
+                                 @Nullable podTemplates: K8sPodTemplates)
 
-// todo need for more elegant code refactoring
 case class SubmitRequest(flinkHome: String,
                          flinkVersion: String,
                          flinkYaml: String,

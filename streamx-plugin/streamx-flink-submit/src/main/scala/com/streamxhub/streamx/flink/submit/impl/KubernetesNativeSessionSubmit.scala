@@ -24,7 +24,7 @@ import com.google.common.collect.Lists
 import com.streamxhub.streamx.common.conf.ConfigConst.APP_WORKSPACE
 import com.streamxhub.streamx.common.enums.ExecutionMode
 import com.streamxhub.streamx.common.util.Logger
-import com.streamxhub.streamx.flink.packer.MavenTool
+import com.streamxhub.streamx.flink.packer.maven.MavenTool
 import com.streamxhub.streamx.flink.submit.`trait`.KubernetesNativeSubmitTrait
 import com.streamxhub.streamx.flink.submit.domain._
 import org.apache.commons.lang3.StringUtils
@@ -43,7 +43,7 @@ import scala.util.Try
  */
 object KubernetesNativeSessionSubmit extends KubernetesNativeSubmitTrait with Logger {
 
-  //noinspection DuplicatedCode
+  // noinspection DuplicatedCode
   override def doSubmit(submitRequest: SubmitRequest): SubmitResponse = {
     // require parameters
     assert(Try(submitRequest.k8sSubmitParam.clusterId.nonEmpty).getOrElse(false))
@@ -54,15 +54,19 @@ object KubernetesNativeSessionSubmit extends KubernetesNativeSubmitTrait with Lo
     }
     // extract flink configuration
     val flinkConfig = extractEffectiveFlinkConfig(submitRequest)
+
     // build fat-jar
     val fatJar = {
+      val fatJarOutputPath = s"$APP_WORKSPACE/${submitRequest.k8sSubmitParam.clusterId}/${jobID.toString}/flink-job.jar"
       val flinkLibs = extractProvidedLibs(submitRequest)
-      val fatJarPath = s"$APP_WORKSPACE/${submitRequest.k8sSubmitParam.clusterId}/${jobID.toString}/flink-job.jar"
+      val jarPackDeps =  submitRequest.k8sSubmitParam.jarPackDeps
+      MavenTool.buildFatJar(jarPackDeps.merge(flinkLibs), fatJarOutputPath)
       // cache file MD5 is used to compare whether it is consistent when it is generated next time.
       //  If it is consistent, it is used directly and returned directly instead of being regenerated
       // fatJarCached.getOrElseUpdate(flinkLibs._1, MavenTool.buildFatJar(flinkLibs._2, fatJarPath))
-      MavenTool.buildFatJar(flinkLibs, fatJarPath)
     }
+    logInfo(s"[flink-submit] already built flink job fat-jar. " +
+      s"${flinkConfIdentifierInfo(flinkConfig)}, jobId=${jobID.toString}, fatJarPath=${fatJar.getAbsolutePath}")
 
     // retrieve k8s cluster and submit flink job on session mode
     var clusterDescriptor: KubernetesClusterDescriptor = null
@@ -79,7 +83,6 @@ object KubernetesNativeSessionSubmit extends KubernetesNativeSubmitTrait with Lo
             .orElse(Lists.newArrayList())
             : _*
         ).build()
-
       val jobGraph = PackagedProgramUtils.createJobGraph(
         packageProgram,
         flinkConfig,
@@ -91,7 +94,9 @@ object KubernetesNativeSessionSubmit extends KubernetesNativeSubmitTrait with Lo
       client = clusterDescriptor.retrieve(flinkConfig.getString(KubernetesConfigOptions.CLUSTER_ID)).getClusterClient
       val submitResult = client.submitJob(jobGraph)
       val jobId = submitResult.get().toString
-      SubmitResponse(client.getClusterId, flinkConfig, jobId)
+      val result = SubmitResponse(client.getClusterId, flinkConfig, jobId)
+      logInfo(s"[flink-submit] flink job has been submitted. ${flinkConfIdentifierInfo(flinkConfig)}, jobId=${jobID.toString}")
+      result
     } catch {
       case e: Exception =>
         logError(s"submit flink job fail in ${submitRequest.executionMode} mode")
@@ -105,7 +110,7 @@ object KubernetesNativeSessionSubmit extends KubernetesNativeSubmitTrait with Lo
   }
 
   override def doStop(stopInfo: StopRequest): StopResponse = {
-    doStop(ExecutionMode.KUBERNETES_NATIVE_SESSION, stopInfo)
+    super.doStop(ExecutionMode.KUBERNETES_NATIVE_SESSION, stopInfo)
   }
 
 }

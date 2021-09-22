@@ -34,7 +34,7 @@
           v-decorator="[ 'executionMode', {rules: [{ required: true, message: 'Execution Mode is required' }] }]"
           @change="handleChangeMode">
           <a-select-option
-            v-for="(o,index) in executionModes"
+            v-for="(o,index) in executionModes[jobType]"
             :key="`execution_mode_${index}`"
             :disabled="o.disabled"
             :value="o.value">
@@ -45,23 +45,24 @@
 
       <template v-if="executionMode === 5|| executionMode === 6">
         <a-form-item
-          label="kubernetes namespace"
+          label="Kubernetes Namespace"
           :label-col="{lg: {span: 5}, sm: {span: 7}}"
           :wrapper-col="{lg: {span: 16}, sm: {span: 17} }">
           <a-input
             type="text"
             placeholder="default"
             allowClear
-            v-decorator="[ 'k8sNameSpace']">
+            v-decorator="[ 'k8sNamespace']">
           </a-input>
         </a-form-item>
         <a-form-item
-          label="kubernetes clusterId"
+          label="Kubernetes ClusterId"
           :label-col="{lg: {span: 5}, sm: {span: 7}}"
           :wrapper-col="{lg: {span: 16}, sm: {span: 17} }">
           <a-input
             type="text"
             placeholder="Please enter Kubernetes clusterId"
+            @change="handleClusterId"
             allowClear
             v-decorator="[ 'clusterId', {rules: [{ required: true, message: 'Kubernetes clusterId is required' }] }]">
           </a-input>
@@ -75,7 +76,7 @@
           :wrapper-col="{lg: {span: 16}, sm: {span: 17} }">
           <a-input
             type="text"
-            placeholder="Please enter Flink Base image"
+            placeholder="Please enter Flink Base image, such as: flink:1.13.0-scala_2.11-java8"
             allowClear
             v-decorator="[ 'flinkImage', {rules: [{ required: true, message: 'Flink Base image is required' }] }]">
           </a-input>
@@ -382,7 +383,8 @@
       <a-form-item
         label="Fault Restart Size"
         :label-col="{lg: {span: 5}, sm: {span: 7}}"
-        :wrapper-col="{lg: {span: 16}, sm: {span: 17} }">
+        :wrapper-col="{lg: {span: 16}, sm: {span: 17} }"
+        v-show="executionMode !== 5 && executionMode !== 6">
         <a-input-number
           :min="1"
           :step="1"
@@ -393,7 +395,8 @@
       <a-form-item
         label="CheckPoint Failure Options"
         :label-col="{lg: {span: 5}, sm: {span: 7}}"
-        :wrapper-col="{lg: {span: 16}, sm: {span: 17} }">
+        :wrapper-col="{lg: {span: 16}, sm: {span: 17} }"
+        v-show="executionMode !== 5 && executionMode !== 6">
         <a-input-group compact>
           <a-input-number
             :min="1"
@@ -731,6 +734,33 @@
       </a-form-item>
 
       <a-form-item
+        label="Kubernetes Pod Template"
+        :label-col="{lg: {span: 5}, sm: {span: 7}}"
+        :wrapper-col="{lg: {span: 16}, sm: {span: 17} }"
+        v-show="executionMode === 6">
+        <a-tabs type="card" v-model="controller.podTemplateTab">
+          <a-tab-pane
+            key="pod-template"
+            tab="Pod Template"
+            forceRender>
+            <div class="pod-template-box syntax-true" style="height: 300px"></div>
+          </a-tab-pane>
+          <a-tab-pane
+            key="jm-pod-template"
+            tab="JM Pod Template"
+            forceRender>
+            <div class="jm-pod-template-box syntax-true" style="height: 300px"></div>
+          </a-tab-pane>
+          <a-tab-pane
+            key="tm-pod-template"
+            tab="TM Pod Template"
+            forceRender>
+            <div class="tm-pod-template-box syntax-true" style="height: 300px"></div>
+          </a-tab-pane>
+        </a-tabs>
+      </a-form-item>
+
+      <a-form-item
         v-if="jobType === 'customcode'"
         label="Program Args"
         :label-col="{lg: {span: 5}, sm: {span: 7}}"
@@ -829,6 +859,7 @@ import {
   bigScreenOpen,
   formatSql,
   initEditor,
+  initPodTemplateEditor,
   updateDependency,
   verifySQL
 } from './AddEdit'
@@ -853,15 +884,26 @@ export default {
         {name: 'parent-first', order: 0},
         {name: 'child-first', order: 1}
       ],
-      executionModes: [
-        {mode: 'local', value: 0, disabled: true},
-        {mode: 'remote', value: 1, disabled: true},
-        {mode: 'yarn pre-job', value: 2, disabled: true},
-        {mode: 'yarn session', value: 3, disabled: true},
-        {mode: 'yarn application', value: 4, disabled: false},
-        {mode: 'kubernetes-session', value: 5, disabled: false},
-        {mode: 'kubernetes-application', value: 6, disabled: false}
-      ],
+      executionModes: {
+        sql: [
+          {mode: 'local', value: 0, disabled: true},
+          {mode: 'remote', value: 1, disabled: true},
+          {mode: 'yarn pre-job', value: 2, disabled: true},
+          {mode: 'yarn session', value: 3, disabled: true},
+          {mode: 'yarn application', value: 4, disabled: false},
+          {mode: 'kubernetes session', value: 5, disabled: false},
+          {mode: 'kubernetes application', value: 6, disabled: false}
+        ],
+        customcode: [
+          {mode: 'local', value: 0, disabled: true},
+          {mode: 'remote', value: 1, disabled: true},
+          {mode: 'yarn pre-job', value: 2, disabled: true},
+          {mode: 'yarn session', value: 3, disabled: true},
+          {mode: 'yarn application', value: 4, disabled: false},
+          {mode: 'kubernetes session (support soon)', value: 5, disabled: true},
+          {mode: 'kubernetes application (support soon)', value: 6, disabled: true}
+        ],
+      },
       cpTriggerAction: [
         {name: 'alert', value: 1},
         {name: 'restart', value: 2}
@@ -895,8 +937,12 @@ export default {
       submitting: false,
       executionMode: null,
       exclusions: new Map(),
+      podTemplate: '',
+      jmPodTemplate: '',
+      tmPodTemplate: '',
       controller: {
         activeTab: 'pom',
+        podTemplateTab: 'pod-template',
         tagCount: {
           total: 1,
           run: 1,
@@ -920,7 +966,10 @@ export default {
         editor: {
           flinkSql: null,
           bigScreen: null,
-          pom: null
+          pom: null,
+          podTemplate: null,
+          jmPodTemplate: null,
+          tmPodTemplate: null
         },
         flinkSql: {
           defaultValue: '',
@@ -952,6 +1001,7 @@ export default {
   beforeMount() {
     this.handleInitForm()
     this.handleInitSQLMode()
+    this.handleK8sPodTemplateEditor()
   },
 
   filters: {
@@ -999,12 +1049,26 @@ export default {
           })
         }
       }
+      if (this.controller.editor.podTemplate) {
+        this.controller.editor.podTemplate.updateOptions({
+          theme: this.ideTheme()
+        })
+      }
+      if (this.controller.editor.jmPodTemplate) {
+        this.controller.editor.jmPodTemplate.updateOptions({
+          theme: this.ideTheme()
+        })
+      }
+      if (this.controller.editor.tmPodTemplate) {
+        this.controller.editor.tmPodTemplate.updateOptions({
+          theme: this.ideTheme()
+        })
+      }
       this.$refs.confEdit.theme()
     }
   },
 
   methods: {
-
     filterOption(input, option) {
       return option.componentOptions.children[0].text.toLowerCase().indexOf(input.toLowerCase()) >= 0
     },
@@ -1038,6 +1102,7 @@ export default {
         this.form.getFieldDecorator('jobType', {initialValue: 'customcode'})
         this.controller.editor.flinkSql.getModel().setValue(this.controller.flinkSql.defaultValue)
       }
+      this.handleK8sPodTemplateEditor()
     },
 
     handleInitSQLMode() {
@@ -1045,6 +1110,12 @@ export default {
       this.form.getFieldDecorator('tableEnv', {initialValue: '1'})
       this.$nextTick(() => {
         initEditor(this)
+      })
+    },
+
+    handleK8sPodTemplateEditor(){
+      this.$nextTick(() => {
+        initPodTemplateEditor(this)
       })
     },
 
@@ -1088,6 +1159,12 @@ export default {
 
     handleChangeAlertType(value) {
       this.alertType = value
+    },
+
+    handleClusterId(value) {
+      if (this.executionMode === 6){
+        this.form.setFieldsValue({jobName: value.target.value})
+      }
     },
 
     handleJobName(confFile) {
@@ -1159,6 +1236,7 @@ export default {
       if (executionMode !== null) {
         const formData = new FormData()
         formData.append('file', data.file)
+        formData.append('executionMode',executionMode)
         upload(formData).then((resp) => {
           this.loading = false
           this.controller.dependency.jar.set(data.file.name, data.file.name)
@@ -1417,9 +1495,14 @@ export default {
         restartSize: values.restartSize,
         alertEmail: values.alertEmail || null,
         description: values.description,
-        k8sNameSpace: values.k8sNameSpace || null,
+        k8sNamespace: values.k8sNamespace || null,
         clusterId: values.clusterId || null,
         flinkImage: values.flinkImage || null
+      }
+      if (params.executionMode === 6) {
+        params.k8sPodTemplate = this.podTemplate
+        params.k8sJmPodTemplate = this.jmPodTemplate
+        params.k8sTmPodTemplate = this.tmPodTemplate
       }
 
       if (this.appType === 1) {
@@ -1483,9 +1566,14 @@ export default {
         restartSize: values.restartSize,
         alertEmail: values.alertEmail,
         description: values.description || null,
-        k8sNameSpace: values.k8sNameSpace || null,
+        k8sNamespace: values.k8sNamespace || null,
         clusterId: values.clusterId || null,
         flinkImage: values.flinkImage || null
+      }
+      if (params.executionMode === 6) {
+        params.k8sPodTemplate = this.podTemplate
+        params.k8sJmPodTemplate = this.jmPodTemplate
+        params.k8sTmPodTemplate = this.tmPodTemplate
       }
       this.handleCreateApp(params)
     },

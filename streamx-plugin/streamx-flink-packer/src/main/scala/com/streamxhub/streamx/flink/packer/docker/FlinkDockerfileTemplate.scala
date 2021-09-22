@@ -18,30 +18,28 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package com.streamxhub.streamx.flink.packer
+package com.streamxhub.streamx.flink.packer.docker
 
-import com.streamxhub.streamx.flink.packer.FlinkDockerfileTemplate.{DEFAULT_DOCKER_FILE_NAME, DOCKER_FILE_TEMPLATE}
+import com.streamxhub.streamx.flink.packer.docker.FlinkDockerfileTemplate.{DEFAULT_DOCKER_FILE_NAME, DOCKER_FILE_TEMPLATE}
 import org.apache.commons.io.FileUtils
 
 import java.io.File
 
 /**
- * flink docker file image template
+ * flink docker file image template.
+ * author: Al-assad
  *
  * @param flinkBaseImage  flink base docker image name, see https://hub.docker.com/_/flink
  * @param flinkFatjarPath path of flink job fat jar
  */
-class FlinkDockerfileTemplate(var flinkBaseImage: String, var flinkFatjarPath: String) {
+case class FlinkDockerfileTemplate(flinkBaseImage: String, flinkFatjarPath: String) {
 
-  def getFatJarName: String = new File(flinkFatjarPath).getName
+  lazy val fatJarName: String = new File(flinkFatjarPath).getName
 
   /**
    * get content of DockerFile
    */
-  def dockerfileContent: String = {
-    val fatJarName = getFatJarName
-    DOCKER_FILE_TEMPLATE.format(flinkBaseImage, "/".concat(fatJarName), fatJarName)
-  }
+  def dockerfileContent: String = DOCKER_FILE_TEMPLATE.format(flinkBaseImage, "/".concat(fatJarName), fatJarName)
 
   /**
    * write content of DockerFile to outputPath.
@@ -58,6 +56,11 @@ class FlinkDockerfileTemplate(var flinkBaseImage: String, var flinkFatjarPath: S
     FileUtils.write(output, dockerfileContent, "UTF-8")
     output
   }
+
+  /**
+   * get flink job jar such as local:///opt/flink/usrlib/flink-fatjar.jar
+   */
+  def getJobJar: String = s"local:///opt/flink/usrlib/$fatJarName"
 
 }
 
