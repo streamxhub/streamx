@@ -17,16 +17,11 @@
 
 package org.apache.streampark.console;
 
-import org.apache.streampark.common.CommonConfiguration;
-import org.apache.streampark.common.IStoppable;
 import org.apache.streampark.console.base.config.SpringProperties;
-import org.apache.streampark.console.base.util.SpringContextUtils;
 
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.builder.SpringApplicationBuilder;
-import org.springframework.context.annotation.Import;
 import org.springframework.scheduling.annotation.EnableScheduling;
 
 /**
@@ -51,11 +46,7 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 @Slf4j
 @SpringBootApplication
 @EnableScheduling
-@Import({CommonConfiguration.class})
-public class StreamParkConsoleBootstrap implements IStoppable {
-
-    @Autowired
-    private SpringContextUtils springContextUtils;
+public class StreamParkConsoleBootstrap {
 
     public static void main(String[] args) throws Exception {
         new SpringApplicationBuilder()
@@ -64,10 +55,4 @@ public class StreamParkConsoleBootstrap implements IStoppable {
             .run(args);
     }
 
-    @Override
-    public void stop(String cause) {
-        // make sure exit after server closed, don't call System.exit in close logic, will cause deadlock if close
-        // multiple times at the same time
-        System.exit(1);
-    }
 }
