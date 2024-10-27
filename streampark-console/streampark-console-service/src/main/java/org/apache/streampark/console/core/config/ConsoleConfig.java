@@ -18,8 +18,6 @@
 package org.apache.streampark.console.core.config;
 
 import org.apache.streampark.common.utils.NetworkUtils;
-import org.apache.streampark.registry.api.ConnectStrategyProperties;
-import org.apache.streampark.registry.api.enums.RegistryNodeType;
 
 import org.apache.commons.lang3.StringUtils;
 
@@ -55,8 +53,6 @@ public class ConsoleConfig implements Validator {
     @Value("${streampark.max-heartbeat-interval:10}")
     private Duration maxHeartbeatInterval = Duration.ofSeconds(10);
 
-    private ConnectStrategyProperties registryDisconnectStrategy = new ConnectStrategyProperties();
-
     /**
      * The IP address and listening port of the console server in the format 'ip:listenPort'.
      */
@@ -85,9 +81,6 @@ public class ConsoleConfig implements Validator {
             consoleConfig.setConsoleAddress(NetworkUtils.getAddr(consoleConfig.getListenPort()));
         }
 
-        consoleConfig.setConsoleRegistryPath(
-            RegistryNodeType.CONSOLE_SERVER.getRegistryPath() + "/" + consoleConfig.getConsoleAddress());
-
         printConfig();
     }
 
@@ -95,10 +88,9 @@ public class ConsoleConfig implements Validator {
         String config =
             "\n****************************Console Configuration**************************************" +
                 "\n  listen-port -> " + listenPort +
-                "\n  registry-disconnect-strategy -> " + registryDisconnectStrategy +
                 "\n  console-address -> " + consoleAddress +
                 "\n  console-registry-path: " + consoleRegistryPath +
-                "\n****************************Master Configuration**************************************";
+                "\n**************************** Master Configuration**************************************";
         log.info(config);
     }
 }
