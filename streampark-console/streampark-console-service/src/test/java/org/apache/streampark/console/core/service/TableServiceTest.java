@@ -29,6 +29,7 @@ import org.apache.streampark.console.core.service.container.MysqlBaseITCASE;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Order;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.ArrayList;
@@ -77,7 +78,7 @@ public class TableServiceTest extends MysqlBaseITCASE {
         catalogService.remove(flinkCatalog.getId());
     }
 
-    // @Test
+    @Test
     @Order(1)
     public void testTableExists_Positive() {
         TableParams tableParams = new TableParams();
@@ -88,7 +89,7 @@ public class TableServiceTest extends MysqlBaseITCASE {
         assertTrue(tableService.tableExists(tableParams));
     }
 
-    // @Test
+    @Test
     @Order(2)
     public void testTableExists_Negative_CatalogNotFound() {
         TableParams tableParams = new TableParams();
@@ -101,7 +102,7 @@ public class TableServiceTest extends MysqlBaseITCASE {
         assertEquals("Catalog is not exit.", exception.getMessage());
     }
 
-    // @Test
+    @Test
     @Order(3)
     public void testCreateTable_Positive() {
         TableParams tableParams = new TableParams();
@@ -126,7 +127,7 @@ public class TableServiceTest extends MysqlBaseITCASE {
         assertEquals(null, exception.getMessage());
     }
 
-    // @Test
+    @Test
     @Order(4)
     public void testCreateTable_Negative_TableNameNull() {
         TableParams tableParams = new TableParams();
@@ -144,7 +145,7 @@ public class TableServiceTest extends MysqlBaseITCASE {
         assertEquals("Table name can not be null.", exception.getMessage());
     }
 
-    // @Test
+    @Test
     @Order(5)
     public void testAddColumn_Positive() {
         TableParams tableParams = new TableParams();
@@ -163,7 +164,7 @@ public class TableServiceTest extends MysqlBaseITCASE {
         assertEquals(null, exception.getMessage());
     }
 
-    // @Test
+    @Test
     @Order(6)
     public void testAddColumn_Negative_TableNameNull() {
         TableParams tableParams = new TableParams();
@@ -181,7 +182,7 @@ public class TableServiceTest extends MysqlBaseITCASE {
         assertEquals("Table name can not be null.", exception.getMessage());
     }
 
-    // @Test
+    @Test
     @Order(7)
     public void testDropColumn() {
         String catalogName = flinkCatalog.getCatalogName();
@@ -195,7 +196,7 @@ public class TableServiceTest extends MysqlBaseITCASE {
         assertEquals(null, exception.getMessage());
     }
 
-    // @Test
+    @Test
     @Order(8)
     public void testDropColumn_Negative_TableNameNull() {
         String catalogName = "flink-test";
@@ -209,7 +210,7 @@ public class TableServiceTest extends MysqlBaseITCASE {
         assertEquals("Table name can not be null.", exception.getMessage());
     }
 
-    // @Test
+    @Test
     @Order(9)
     public void testAddOption() {
         TableParams tableParams = new TableParams();
@@ -226,7 +227,7 @@ public class TableServiceTest extends MysqlBaseITCASE {
             exception.getMessage());
     }
 
-    // @Test
+    @Test
     @Order(10)
     public void testAddOption_Negative_OptionsNull() {
         TableParams tableParams = new TableParams();
@@ -239,7 +240,7 @@ public class TableServiceTest extends MysqlBaseITCASE {
         assertEquals("Table options can not be null.", exception.getMessage());
     }
 
-    // @Test
+    @Test
     @Order(12)
     public void testDropTable_Negative_TableNameNull() {
         String catalogName = "test_catalog";
@@ -251,7 +252,7 @@ public class TableServiceTest extends MysqlBaseITCASE {
         assertEquals("Table name can not be null.", exception.getMessage());
     }
 
-    // @Test
+    @Test
     @Order(13)
     public void testRenameTable() {
         String catalogName = flinkCatalog.getCatalogName();
@@ -263,7 +264,7 @@ public class TableServiceTest extends MysqlBaseITCASE {
         assertEquals(null, exception.getMessage());
     }
 
-    // @Test
+    @Test
     @Order(14)
     public void testRenameTable_Negative_FromTableNameNull() {
         String catalogName = "test_catalog";
@@ -277,7 +278,7 @@ public class TableServiceTest extends MysqlBaseITCASE {
         assertEquals("From table name can not be null.", exception.getMessage());
     }
 
-    // @Test
+    @Test
     @Order(15)
     public void testListTables_Positive() {
         TableParams tableParams = new TableParams();
@@ -291,7 +292,7 @@ public class TableServiceTest extends MysqlBaseITCASE {
         assertEquals(1, result.size());
     }
 
-    // @Test
+    @Test
     @Order(16)
     public void testListTables_Negative_DatabaseNameNull() {
         TableParams tableParams = new TableParams();
@@ -304,7 +305,7 @@ public class TableServiceTest extends MysqlBaseITCASE {
         assertEquals("Database name can not be null.", exception.getMessage());
     }
 
-    // @Test
+    @Test
     @Order(17)
     public void testListColumns_Positive() {
         String catalogName = flinkCatalog.getCatalogName();
@@ -313,7 +314,7 @@ public class TableServiceTest extends MysqlBaseITCASE {
         assertNotNull(result);
     }
 
-    // @Test
+    @Test
     @Order(17)
     public void testListColumns_Negative_DatabaseNameNull() {
         String catalogName = "test_catalog";

@@ -26,6 +26,7 @@ import org.apache.streampark.console.core.service.container.MysqlBaseITCASE;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.List;
@@ -79,7 +80,7 @@ public class DatabaseServiceTest extends MysqlBaseITCASE {
         assertTrue(databaseService.databaseExists(dbParam));
     }
 
-    // @Test
+    @Test
     public void testCreateDatabase_Negative() {
         DatabaseParam dbParam = new DatabaseParam();
         dbParam.setCatalogId(flinkCatalog.getId());
@@ -101,7 +102,7 @@ public class DatabaseServiceTest extends MysqlBaseITCASE {
         assertNotNull(databaseParamList);
     }
 
-    // @Test
+    @Test
     public void testListDatabases_Negative_NoDatabases() {
 
         Exception exception =
@@ -115,7 +116,7 @@ public class DatabaseServiceTest extends MysqlBaseITCASE {
             "The catalog can't be null. get catalog from database failed.", exception.getMessage());
     }
 
-    // @Test
+    @Test
     public void testDropDatabase_Positive() {
         DatabaseParam dbParam = new DatabaseParam();
         dbParam.setCatalogId(flinkCatalog.getId());
@@ -132,7 +133,7 @@ public class DatabaseServiceTest extends MysqlBaseITCASE {
         assertEquals(null, exception.getMessage());
     }
 
-    // @Test
+    @Test
     public void testDropDatabase_Negative_NullDatabaseName() {
         DatabaseParam dbParam = new DatabaseParam();
         dbParam.setCatalogId(1L);
