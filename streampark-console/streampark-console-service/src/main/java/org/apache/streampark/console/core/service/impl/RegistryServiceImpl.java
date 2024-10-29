@@ -112,6 +112,7 @@ public class RegistryServiceImpl implements RegistryService {
                 log.info("Zookeeper session expired, attempting to reconnect...");
                 reconnectAndRegister();
             } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
                 log.error("Failed to update heartbeat for node: {}", nodePath, e);
             }
         }, 0, HEARTBEAT_INTERVAL, TimeUnit.MILLISECONDS);
@@ -134,6 +135,7 @@ public class RegistryServiceImpl implements RegistryService {
                 log.info("Zookeeper session expired, attempting to reconnect...");
                 reconnectAndRegister();
             } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
                 log.error("Failed to check heartbeat", e);
             }
         }, HEARTBEAT_TIMEOUT, HEARTBEAT_TIMEOUT, TimeUnit.MILLISECONDS);
@@ -164,6 +166,7 @@ public class RegistryServiceImpl implements RegistryService {
             log.info("Zookeeper session expired, attempting to reconnect...");
             reconnectAndRegister();
         } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
             log.error("Failed to handle node changes", e);
         }
     }
@@ -182,7 +185,7 @@ public class RegistryServiceImpl implements RegistryService {
                 try {
                     Thread.sleep(3000);
                 } catch (InterruptedException ignored) {
-
+                    Thread.currentThread().interrupt();
                 }
             }
         }
@@ -196,6 +199,7 @@ public class RegistryServiceImpl implements RegistryService {
             scheduler.shutdown();
             log.info("ZooKeeper client closed: {}", nodePath);
         } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
             log.error("Failed to close ZooKeeper client", e);
         }
     }
