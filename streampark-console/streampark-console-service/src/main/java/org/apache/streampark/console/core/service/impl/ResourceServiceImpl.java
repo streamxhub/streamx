@@ -497,7 +497,7 @@ public class ResourceServiceImpl extends ServiceImpl<ResourceMapper, Resource>
         for (FlinkSql flinkSql : flinkSqls) {
             String sqlTeamResource = flinkSql.getTeamResource();
             if (sqlTeamResource != null
-                && sqlTeamResource.contains(String.valueOf(resource.getTeamId()))) {
+                && sqlTeamResource.contains(String.valueOf(resource.getId()))) {
                 FlinkApplication app = applicationMap.get(flinkSql.getAppId());
                 if (!dependApplications.contains(app)) {
                     dependApplications.add(applicationMap.get(flinkSql.getAppId()));
