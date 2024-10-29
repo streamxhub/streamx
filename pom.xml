@@ -103,6 +103,7 @@
         <hadoop.version>3.3.4</hadoop.version>
         <hbase.version>2.1.10</hbase.version>
         <redis.version>3.3.0</redis.version>
+        <zoopkeeper.version>3.6.3</zoopkeeper.version>
         <es.version>6.2.3</es.version>
         <influxdb.version>2.17</influxdb.version>
         <protobuf.version>2.5.0</protobuf.version>
@@ -240,6 +241,12 @@
                 <artifactId>mysql-connector-java</artifactId>
                 <version>${mysql.version}</version>
                 <scope>test</scope>
+            </dependency>
+
+            <dependency>
+                <groupId>org.apache.zookeeper</groupId>
+                <artifactId>zookeeper</artifactId>
+                <version>${zoopkeeper.version}</version>
             </dependency>
 
             <dependency>

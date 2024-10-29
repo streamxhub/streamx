@@ -106,6 +106,10 @@ registry:
   heartbeat-refresh-interval: 1s
   session-timeout: 3s
 
+zookeeper:
+  # zookeeper address
+  address: localhost:2181
+
 network:
   # network interface preferred like eth0, default: empty
   preferred-interface: ""
