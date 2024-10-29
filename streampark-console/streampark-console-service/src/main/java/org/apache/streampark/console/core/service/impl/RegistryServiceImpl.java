@@ -71,9 +71,12 @@ public class RegistryServiceImpl implements RegistryService {
     private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(2);
 
     @PostConstruct
-    public void init() {
+    public void registry() {
+        if (!enableHA()) {
+            return;
+        }
         try {
-            zk_address = SystemPropertyUtils.get("zookeeper.address", "localhost:2181");
+            zk_address = SystemPropertyUtils.get("high-availability.zookeeper.quorum", "localhost:2181");
             zk = new ZooKeeper(zk_address, HEARTBEAT_TIMEOUT, watcher);
 
             if (zk.exists(REGISTRY_PATH, false) == null) {
@@ -82,7 +85,8 @@ public class RegistryServiceImpl implements RegistryService {
 
             String ip = InetAddress.getLocalHost().getHostAddress();
             String port = SystemPropertyUtils.get("server.port", "10000");
-            nodePath = zk.create(REGISTRY_PATH + "/" + ip + ":" + port, new byte[0],
+            String server_id = ip + ":" + port;
+            nodePath = zk.create(REGISTRY_PATH + "/" + server_id, new byte[0],
                 OPEN_ACL_UNSAFE, CreateMode.EPHEMERAL);
 
             currentNodes.add(nodePath);
@@ -92,7 +96,10 @@ public class RegistryServiceImpl implements RegistryService {
     }
 
     @Override
-    public void start() {
+    public void startListening() {
+        if (!enableHA()) {
+            return;
+        }
         try {
             distributedTaskService.init(currentNodes, nodePath);
             startHeartbeat();
@@ -193,7 +200,10 @@ public class RegistryServiceImpl implements RegistryService {
     }
 
     @Override
-    public void close() {
+    public void deRegistry() {
+        if (!enableHA()) {
+            return;
+        }
         try {
             zk.close();
             scheduler.shutdown();
@@ -202,6 +212,10 @@ public class RegistryServiceImpl implements RegistryService {
             Thread.currentThread().interrupt();
             log.error("Failed to close ZooKeeper client", e);
         }
+    }
+
+    public boolean enableHA() {
+        return SystemPropertyUtils.get("high-availability.enable", "false").equals("true");
     }
 
 }

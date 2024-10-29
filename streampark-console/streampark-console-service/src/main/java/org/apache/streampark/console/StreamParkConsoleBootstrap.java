@@ -17,6 +17,7 @@
 
 package org.apache.streampark.console;
 
+import org.apache.streampark.common.util.SystemPropertyUtils;
 import org.apache.streampark.console.base.config.SpringProperties;
 import org.apache.streampark.console.core.service.RegistryService;
 
@@ -64,11 +65,17 @@ public class StreamParkConsoleBootstrap {
 
     @PostConstruct
     public void init() {
-        registryService.start();
-        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-            registryService.close();
-            log.info("RegistryService close success.");
-        }));
+        if (enableHA()) {
+            registryService.startListening();
+            Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+                registryService.deRegistry();
+                log.info("RegistryService close success.");
+            }));
+        }
+    }
+
+    public boolean enableHA() {
+        return SystemPropertyUtils.get("high-availability.enable", "false").equals("true");
     }
 
 }

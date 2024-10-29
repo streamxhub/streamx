@@ -22,10 +22,10 @@ public interface RegistryService {
     /**
      * Start the registry service.
      */
-    void start();
+    void startListening();
 
     /**
      * Close the registry service.
      */
-    void close();
+    void deRegistry();
 }

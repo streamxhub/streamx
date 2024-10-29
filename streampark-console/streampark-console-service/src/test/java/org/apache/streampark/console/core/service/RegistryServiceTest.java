@@ -17,6 +17,7 @@
 
 package org.apache.streampark.console.core.service;
 
+import org.apache.streampark.common.util.SystemPropertyUtils;
 import org.apache.streampark.console.core.service.impl.RegistryServiceImpl;
 
 import org.junit.jupiter.api.Assertions;
@@ -28,9 +29,10 @@ public class RegistryServiceTest {
 
     @Test
     public void testRegister() {
-        registryService.init();
+        SystemPropertyUtils.set("high-availability.enable", "true");
+        registryService.registry();
         Assertions.assertEquals(1, registryService.getCurrentNodes().size());
-        registryService.close();
+        registryService.deRegistry();
     }
 
 }
