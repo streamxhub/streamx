@@ -19,6 +19,9 @@ package org.apache.streampark.console.core.service;
 
 public interface RegistryService {
 
+    /**
+     * Start the registry service.
+     */
     void start();
 
     /**
