@@ -379,3 +379,5 @@ xnio-nio-3.8.7.Final.jar
 xz-1.5.jar
 zookeeper-3.6.3.jar
 icu4j-67.1.jar
+zookeeper-jute-3.6.3.jar
+netty-transport-native-epoll-4.1.91.Final.jar
