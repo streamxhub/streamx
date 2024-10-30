@@ -32,8 +32,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import javax.annotation.PostConstruct;
-
 import java.net.InetAddress;
 import java.util.HashSet;
 import java.util.List;
@@ -52,7 +50,7 @@ public class RegistryServiceImpl implements RegistryService {
     private static final int HEARTBEAT_INTERVAL = 10000;
     private static final int HEARTBEAT_TIMEOUT = 60000;
 
-    private String zk_address;
+    private String zkAddress;
     private ZooKeeper zk;
     private String nodePath;
     private Watcher watcher = event -> {
@@ -70,14 +68,10 @@ public class RegistryServiceImpl implements RegistryService {
 
     private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(2);
 
-    @PostConstruct
     public void registry() {
-        if (!enableHA()) {
-            return;
-        }
         try {
-            zk_address = SystemPropertyUtils.get("high-availability.zookeeper.quorum", "localhost:2181");
-            zk = new ZooKeeper(zk_address, HEARTBEAT_TIMEOUT, watcher);
+            zkAddress = SystemPropertyUtils.get("high-availability.zookeeper.quorum", "localhost:2181");
+            zk = new ZooKeeper(zkAddress, HEARTBEAT_TIMEOUT, watcher);
 
             if (zk.exists(REGISTRY_PATH, false) == null) {
                 zk.create(REGISTRY_PATH, new byte[0], OPEN_ACL_UNSAFE, CreateMode.PERSISTENT);
@@ -96,10 +90,7 @@ public class RegistryServiceImpl implements RegistryService {
     }
 
     @Override
-    public void startListening() {
-        if (!enableHA()) {
-            return;
-        }
+    public void doRegister() {
         try {
             distributedTaskService.init(currentNodes, nodePath);
             startHeartbeat();
@@ -183,7 +174,7 @@ public class RegistryServiceImpl implements RegistryService {
         while (retries > 0) {
             try {
                 zk.close();
-                zk = new ZooKeeper(zk_address, HEARTBEAT_TIMEOUT, watcher);
+                zk = new ZooKeeper(zkAddress, HEARTBEAT_TIMEOUT, watcher);
                 zk.create(nodePath, new byte[0], OPEN_ACL_UNSAFE, CreateMode.EPHEMERAL);
                 return;
             } catch (Exception e) {
@@ -200,10 +191,7 @@ public class RegistryServiceImpl implements RegistryService {
     }
 
     @Override
-    public void deRegistry() {
-        if (!enableHA()) {
-            return;
-        }
+    public void unRegister() {
         try {
             zk.close();
             scheduler.shutdown();
@@ -213,9 +201,4 @@ public class RegistryServiceImpl implements RegistryService {
             log.error("Failed to close ZooKeeper client", e);
         }
     }
-
-    public boolean enableHA() {
-        return SystemPropertyUtils.get("high-availability.enable", "false").equals("true");
-    }
-
 }

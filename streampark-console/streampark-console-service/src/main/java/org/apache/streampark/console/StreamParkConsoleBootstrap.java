@@ -66,9 +66,10 @@ public class StreamParkConsoleBootstrap {
     @PostConstruct
     public void init() {
         if (enableHA()) {
-            registryService.startListening();
+            registryService.registry();
+            registryService.doRegister();
             Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-                registryService.deRegistry();
+                registryService.unRegister();
                 log.info("RegistryService close success.");
             }));
         }

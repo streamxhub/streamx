@@ -20,12 +20,17 @@ package org.apache.streampark.console.core.service;
 public interface RegistryService {
 
     /**
+     * Registry the service.
+     */
+    void registry();
+
+    /**
      * Start the registry service.
      */
-    void startListening();
+    void doRegister();
 
     /**
      * Close the registry service.
      */
-    void deRegistry();
+    void unRegister();
 }

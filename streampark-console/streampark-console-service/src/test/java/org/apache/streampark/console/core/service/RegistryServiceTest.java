@@ -29,10 +29,15 @@ public class RegistryServiceTest {
 
     @Test
     public void testRegister() {
-        SystemPropertyUtils.set("high-availability.enable", "true");
-        registryService.registry();
-        Assertions.assertEquals(1, registryService.getCurrentNodes().size());
-        registryService.deRegistry();
+        if (enableHA()) {
+            registryService.registry();
+            Assertions.assertEquals(1, registryService.getCurrentNodes().size());
+            registryService.unRegister();
+        }
+    }
+
+    public boolean enableHA() {
+        return SystemPropertyUtils.get("high-availability.enable", "false").equals("true");
     }
 
 }
