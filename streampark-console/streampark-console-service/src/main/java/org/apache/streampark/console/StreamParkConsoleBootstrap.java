@@ -17,17 +17,12 @@
 
 package org.apache.streampark.console;
 
-import org.apache.streampark.common.util.SystemPropertyUtils;
 import org.apache.streampark.console.base.config.SpringProperties;
-import org.apache.streampark.console.core.service.RegistryService;
 
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.scheduling.annotation.EnableScheduling;
-
-import javax.annotation.PostConstruct;
 
 /**
  *
@@ -53,29 +48,10 @@ import javax.annotation.PostConstruct;
 @EnableScheduling
 public class StreamParkConsoleBootstrap {
 
-    @Autowired
-    private RegistryService registryService;
-
     public static void main(String[] args) throws Exception {
         new SpringApplicationBuilder()
             .properties(SpringProperties.get())
             .sources(StreamParkConsoleBootstrap.class)
             .run(args);
     }
-
-    @PostConstruct
-    public void init() {
-        if (enableHA()) {
-            registryService.registry();
-            Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-                registryService.unRegister();
-                log.info("RegistryService close success.");
-            }));
-        }
-    }
-
-    public boolean enableHA() {
-        return SystemPropertyUtils.get("high-availability.enable", "false").equals("true");
-    }
-
 }
