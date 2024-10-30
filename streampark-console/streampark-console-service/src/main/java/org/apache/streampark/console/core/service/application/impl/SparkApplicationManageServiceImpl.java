@@ -28,26 +28,28 @@ import org.apache.streampark.console.base.exception.ApiAlertException;
 import org.apache.streampark.console.base.mybatis.pager.MybatisPager;
 import org.apache.streampark.console.base.util.WebUtils;
 import org.apache.streampark.console.core.bean.AppControl;
+import org.apache.streampark.console.core.entity.Application;
 import org.apache.streampark.console.core.entity.Resource;
 import org.apache.streampark.console.core.entity.SparkApplication;
 import org.apache.streampark.console.core.entity.SparkApplicationConfig;
 import org.apache.streampark.console.core.entity.SparkSql;
 import org.apache.streampark.console.core.enums.CandidateTypeEnum;
 import org.apache.streampark.console.core.enums.ChangeTypeEnum;
+import org.apache.streampark.console.core.enums.EngineTypeEnum;
 import org.apache.streampark.console.core.enums.OptionStateEnum;
 import org.apache.streampark.console.core.enums.ReleaseStateEnum;
 import org.apache.streampark.console.core.enums.SparkAppStateEnum;
 import org.apache.streampark.console.core.mapper.SparkApplicationMapper;
-import org.apache.streampark.console.core.service.AppBuildPipeService;
 import org.apache.streampark.console.core.service.ProjectService;
 import org.apache.streampark.console.core.service.ResourceService;
-import org.apache.streampark.console.core.service.SettingService;
-import org.apache.streampark.console.core.service.SparkApplicationBackUpService;
-import org.apache.streampark.console.core.service.SparkApplicationConfigService;
-import org.apache.streampark.console.core.service.SparkApplicationLogService;
 import org.apache.streampark.console.core.service.SparkEffectiveService;
 import org.apache.streampark.console.core.service.SparkSqlService;
 import org.apache.streampark.console.core.service.YarnQueueService;
+import org.apache.streampark.console.core.service.application.ApplicationLogService;
+import org.apache.streampark.console.core.service.application.ApplicationService;
+import org.apache.streampark.console.core.service.application.FlinkApplicationBuildPipelineService;
+import org.apache.streampark.console.core.service.application.SparkApplicationBackupService;
+import org.apache.streampark.console.core.service.application.SparkApplicationConfigService;
 import org.apache.streampark.console.core.service.application.SparkApplicationManageService;
 import org.apache.streampark.console.core.util.ServiceHelper;
 import org.apache.streampark.flink.packer.pipeline.PipelineStatusEnum;
@@ -96,13 +98,16 @@ public class SparkApplicationManageServiceImpl
     private ProjectService projectService;
 
     @Autowired
-    private SparkApplicationBackUpService backUpService;
+    private ApplicationService applicationService;
+
+    @Autowired
+    private SparkApplicationBackupService backUpService;
 
     @Autowired
     private SparkApplicationConfigService configService;
 
     @Autowired
-    private SparkApplicationLogService applicationLogService;
+    private ApplicationLogService applicationLogService;
 
     @Autowired
     private SparkSqlService sparkSqlService;
@@ -111,10 +116,7 @@ public class SparkApplicationManageServiceImpl
     private SparkEffectiveService effectiveService;
 
     @Autowired
-    private SettingService settingService;
-
-    @Autowired
-    private AppBuildPipeService appBuildPipeService;
+    private FlinkApplicationBuildPipelineService appBuildPipeService;
 
     @Autowired
     private YarnQueueService yarnQueueService;
@@ -151,9 +153,7 @@ public class SparkApplicationManageServiceImpl
 
     @Override
     public boolean mapping(SparkApplication appParam) {
-        boolean mapping = this.baseMapper.mapping(appParam);
-        SparkApplication application = getById(appParam.getId());
-        return mapping;
+        return this.baseMapper.mapping(appParam);
     }
 
     @Override
@@ -194,9 +194,9 @@ public class SparkApplicationManageServiceImpl
         try {
             application
                 .getFsOperator()
-                .delete(application.getWorkspace().SPARK_APP_WORKSPACE().concat("/").concat(appId.toString()));
+                .delete(application.getWorkspace().APP_WORKSPACE().concat("/").concat(appId.toString()));
             // try to delete yarn-application, and leave no trouble.
-            String path = Workspace.of(StorageType.HDFS).SPARK_APP_WORKSPACE().concat("/").concat(appId.toString());
+            String path = Workspace.of(StorageType.HDFS).APP_WORKSPACE().concat("/").concat(appId.toString());
             if (HdfsOperator.exists(path)) {
                 HdfsOperator.delete(path);
             }
@@ -235,7 +235,8 @@ public class SparkApplicationManageServiceImpl
                                 && PipelineStatusEnum.success
                                     .getCode()
                                     .equals(record.getBuildStatus()))
-                        .setAllowStop(record.isRunning());
+                        .setAllowStop(record.isRunning())
+                        .setAllowView(record.shouldTracking());
                     record.setAppControl(appControl);
                 })
             .collect(Collectors.toList());
@@ -286,7 +287,13 @@ public class SparkApplicationManageServiceImpl
             appParam.setJarCheckSum(org.apache.commons.io.FileUtils.checksumCRC32(new File(jarPath)));
         }
 
-        if (save(appParam)) {
+        // 1) save application
+        Application application = applicationService.create(EngineTypeEnum.SPARK);
+        appParam.setId(application.getId());
+
+        boolean saveSuccess = save(appParam);
+
+        if (saveSuccess) {
             if (appParam.isSparkSqlJob()) {
                 SparkSql sparkSql = new SparkSql(appParam);
                 sparkSqlService.create(sparkSql);
@@ -352,6 +359,9 @@ public class SparkApplicationManageServiceImpl
         newApp.setModifyTime(newApp.getCreateTime());
         newApp.setTags(oldApp.getTags());
 
+        Application application = applicationService.create(EngineTypeEnum.SPARK);
+        newApp.setId(application.getId());
+
         boolean saved = save(newApp);
         if (saved) {
             if (newApp.isSparkSqlJob()) {
@@ -385,7 +395,7 @@ public class SparkApplicationManageServiceImpl
         SparkApplication application = getById(appParam.getId());
 
         /* If the original mode is remote, k8s-session, yarn-session, check cluster status */
-        SparkDeployMode sparkDeployMode = application.getSparkDeployMode();
+        SparkDeployMode sparkDeployMode = application.getDeployModeEnum();
 
         boolean success = validateQueueIfNeeded(application, appParam);
         ApiAlertException.throwIfFalse(
@@ -449,7 +459,7 @@ public class SparkApplicationManageServiceImpl
         application.setRestartSize(appParam.getRestartSize());
         application.setTags(appParam.getTags());
 
-        switch (appParam.getSparkDeployMode()) {
+        switch (appParam.getDeployModeEnum()) {
             case YARN_CLUSTER:
             case YARN_CLIENT:
                 application.setHadoopUser(appParam.getHadoopUser());
@@ -458,18 +468,15 @@ public class SparkApplicationManageServiceImpl
                 break;
         }
 
-        // Spark Sql job...
         if (application.isSparkSqlJob()) {
             updateSparkSqlJob(application, appParam);
-            return true;
-        }
-
-        if (application.isStreamParkJob()) {
-            // configService.update(appParam, application.isRunning());
-        } else {
+        } else if (application.isSparkJarJob()) {
             application.setJar(appParam.getJar());
             application.setMainClass(appParam.getMainClass());
         }
+
+        // update config
+        configService.update(appParam, application.isRunning());
         this.updateById(application);
         return true;
     }
@@ -492,19 +499,19 @@ public class SparkApplicationManageServiceImpl
             sparkSqlService.create(sql);
             application.setBuild(true);
         } else {
-            // get previous flink sql and decode
+            // get previous spark sql and decode
             SparkSql copySourceSparkSql = sparkSqlService.getById(appParam.getSqlId());
             ApiAlertException.throwIfNull(
-                copySourceSparkSql, "Flink sql is null, update flink sql job failed.");
+                copySourceSparkSql, "Spark sql is null, update spark sql job failed.");
             copySourceSparkSql.decode();
 
-            // get submit flink sql
-            SparkSql targetFlinkSql = new SparkSql(appParam);
+            // get submit spark sql
+            SparkSql targetSparkSql = new SparkSql(appParam);
 
             // judge sql and dependency has changed
-            ChangeTypeEnum changeTypeEnum = copySourceSparkSql.checkChange(targetFlinkSql);
+            ChangeTypeEnum changeTypeEnum = copySourceSparkSql.checkChange(targetSparkSql);
 
-            log.info("updateFlinkSqlJob changeTypeEnum: {}", changeTypeEnum);
+            log.info("updateSparkSqlJob changeTypeEnum: {}", changeTypeEnum);
 
             // if has been changed
             if (changeTypeEnum.hasChanged()) {
@@ -542,7 +549,6 @@ public class SparkApplicationManageServiceImpl
             }
         }
         this.updateById(application);
-        // this.configService.update(appParam, application.isRunning());
     }
 
     @Override
@@ -648,7 +654,7 @@ public class SparkApplicationManageServiceImpl
      */
     @VisibleForTesting
     public boolean validateQueueIfNeeded(SparkApplication appParam) {
-        yarnQueueService.checkQueueLabel(appParam.getSparkDeployMode(), appParam.getYarnQueue());
+        yarnQueueService.checkQueueLabel(appParam.getDeployModeEnum(), appParam.getYarnQueue());
         if (!isYarnNotDefaultQueue(appParam)) {
             return true;
         }
@@ -664,13 +670,13 @@ public class SparkApplicationManageServiceImpl
      */
     @VisibleForTesting
     public boolean validateQueueIfNeeded(SparkApplication oldApp, SparkApplication newApp) {
-        yarnQueueService.checkQueueLabel(newApp.getSparkDeployMode(), newApp.getYarnQueue());
+        yarnQueueService.checkQueueLabel(newApp.getDeployModeEnum(), newApp.getYarnQueue());
         if (!isYarnNotDefaultQueue(newApp)) {
             return true;
         }
 
         oldApp.resolveYarnQueue();
-        if (SparkDeployMode.isYarnMode(newApp.getSparkDeployMode())
+        if (SparkDeployMode.isYarnMode(newApp.getDeployModeEnum())
             && StringUtils.equals(oldApp.getYarnQueue(), newApp.getYarnQueue())) {
             return true;
         }
@@ -686,14 +692,14 @@ public class SparkApplicationManageServiceImpl
      *     (empty or default), return true, false else.
      */
     private boolean isYarnNotDefaultQueue(SparkApplication application) {
-        return SparkDeployMode.isYarnMode(application.getSparkDeployMode())
+        return SparkDeployMode.isYarnMode(application.getDeployModeEnum())
             && !yarnQueueService.isDefaultQueue(application.getYarnQueue());
     }
 
     private boolean isYarnApplicationModeChange(
                                                 SparkApplication application, SparkApplication appParam) {
         return !application.getDeployMode().equals(appParam.getDeployMode())
-            && (SparkDeployMode.YARN_CLIENT == appParam.getSparkDeployMode()
-                || SparkDeployMode.YARN_CLUSTER == application.getSparkDeployMode());
+            && (SparkDeployMode.YARN_CLIENT == appParam.getDeployModeEnum()
+                || SparkDeployMode.YARN_CLUSTER == application.getDeployModeEnum());
     }
 }

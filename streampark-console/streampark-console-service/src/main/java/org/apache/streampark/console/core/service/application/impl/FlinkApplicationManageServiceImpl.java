@@ -29,6 +29,7 @@ import org.apache.streampark.console.base.mybatis.pager.MybatisPager;
 import org.apache.streampark.console.base.util.ObjectUtils;
 import org.apache.streampark.console.base.util.WebUtils;
 import org.apache.streampark.console.core.bean.AppControl;
+import org.apache.streampark.console.core.entity.Application;
 import org.apache.streampark.console.core.entity.FlinkApplication;
 import org.apache.streampark.console.core.entity.FlinkApplicationConfig;
 import org.apache.streampark.console.core.entity.FlinkCluster;
@@ -36,22 +37,24 @@ import org.apache.streampark.console.core.entity.FlinkSql;
 import org.apache.streampark.console.core.entity.Resource;
 import org.apache.streampark.console.core.enums.CandidateTypeEnum;
 import org.apache.streampark.console.core.enums.ChangeTypeEnum;
+import org.apache.streampark.console.core.enums.EngineTypeEnum;
 import org.apache.streampark.console.core.enums.FlinkAppStateEnum;
 import org.apache.streampark.console.core.enums.OptionStateEnum;
 import org.apache.streampark.console.core.enums.ReleaseStateEnum;
 import org.apache.streampark.console.core.mapper.FlinkApplicationMapper;
-import org.apache.streampark.console.core.service.AppBuildPipeService;
-import org.apache.streampark.console.core.service.ApplicationLogService;
-import org.apache.streampark.console.core.service.EffectiveService;
-import org.apache.streampark.console.core.service.FlinkApplicationBackUpService;
-import org.apache.streampark.console.core.service.FlinkApplicationConfigService;
 import org.apache.streampark.console.core.service.FlinkClusterService;
+import org.apache.streampark.console.core.service.FlinkEffectiveService;
 import org.apache.streampark.console.core.service.FlinkSqlService;
 import org.apache.streampark.console.core.service.ProjectService;
 import org.apache.streampark.console.core.service.ResourceService;
 import org.apache.streampark.console.core.service.SavepointService;
 import org.apache.streampark.console.core.service.SettingService;
 import org.apache.streampark.console.core.service.YarnQueueService;
+import org.apache.streampark.console.core.service.application.ApplicationLogService;
+import org.apache.streampark.console.core.service.application.ApplicationService;
+import org.apache.streampark.console.core.service.application.FlinkApplicationBackupService;
+import org.apache.streampark.console.core.service.application.FlinkApplicationBuildPipelineService;
+import org.apache.streampark.console.core.service.application.FlinkApplicationConfigService;
 import org.apache.streampark.console.core.service.application.FlinkApplicationManageService;
 import org.apache.streampark.console.core.util.ServiceHelper;
 import org.apache.streampark.console.core.watcher.FlinkAppHttpWatcher;
@@ -105,7 +108,10 @@ public class FlinkApplicationManageServiceImpl extends ServiceImpl<FlinkApplicat
     private ProjectService projectService;
 
     @Autowired
-    private FlinkApplicationBackUpService backUpService;
+    private ApplicationService applicationService;
+
+    @Autowired
+    private FlinkApplicationBackupService backUpService;
 
     @Autowired
     private FlinkApplicationConfigService configService;
@@ -120,7 +126,7 @@ public class FlinkApplicationManageServiceImpl extends ServiceImpl<FlinkApplicat
     private SavepointService savepointService;
 
     @Autowired
-    private EffectiveService effectiveService;
+    private FlinkEffectiveService effectiveService;
 
     @Autowired
     private SettingService settingService;
@@ -129,7 +135,7 @@ public class FlinkApplicationManageServiceImpl extends ServiceImpl<FlinkApplicat
     private FlinkK8sWatcher k8SFlinkTrackMonitor;
 
     @Autowired
-    private AppBuildPipeService appBuildPipeService;
+    private FlinkApplicationBuildPipelineService appBuildPipeService;
 
     @Autowired
     private YarnQueueService yarnQueueService;
@@ -305,7 +311,8 @@ public class FlinkApplicationManageServiceImpl extends ServiceImpl<FlinkApplicat
                 !record.shouldTracking()
                     && PipelineStatusEnum.success.getCode()
                         .equals(record.getBuildStatus()))
-            .setAllowStop(record.isRunning());
+            .setAllowStop(record.isRunning())
+            .setAllowView(record.shouldTracking());
     }
 
     @Override
@@ -348,7 +355,12 @@ public class FlinkApplicationManageServiceImpl extends ServiceImpl<FlinkApplicat
             appParam.setJarCheckSum(org.apache.commons.io.FileUtils.checksumCRC32(new File(jarPath)));
         }
 
-        if (save(appParam)) {
+        // 1) save application
+        Application application = applicationService.create(EngineTypeEnum.FLINK);
+        appParam.setId(application.getId());
+
+        boolean saveSuccess = save(appParam);
+        if (saveSuccess) {
             if (appParam.isFlinkSqlJobOrPyFlinkJob()) {
                 FlinkSql flinkSql = new FlinkSql(appParam);
                 flinkSqlService.create(flinkSql);
@@ -382,7 +394,7 @@ public class FlinkApplicationManageServiceImpl extends ServiceImpl<FlinkApplicat
 
         newApp.setJobName(jobName);
         newApp.setClusterId(
-            FlinkDeployMode.isSessionMode(persist.getFlinkDeployMode())
+            FlinkDeployMode.isSessionMode(persist.getDeployModeEnum())
                 ? persist.getClusterId()
                 : null);
         newApp.setArgs(appParam.getArgs() != null ? appParam.getArgs() : persist.getArgs());
@@ -429,6 +441,9 @@ public class FlinkApplicationManageServiceImpl extends ServiceImpl<FlinkApplicat
         newApp.setTeamId(persist.getTeamId());
         newApp.setDependency(persist.getDependency());
 
+        Application application = applicationService.create(EngineTypeEnum.FLINK);
+        newApp.setId(application.getId());
+
         boolean saved = save(newApp);
         if (saved) {
             if (newApp.isFlinkSqlJob()) {
@@ -461,7 +476,7 @@ public class FlinkApplicationManageServiceImpl extends ServiceImpl<FlinkApplicat
         FlinkApplication application = getById(appParam.getId());
 
         /* If the original mode is remote, k8s-session, yarn-session, check cluster status */
-        FlinkDeployMode flinkDeployMode = application.getFlinkDeployMode();
+        FlinkDeployMode flinkDeployMode = application.getDeployModeEnum();
         switch (flinkDeployMode) {
             case REMOTE:
             case YARN_SESSION:
@@ -546,7 +561,7 @@ public class FlinkApplicationManageServiceImpl extends ServiceImpl<FlinkApplicat
         application.setCpMaxFailureInterval(appParam.getCpMaxFailureInterval());
         application.setTags(appParam.getTags());
 
-        switch (appParam.getFlinkDeployMode()) {
+        switch (appParam.getDeployModeEnum()) {
             case YARN_APPLICATION:
                 application.setHadoopUser(appParam.getHadoopUser());
                 break;
@@ -772,7 +787,7 @@ public class FlinkApplicationManageServiceImpl extends ServiceImpl<FlinkApplicat
      */
     @VisibleForTesting
     public boolean validateQueueIfNeeded(FlinkApplication appParam) {
-        yarnQueueService.checkQueueLabel(appParam.getFlinkDeployMode(), appParam.getYarnQueue());
+        yarnQueueService.checkQueueLabel(appParam.getDeployModeEnum(), appParam.getYarnQueue());
         if (!isYarnNotDefaultQueue(appParam)) {
             return true;
         }
@@ -788,13 +803,13 @@ public class FlinkApplicationManageServiceImpl extends ServiceImpl<FlinkApplicat
      */
     @VisibleForTesting
     public boolean validateQueueIfNeeded(FlinkApplication oldApp, FlinkApplication newApp) {
-        yarnQueueService.checkQueueLabel(newApp.getFlinkDeployMode(), newApp.getYarnQueue());
+        yarnQueueService.checkQueueLabel(newApp.getDeployModeEnum(), newApp.getYarnQueue());
         if (!isYarnNotDefaultQueue(newApp)) {
             return true;
         }
 
         oldApp.setYarnQueueByHotParams();
-        if (FlinkDeployMode.isYarnPerJobOrAppMode(newApp.getFlinkDeployMode())
+        if (FlinkDeployMode.isYarnPerJobOrAppMode(newApp.getDeployModeEnum())
             && StringUtils.equals(oldApp.getYarnQueue(), newApp.getYarnQueue())) {
             return true;
         }
@@ -810,7 +825,7 @@ public class FlinkApplicationManageServiceImpl extends ServiceImpl<FlinkApplicat
      *     (empty or default), return true, false else.
      */
     private boolean isYarnNotDefaultQueue(FlinkApplication application) {
-        return FlinkDeployMode.isYarnPerJobOrAppMode(application.getFlinkDeployMode())
+        return FlinkDeployMode.isYarnPerJobOrAppMode(application.getDeployModeEnum())
             && !yarnQueueService.isDefaultQueue(application.getYarnQueue());
     }
 
@@ -835,7 +850,7 @@ public class FlinkApplicationManageServiceImpl extends ServiceImpl<FlinkApplicat
 
     private boolean isYarnApplicationModeChange(FlinkApplication application, FlinkApplication appParam) {
         return !application.getDeployMode().equals(appParam.getDeployMode())
-            && (FlinkDeployMode.YARN_APPLICATION == appParam.getFlinkDeployMode()
-                || FlinkDeployMode.YARN_APPLICATION == application.getFlinkDeployMode());
+            && (FlinkDeployMode.YARN_APPLICATION == appParam.getDeployModeEnum()
+                || FlinkDeployMode.YARN_APPLICATION == application.getDeployModeEnum());
     }
 }

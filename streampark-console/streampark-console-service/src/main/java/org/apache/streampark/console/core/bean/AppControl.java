@@ -17,10 +17,12 @@
 
 package org.apache.streampark.console.core.bean;
 
-import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 import lombok.experimental.Accessors;
 
-@Data
+@Getter
+@Setter
 @Accessors(chain = true)
 public class AppControl {
 
@@ -32,4 +34,6 @@ public class AppControl {
 
     /** allow to build the application */
     private boolean allowBuild;
+
+    private boolean allowView;
 }

@@ -43,21 +43,21 @@ export const stateMap = {
     class: 'status-processing-restarting',
   },
   [AppStateEnum.ACCEPTED]: {
-    color: '#52c41a',
+    color: '#13c2c2',
     title: t('spark.app.runState.accept'),
-    class: 'status-processing-running',
+    class: 'status-processing-restarting',
   },
   [AppStateEnum.SUCCEEDED]: {
-    color: '#52c41a',
+    color: '#1890ff',
     title: t('spark.app.runState.success'),
     class: 'status-processing-success',
   },
   [AppStateEnum.RUNNING]: {
-    color: '#1890ff',
+    color: '#52c41a',
     title: t('spark.app.runState.running'),
-    class: 'status-processing-failing',
+    class: 'status-processing-running',
   },
-  [AppStateEnum.FINISHED]: { color: '#52c41a', title: t('spark.app.runState.finished') },
+  [AppStateEnum.FINISHED]: { color: '#1890ff', title: t('spark.app.runState.finished') },
   [AppStateEnum.FAILED]: { color: '#f5222d', title: t('spark.app.runState.failed') },
   [AppStateEnum.LOST]: { color: '#333333', title: t('spark.app.runState.lost') },
   [AppStateEnum.MAPPING]: {
@@ -73,9 +73,9 @@ export const stateMap = {
   },
 
   [AppStateEnum.STOPPING]: {
-    color: '#f5222d',
+    color: '#faad14',
     title: t('spark.app.runState.stopping'),
-    class: 'status-processing-initializing',
+    class: 'status-processing-cancelling',
   },
   [AppStateEnum.KILLED]: { color: '#8E50FF', title: t('spark.app.runState.killed') },
 };

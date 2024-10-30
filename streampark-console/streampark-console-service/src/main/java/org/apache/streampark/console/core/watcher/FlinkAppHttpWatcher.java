@@ -180,15 +180,19 @@ public class FlinkAppHttpWatcher {
     @PostConstruct
     public void init() {
         WATCHING_APPS.clear();
-        List<FlinkApplication> applications = distributedTaskService.getMonitoredTaskList(applicationManageService.list(
+        List<FlinkApplication> applications = applicationManageService.list(
             new LambdaQueryWrapper<FlinkApplication>()
                 .eq(FlinkApplication::getTracking, 1)
-                .notIn(FlinkApplication::getDeployMode, FlinkDeployMode.getKubernetesMode())));
-        applications.forEach(
-            (app) -> {
-                WATCHING_APPS.put(app.getId(), app);
-                STARTING_CACHE.put(app.getId(), DEFAULT_FLAG_BYTE);
-            });
+                .notIn(FlinkApplication::getDeployMode, FlinkDeployMode.getKubernetesMode()))
+            .stream()
+            .filter(application -> distributedTaskService.isLocalProcessing(application.getId()))
+            .collect(Collectors.toList());
+
+        applications.forEach(app -> {
+            Long appId = app.getId();
+            WATCHING_APPS.put(appId, app);
+            STARTING_CACHE.put(appId, DEFAULT_FLAG_BYTE);
+        });
     }
 
     @PreDestroy
@@ -298,7 +302,7 @@ public class FlinkAppHttpWatcher {
         StopFromEnum stopFrom = getStopFrom(application);
         JobsOverview jobsOverview = httpJobsOverview(application);
         Optional<JobsOverview.Job> optional;
-        FlinkDeployMode deployMode = application.getFlinkDeployMode();
+        FlinkDeployMode deployMode = application.getDeployModeEnum();
         if (FlinkDeployMode.YARN_APPLICATION.equals(deployMode)
             || FlinkDeployMode.YARN_PER_JOB.equals(deployMode)) {
             if (jobsOverview.getJobs() != null) {
@@ -575,7 +579,7 @@ public class FlinkAppHttpWatcher {
             // query the status from the yarn rest Api
             YarnAppInfo yarnAppInfo = httpYarnAppInfo(application);
             if (yarnAppInfo == null) {
-                if (!FlinkDeployMode.REMOTE.equals(application.getFlinkDeployMode())) {
+                if (!FlinkDeployMode.REMOTE.equals(application.getDeployModeEnum())) {
                     throw new RuntimeException(
                         "[StreamPark][FlinkAppHttpWatcher] getFromYarnRestApi failed ");
                 }
@@ -614,7 +618,7 @@ public class FlinkAppHttpWatcher {
                         }
                     }
                 } catch (Exception e) {
-                    if (!FlinkDeployMode.REMOTE.equals(application.getFlinkDeployMode())) {
+                    if (!FlinkDeployMode.REMOTE.equals(application.getDeployModeEnum())) {
                         throw new RuntimeException(
                             "[StreamPark][FlinkAppHttpWatcher] getFromYarnRestApi error,", e);
                     }
@@ -726,8 +730,8 @@ public class FlinkAppHttpWatcher {
     private Overview httpOverview(FlinkApplication application) throws IOException {
         String appId = application.getClusterId();
         if (appId != null) {
-            if (application.getFlinkDeployMode().equals(FlinkDeployMode.YARN_APPLICATION)
-                || application.getFlinkDeployMode().equals(FlinkDeployMode.YARN_PER_JOB)) {
+            if (application.getDeployModeEnum().equals(FlinkDeployMode.YARN_APPLICATION)
+                || application.getDeployModeEnum().equals(FlinkDeployMode.YARN_PER_JOB)) {
                 String reqURL;
                 if (StringUtils.isEmpty(application.getJobManagerUrl())) {
                     String format = "proxy/%s/overview";
@@ -744,7 +748,7 @@ public class FlinkAppHttpWatcher {
 
     private JobsOverview httpJobsOverview(FlinkApplication application) throws Exception {
         final String flinkUrl = "jobs/overview";
-        FlinkDeployMode deployMode = application.getFlinkDeployMode();
+        FlinkDeployMode deployMode = application.getDeployModeEnum();
         if (FlinkDeployMode.isYarnMode(deployMode)) {
             String reqURL;
             if (StringUtils.isEmpty(application.getJobManagerUrl())) {
@@ -778,7 +782,7 @@ public class FlinkAppHttpWatcher {
 
     private CheckPoints httpCheckpoints(FlinkApplication application) throws Exception {
         final String flinkUrl = "jobs/%s/checkpoints";
-        FlinkDeployMode deployMode = application.getFlinkDeployMode();
+        FlinkDeployMode deployMode = application.getDeployModeEnum();
         if (FlinkDeployMode.isYarnMode(deployMode)) {
             String reqURL;
             if (StringUtils.isEmpty(application.getJobManagerUrl())) {

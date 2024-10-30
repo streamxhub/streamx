@@ -24,7 +24,7 @@ import org.apache.streampark.console.base.mybatis.pager.MybatisPager;
 import org.apache.streampark.console.core.bean.FlinkCatalogParams;
 import org.apache.streampark.console.core.entity.FlinkCatalog;
 import org.apache.streampark.console.core.mapper.FlinkCatalogMapper;
-import org.apache.streampark.console.core.service.CatalogService;
+import org.apache.streampark.console.core.service.FlinkCatalogService;
 
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
@@ -46,7 +46,7 @@ import java.util.regex.Pattern;
 @Transactional(propagation = Propagation.SUPPORTS, rollbackFor = Exception.class)
 public class FlinkCatalogServiceImpl extends ServiceImpl<FlinkCatalogMapper, FlinkCatalog>
     implements
-        CatalogService {
+        FlinkCatalogService {
 
     private static final String CATALOG_REGEX = "^[a-z0-9]([-a-z0-9]*[a-z0-9])?$";
 
@@ -93,7 +93,17 @@ public class FlinkCatalogServiceImpl extends ServiceImpl<FlinkCatalogMapper, Fli
     }
 
     @Override
-    public boolean update(FlinkCatalogParams catalogParam, long userId) {
+    public FlinkCatalog getCatalog(Long catalogId) {
+        return this.baseMapper.selectById(catalogId);
+    }
+
+    @Override
+    public FlinkCatalog getCatalog(String catalogName) {
+        return this.baseMapper.selectByCatalogName(catalogName);
+    }
+
+    @Override
+    public boolean update(FlinkCatalogParams catalogParam, Long userId) {
         AlertException.throwIfNull(
             catalogParam.getTeamId(), "The teamId can't be null. List catalog failed.");
         FlinkCatalog catalog = getById(catalogParam.getId());

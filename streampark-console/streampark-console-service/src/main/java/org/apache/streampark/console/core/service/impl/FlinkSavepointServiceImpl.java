@@ -32,14 +32,15 @@ import org.apache.streampark.console.core.entity.FlinkCluster;
 import org.apache.streampark.console.core.entity.FlinkEnv;
 import org.apache.streampark.console.core.entity.FlinkSavepoint;
 import org.apache.streampark.console.core.enums.CheckPointTypeEnum;
+import org.apache.streampark.console.core.enums.EngineTypeEnum;
 import org.apache.streampark.console.core.enums.OperationEnum;
 import org.apache.streampark.console.core.enums.OptionStateEnum;
 import org.apache.streampark.console.core.mapper.FlinkSavepointMapper;
-import org.apache.streampark.console.core.service.ApplicationLogService;
-import org.apache.streampark.console.core.service.FlinkApplicationConfigService;
 import org.apache.streampark.console.core.service.FlinkClusterService;
 import org.apache.streampark.console.core.service.FlinkEnvService;
 import org.apache.streampark.console.core.service.SavepointService;
+import org.apache.streampark.console.core.service.application.ApplicationLogService;
+import org.apache.streampark.console.core.service.application.FlinkApplicationConfigService;
 import org.apache.streampark.console.core.service.application.FlinkApplicationManageService;
 import org.apache.streampark.console.core.util.ServiceHelper;
 import org.apache.streampark.console.core.watcher.FlinkAppHttpWatcher;
@@ -189,11 +190,12 @@ public class FlinkSavepointServiceImpl extends ServiceImpl<FlinkSavepointMapper,
     @Nonnull
     private ApplicationLog getApplicationLog(FlinkApplication application) {
         ApplicationLog applicationLog = new ApplicationLog();
+        applicationLog.setJobType(EngineTypeEnum.FLINK.getCode());
         applicationLog.setOptionName(OperationEnum.SAVEPOINT.getValue());
         applicationLog.setAppId(application.getId());
-        applicationLog.setJobManagerUrl(application.getJobManagerUrl());
+        applicationLog.setTrackingUrl(application.getJobManagerUrl());
         applicationLog.setOptionTime(new Date());
-        applicationLog.setYarnAppId(application.getClusterId());
+        applicationLog.setClusterId(application.getClusterId());
         applicationLog.setUserId(ServiceHelper.getUserId());
         return applicationLog;
     }
@@ -292,7 +294,7 @@ public class FlinkSavepointServiceImpl extends ServiceImpl<FlinkSavepointMapper,
     private Map<String, Object> tryGetRestProps(FlinkApplication application, FlinkCluster cluster) {
         Map<String, Object> properties = new HashMap<>();
 
-        if (FlinkDeployMode.isRemoteMode(application.getFlinkDeployMode())) {
+        if (FlinkDeployMode.isRemoteMode(application.getDeployModeEnum())) {
             AssertUtils.notNull(
                 cluster,
                 String.format(
@@ -311,7 +313,7 @@ public class FlinkSavepointServiceImpl extends ServiceImpl<FlinkSavepointMapper,
                 ? cluster.getClusterId()
                 : application.getClusterId();
         } else if (FlinkDeployMode.isYarnMode(application.getDeployMode())) {
-            if (FlinkDeployMode.YARN_SESSION.equals(application.getFlinkDeployMode())) {
+            if (FlinkDeployMode.YARN_SESSION.equals(application.getDeployModeEnum())) {
                 AssertUtils.notNull(
                     cluster,
                     String.format(
@@ -493,7 +495,7 @@ public class FlinkSavepointServiceImpl extends ServiceImpl<FlinkSavepointMapper,
         return new TriggerSavepointRequest(
             application.getId(),
             flinkEnv.getFlinkVersion(),
-            application.getFlinkDeployMode(),
+            application.getDeployModeEnum(),
             properties,
             clusterId,
             application.getJobId(),
