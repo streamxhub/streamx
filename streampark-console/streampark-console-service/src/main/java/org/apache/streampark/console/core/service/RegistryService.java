@@ -25,11 +25,6 @@ public interface RegistryService {
     void registry();
 
     /**
-     * Start the registry service.
-     */
-    void doRegister();
-
-    /**
      * Close the registry service.
      */
     void unRegister();

@@ -84,18 +84,20 @@ public class RegistryServiceImpl implements RegistryService {
                 OPEN_ACL_UNSAFE, CreateMode.EPHEMERAL);
 
             currentNodes.add(nodePath);
+
+            doRegister();
         } catch (Exception e) {
             log.error("Failed to init ZooKeeper client", e);
         }
     }
 
-    @Override
     public void doRegister() {
         try {
             distributedTaskService.init(currentNodes, nodePath);
             startHeartbeat();
             startHeartbeatChecker();
             handleNodeChanges();
+            log.info("ZooKeeper client started: {}", nodePath);
         } catch (Exception e) {
             log.error("Failed to start ZooKeeper client", e);
         }
