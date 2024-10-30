@@ -63,5 +63,4 @@ object SparkClient extends Logger {
         }
       })
   }
-
 }

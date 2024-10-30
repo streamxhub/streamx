@@ -137,6 +137,14 @@ public class SparkApplication extends BaseEntity {
     /** k8s namespace */
     private String k8sNamespace = Constants.DEFAULT;
 
+    /** spark-hadoop integration on spark-k8s mode */
+    private Boolean k8sHadoopIntegration;
+
+    /** spark kubernetes pod template */
+    private String k8sDriverPodTemplate;
+
+    private String k8sExecutorPodTemplate;
+
     @TableField("HADOOP_USER")
     private String hadoopUser;
 

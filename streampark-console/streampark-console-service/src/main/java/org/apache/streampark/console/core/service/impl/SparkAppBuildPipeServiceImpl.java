@@ -29,6 +29,7 @@ import org.apache.streampark.console.base.exception.ApiAlertException;
 import org.apache.streampark.console.base.util.JacksonUtils;
 import org.apache.streampark.console.base.util.WebUtils;
 import org.apache.streampark.console.core.bean.Dependency;
+import org.apache.streampark.console.core.bean.DockerConfig;
 import org.apache.streampark.console.core.entity.AppBuildPipeline;
 import org.apache.streampark.console.core.entity.Message;
 import org.apache.streampark.console.core.entity.Resource;
@@ -45,6 +46,7 @@ import org.apache.streampark.console.core.enums.ResourceTypeEnum;
 import org.apache.streampark.console.core.mapper.ApplicationBuildPipelineMapper;
 import org.apache.streampark.console.core.service.MessageService;
 import org.apache.streampark.console.core.service.ResourceService;
+import org.apache.streampark.console.core.service.SettingService;
 import org.apache.streampark.console.core.service.SparkAppBuildPipeService;
 import org.apache.streampark.console.core.service.SparkApplicationConfigService;
 import org.apache.streampark.console.core.service.SparkApplicationLogService;
@@ -54,6 +56,7 @@ import org.apache.streampark.console.core.service.application.SparkApplicationIn
 import org.apache.streampark.console.core.service.application.SparkApplicationManageService;
 import org.apache.streampark.console.core.util.ServiceHelper;
 import org.apache.streampark.console.core.watcher.SparkAppHttpWatcher;
+import org.apache.streampark.flink.packer.docker.DockerConf;
 import org.apache.streampark.flink.packer.maven.Artifact;
 import org.apache.streampark.flink.packer.maven.DependencyInfo;
 import org.apache.streampark.flink.packer.pipeline.BuildPipeline;
@@ -61,7 +64,9 @@ import org.apache.streampark.flink.packer.pipeline.BuildResult;
 import org.apache.streampark.flink.packer.pipeline.PipeWatcher;
 import org.apache.streampark.flink.packer.pipeline.PipelineSnapshot;
 import org.apache.streampark.flink.packer.pipeline.PipelineStatusEnum;
+import org.apache.streampark.flink.packer.pipeline.SparkK8sApplicationBuildRequest;
 import org.apache.streampark.flink.packer.pipeline.SparkYarnApplicationBuildRequest;
+import org.apache.streampark.flink.packer.pipeline.impl.SparkK8sApplicationBuildPipeline;
 import org.apache.streampark.flink.packer.pipeline.impl.SparkYarnApplicationBuildPipeline;
 
 import org.apache.commons.collections.CollectionUtils;
@@ -109,6 +114,9 @@ public class SparkAppBuildPipeServiceImpl
 
     @Autowired
     private MessageService messageService;
+
+    @Autowired
+    private SettingService settingService;
 
     @Autowired
     private SparkApplicationManageService applicationManageService;
@@ -390,10 +398,44 @@ public class SparkAppBuildPipeServiceImpl
                     getMergedDependencyInfo(app));
                 log.info("Submit params to building pipeline : {}", yarnAppRequest);
                 return SparkYarnApplicationBuildPipeline.of(yarnAppRequest);
+            case KUBERNETES_NATIVE_CLUSTER:
+            case KUBERNETES_NATIVE_CLIENT:
+                DockerConfig dockerConfig = settingService.getDockerConfig();
+                SparkK8sApplicationBuildRequest k8sApplicationBuildRequest = buildSparkK8sApplicationBuildRequest(
+                    app, mainClass, sparkUserJar, sparkEnv, dockerConfig);
+                log.info("Submit params to building pipeline : {}", k8sApplicationBuildRequest);
+                return SparkK8sApplicationBuildPipeline.of(k8sApplicationBuildRequest);
             default:
                 throw new UnsupportedOperationException(
                     "Unsupported Building Application for DeployMode: " + app.getSparkDeployMode());
         }
+    }
+
+    @Nonnull
+    private SparkK8sApplicationBuildRequest buildSparkK8sApplicationBuildRequest(
+                                                                                 @Nonnull SparkApplication app,
+                                                                                 String mainClass,
+                                                                                 String sparkUserJar,
+                                                                                 SparkEnv sparkEnv,
+                                                                                 DockerConfig dockerConfig) {
+        SparkK8sApplicationBuildRequest k8sApplicationBuildRequest = new SparkK8sApplicationBuildRequest(
+            app.getAppName(),
+            app.getLocalAppHome(),
+            mainClass,
+            sparkUserJar,
+            app.getSparkDeployMode(),
+            app.getDevelopmentMode(),
+            sparkEnv.getSparkVersion(),
+            getMergedDependencyInfo(app),
+            app.getK8sNamespace(),
+            app.getK8sContainerImage(),
+            app.getK8sHadoopIntegration() != null ? app.getK8sHadoopIntegration() : false,
+            DockerConf.of(
+                dockerConfig.getAddress(),
+                dockerConfig.getNamespace(),
+                dockerConfig.getUsername(),
+                dockerConfig.getPassword()));
+        return k8sApplicationBuildRequest;
     }
 
     private String retrieveSparkUserJar(SparkEnv sparkEnv, SparkApplication app) {
