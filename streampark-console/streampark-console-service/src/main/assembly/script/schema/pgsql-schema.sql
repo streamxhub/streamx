@@ -157,7 +157,7 @@ create table "public"."t_app_backup" (
   "sql_id" int8,
   "config_id" int8,
   "version" int4,
-  "path" varchar(128) collate "pg_catalog"."default",
+  "path" text collate "pg_catalog"."default",
   "description" varchar(255) collate "pg_catalog"."default",
   "create_time" timestamp(6)
 )

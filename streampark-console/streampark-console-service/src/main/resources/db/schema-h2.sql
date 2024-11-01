@@ -24,7 +24,7 @@ create table if not exists `t_app_backup` (
   `sql_id` bigint default null,
   `config_id` bigint default null,
   `version` int default null,
-  `path` varchar(128) default null,
+  `path` text default null,
   `description` varchar(255) default null,
   `create_time` datetime default null comment 'create time',
   `modify_time` datetime default null comment 'modify time',

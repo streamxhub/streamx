@@ -31,7 +31,7 @@ create table `t_app_backup` (
   `sql_id` bigint default null,
   `config_id` bigint default null,
   `version` int default null,
-  `path` varchar(128) collate utf8mb4_general_ci default null,
+  `path` text collate utf8mb4_general_ci default null,
   `description` varchar(255) collate utf8mb4_general_ci default null,
   `create_time` datetime default null comment 'create time',
   primary key (`id`) using btree
