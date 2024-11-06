@@ -31,6 +31,8 @@ import { fetchCheckSparkName } from '/@/api/spark/app';
 import { useRoute } from 'vue-router';
 import { Alert, Select, Tag } from 'ant-design-vue';
 import { fetchYarnQueueList } from '/@/api/setting/yarnQueue';
+import { fetchSparkCluster } from '/@/api/spark/sparkCluster';
+import { SparkCluster } from '/@/api/spark/sparkCluster.type';
 
 export function useSparkSchema(sparkEnvs: Ref<SparkEnv[]>) {
   const { t } = useI18n();
@@ -66,6 +68,8 @@ export function useSparkSchema(sparkEnvs: Ref<SparkEnv[]>) {
   const getJobTypeOptions = () => {
     return Object.values(sparkJobTypeMap);
   };
+
+  const sparkClusters = ref<SparkCluster[]>([]);
 
   const getJobTypeSchema = computed((): FormSchema[] => {
     if (route.query.appId) {
@@ -154,6 +158,20 @@ export function useSparkSchema(sparkEnvs: Ref<SparkEnv[]>) {
         },
         rules: [
           { required: true, message: t('spark.app.addAppTips.sparkVersionIsRequiredMessage') },
+        ],
+      },
+      {
+        field: 'sparkClusterId',
+        label: t('Spark Cluster'),
+        component: 'Select',
+        componentProps: {
+          placeholder: 'Spark Cluster',
+          options: unref(sparkClusters),
+          fieldNames: { label: 'clusterName', value: 'id', options: 'options' },
+        },
+        ifShow: ({ values }) => values.deployMode == DeployMode.REMOTE,
+        rules: [
+          { required: true, message: t('flink.app.addAppTips.flinkClusterIsRequiredMessage') },
         ],
       },
       {
@@ -294,6 +312,10 @@ export function useSparkSchema(sparkEnvs: Ref<SparkEnv[]>) {
           value: v.variableValue,
         };
       });
+    });
+    //get sparkCluster
+    fetchSparkCluster().then((res) => {
+      sparkClusters.value = res;
     });
   });
   return {

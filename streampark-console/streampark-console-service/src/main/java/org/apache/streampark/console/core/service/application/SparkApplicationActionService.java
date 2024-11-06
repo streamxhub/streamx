@@ -22,6 +22,8 @@ import org.apache.streampark.console.core.entity.SparkApplication;
 
 import com.baomidou.mybatisplus.extension.service.IService;
 
+import java.util.List;
+
 /**
  * This interface represents an Application Operation Service. It extends the IService interface for
  * handling Application entities.
@@ -67,4 +69,12 @@ public interface SparkApplicationActionService extends IService<SparkApplication
      * @param id the application's id which need to be stopped
      */
     void forcedStop(Long id);
+
+    /**
+     * Get the application by cluster id.
+     * @param clusterId
+     * @return
+     */
+    List<SparkApplication> getByClusterId(String clusterId);
+
 }

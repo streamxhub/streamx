@@ -104,3 +104,20 @@ export enum AppStateEnum {
   /** Has killed in Yarn. */
   KILLED = -9,
 }
+
+export enum ClusterStateEnum {
+  /** The cluster was just created but not started */
+  CREATED = 0,
+  /** cluster started */
+  RUNNING = 1,
+  /** cluster canceled */
+  CANCELED = 2,
+  /** cluster lost */
+  LOST = 3,
+  /** cluster unknown */
+  UNKNOWN = 4,
+  STARTING = 5,
+  CANCELLING = 6,
+  FAILED = 7,
+  KILLED = 8,
+}

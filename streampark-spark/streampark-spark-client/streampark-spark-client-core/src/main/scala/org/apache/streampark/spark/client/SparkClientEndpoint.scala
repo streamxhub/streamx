@@ -28,7 +28,8 @@ object SparkClientEndpoint {
 
   private[this] val clients: Map[SparkDeployMode, SparkClientTrait] = Map(
     YARN_CLUSTER -> YarnClient,
-    YARN_CLIENT -> YarnClient)
+    YARN_CLIENT -> YarnClient,
+    REMOTE -> RemoteClient)
 
   def submit(submitRequest: SubmitRequest): SubmitResponse = {
     clients.get(submitRequest.deployMode) match {

@@ -220,6 +220,9 @@ public class SparkApplicationInfoServiceImpl
             boolean exists = !getYarnAppReport(application.getAppName()).isEmpty();
             return exists ? AppExistsStateEnum.IN_YARN : AppExistsStateEnum.NO;
         }
+        if (SparkDeployMode.isRemoteMode(application.getDeployMode())) {
+            return AppExistsStateEnum.IN_DB;
+        }
         // todo on k8s check...
         return AppExistsStateEnum.NO;
     }

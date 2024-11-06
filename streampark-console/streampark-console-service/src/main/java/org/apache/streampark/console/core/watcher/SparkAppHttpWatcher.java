@@ -17,6 +17,7 @@
 
 package org.apache.streampark.console.core.watcher;
 
+import org.apache.streampark.common.enums.SparkDeployMode;
 import org.apache.streampark.common.util.HadoopUtils;
 import org.apache.streampark.common.util.YarnUtils;
 import org.apache.streampark.console.base.util.JacksonUtils;
@@ -26,6 +27,7 @@ import org.apache.streampark.console.core.enums.SparkAppStateEnum;
 import org.apache.streampark.console.core.enums.SparkOptionStateEnum;
 import org.apache.streampark.console.core.enums.StopFromEnum;
 import org.apache.streampark.console.core.metrics.spark.Job;
+import org.apache.streampark.console.core.metrics.spark.SparkApplicationMetrics;
 import org.apache.streampark.console.core.metrics.spark.SparkApplicationSummary;
 import org.apache.streampark.console.core.metrics.yarn.YarnAppInfo;
 import org.apache.streampark.console.core.service.DistributedTaskService;
@@ -88,6 +90,9 @@ public class SparkAppHttpWatcher {
     @Autowired
     private Executor executorService;
 
+    @Autowired
+    SparkClusterWatcher sparkClusterWatcher;
+
     // track interval every 5 seconds
     public static final Duration WATCHING_INTERVAL = Duration.ofSeconds(5);
 
@@ -103,12 +108,12 @@ public class SparkAppHttpWatcher {
     private static final Cache<Long, Byte> STARTING_CACHE =
         Caffeine.newBuilder().expireAfterWrite(5, TimeUnit.MINUTES).build();
 
-    /** tracking task list */
+    /**
+     * tracking task list
+     */
     private static final Map<Long, SparkApplication> WATCHING_APPS = new ConcurrentHashMap<>(0);
 
     /**
-     *
-     *
      * <pre>
      * StopFrom: Recording spark application stopped by streampark or stopped by other actions
      * </pre>
@@ -183,11 +188,66 @@ public class SparkAppHttpWatcher {
         executorService.execute(
             () -> {
                 try {
-                    getStateFromYarn(application);
+                    if (SparkDeployMode.isYarnMode(application.getDeployMode())) {
+                        getStateFromYarn(application);
+                    }
+                    if (SparkDeployMode.isRemoteMode(application.getDeployMode())) {
+                        getStateFromMasterUrl(application);
+                    }
                 } catch (Exception e) {
                     throw new RuntimeException(e);
                 }
             });
+    }
+
+    private void getStateFromMasterUrl(SparkApplication application) {
+        SparkOptionStateEnum optionStateEnum = OPTIONING.get(application.getId());
+        log.info(
+            "[StreamPark][SparkAppHttpWatcher] getStateFromMaster, appId:{}, clusterId:{}",
+            application.getId(),
+            application.getClusterId());
+        try {
+            SparkApplicationMetrics metrics =
+                sparkClusterWatcher.getSparkApplicationMetrics(application.getSparkClusterId());
+            SparkApplicationMetrics.Application metricsApp = metrics.activeapps.stream()
+                .filter(v -> v.matchId(application.getClusterId())).findFirst()
+                .orElseGet(
+                    () -> metrics.completedapps.stream().filter(v -> v.matchId(application.getClusterId())).findFirst()
+                        .orElse(null));
+            if (metricsApp == null) {
+                log.warn(
+                    "[StreamPark][SparkAppHttpWatcher] getStateFromMasterUrl, application {} not found in cluster {}",
+                    application.getId(),
+                    application.getClusterId());
+                return;
+            }
+            SparkAppStateEnum state = SparkAppStateEnum.of(metricsApp.state);
+            if (SparkAppStateEnum.isEndState(state.getValue())) {
+                log.info(
+                    "[StreamPark][SparkAppHttpWatcher] getStateFromRemote, application {} was ended, appId is {}, state is {}",
+                    application.getId(),
+                    application.getClusterId(),
+                    state);
+                application.setEndTime(new Date());
+            }
+            if (SparkAppStateEnum.RUNNING == state) {
+                application.setDuration(metricsApp.getDuration());
+                SparkApplicationSummary summary = new SparkApplicationSummary(0L, 0L, 0L, 0L, null, null);
+                try {
+                    summary.setUsedMemory((long) metricsApp.getMemoryperslave());
+                    summary.setUsedVCores((long) metricsApp.getCores());
+                    application.fillRunningMetrics(summary);
+                } catch (Exception e) {
+                    log.warn(
+                        "[StreamPark][SparkAppHttpWatcher] getStateFromYarn, fetch spark job status failed. The cluster may have already been shutdown.");
+                }
+            }
+            application.setState(state.getValue());
+            cleanOptioning(optionStateEnum, application.getId());
+            doPersistMetrics(application, false);
+        } catch (Exception e) {
+            throw new RuntimeException("[StreamPark][SparkAppHttpWatcher] getStateFromMasterUrl failed!", e);
+        }
     }
 
     private StopFromEnum getAppStopFrom(Long appId) {
@@ -285,7 +345,9 @@ public class SparkAppHttpWatcher {
         }
     }
 
-    /** set current option state */
+    /**
+     * set current option state
+     */
     public static void setOptionState(Long appId, SparkOptionStateEnum state) {
         log.info("[StreamPark][SparkAppHttpWatcher] setOptioning");
         OPTIONING.put(appId, state);
@@ -324,6 +386,7 @@ public class SparkAppHttpWatcher {
         String reqURL = "ws/v1/cluster/apps/".concat(application.getClusterId());
         return yarnRestRequest(reqURL, YarnAppInfo.class);
     }
+
     private Job[] httpJobsStatus(SparkApplication application) throws IOException {
         String format = "proxy/%s/api/v1/applications/%s/jobs";
         String reqURL = String.format(format, application.getClusterId(), application.getClusterId());
@@ -372,7 +435,7 @@ public class SparkAppHttpWatcher {
      * Describes the alarming behavior under abnormal operation for jobs running in yarn mode.
      *
      * @param application spark application
-     * @param appState spark application state
+     * @param appState    spark application state
      */
     private void doAlert(SparkApplication application, SparkAppStateEnum appState) {
         AlertTemplate alertTemplate = AlertTemplateUtils.createAlertTemplate(application, appState);

@@ -378,6 +378,7 @@ public class SparkApplicationBuildPipelineServiceImpl
         switch (deployModeEnum) {
             case YARN_CLIENT:
             case YARN_CLUSTER:
+            case REMOTE:
                 String yarnProvidedPath = app.getAppLib();
                 String localWorkspace = app.getLocalAppHome().concat("/lib");
                 if (ApplicationType.APACHE_SPARK == app.getApplicationType()) {

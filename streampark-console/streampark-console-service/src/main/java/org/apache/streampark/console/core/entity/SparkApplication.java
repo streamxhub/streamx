@@ -66,26 +66,38 @@ public class SparkApplication extends BaseEntity {
 
     private Long teamId;
 
-    /** 1) spark jar 2) spark SQL 3) pyspark*/
+    /**
+     * 1) spark jar 2) spark SQL 3) pyspark
+     */
     private Integer jobType;
 
-    /** 1) Apache Spark 2) StreamPark Spark */
+    /**
+     * 1) Apache Spark 2) StreamPark Spark
+     */
     private Integer appType;
 
-    /** spark version */
+    /**
+     * spark version
+     */
     private Long versionId;
 
-    /** spark.app.name */
+    /**
+     * spark.app.name
+     */
     private String appName;
 
     private Integer deployMode;
 
-    /** 1: cicd (build from csv) 2: upload (upload local jar job) */
+    /**
+     * 1: cicd (build from csv) 2: upload (upload local jar job)
+     */
     private Integer resourceFrom;
 
     private Long projectId;
 
-    /** application module */
+    /**
+     * application module
+     */
     private String module;
 
     private String mainClass;
@@ -104,7 +116,9 @@ public class SparkApplication extends BaseEntity {
      */
     private String appProperties;
 
-    /** Arguments passed to the main method of your main class */
+    /**
+     * Arguments passed to the main method of your main class
+     */
     private String appArgs;
 
     /**
@@ -124,29 +138,43 @@ public class SparkApplication extends BaseEntity {
      */
     private transient String yarnQueueLabel;
 
-    /** The api server url of k8s. */
+    /**
+     * The api server url of k8s.
+     */
     private String k8sMasterUrl;
 
-    /** spark docker base image */
+    /**
+     * spark docker base image
+     */
     private String k8sContainerImage;
 
-    /** k8s image pull policy */
+    /**
+     * k8s image pull policy
+     */
     private int k8sImagePullPolicy;
 
-    /** k8s spark service account */
+    /**
+     * k8s spark service account
+     */
     private String k8sServiceAccount;
 
-    /** k8s namespace */
+    /**
+     * k8s namespace
+     */
     private String k8sNamespace = Constants.DEFAULT;
 
     @TableField("HADOOP_USER")
     private String hadoopUser;
 
-    /** max restart retries after job failed */
+    /**
+     * max restart retries after job failed
+     */
     @TableField(updateStrategy = FieldStrategy.IGNORED)
     private Integer restartSize;
 
-    /** has restart count */
+    /**
+     * has restart count
+     */
     private Integer restartCount;
 
     private Integer state;
@@ -161,17 +189,25 @@ public class SparkApplication extends BaseEntity {
 
     private String description;
 
-    /** determine if tracking status */
+    /**
+     * determine if tracking status
+     */
     private Integer tracking;
 
-    /** task release status */
+    /**
+     * task release status
+     */
     @TableField("`release`")
     private Integer release;
 
-    /** determine if a task needs to be built */
+    /**
+     * determine if a task needs to be built
+     */
     private Boolean build;
 
-    /** alert id */
+    /**
+     * alert id
+     */
     @TableField(updateStrategy = FieldStrategy.IGNORED)
     private Long alertId;
 
@@ -188,20 +224,29 @@ public class SparkApplication extends BaseEntity {
 
     private String tags;
 
-    /** scheduling */
+    /**
+     * scheduling
+     */
     private String driverCores;
     private String driverMemory;
     private String executorCores;
     private String executorMemory;
     private String executorMaxNums;
 
-    /** metrics of running job */
+    /**
+     * metrics of running job
+     */
     private Long numTasks;
     private Long numCompletedTasks;
     private Long numStages;
     private Long numCompletedStages;
     private Long usedMemory;
     private Long usedVCores;
+
+    /**
+     * the cluster id bound to the task in remote mode
+     */
+    private Long sparkClusterId;
 
     private transient String teamResource;
     private transient String dependency;
@@ -217,10 +262,14 @@ public class SparkApplication extends BaseEntity {
     private transient Integer format;
     private transient String backUpDescription;
 
-    /** spark Web UI Url */
+    /**
+     * spark Web UI Url
+     */
     private transient String sparkRestUrl;
 
-    /** refer to {@link org.apache.streampark.flink.packer.pipeline.BuildPipeline} */
+    /**
+     * refer to {@link org.apache.streampark.flink.packer.pipeline.BuildPipeline}
+     */
     private transient Integer buildStatus;
 
     private transient AppControl appControl;
@@ -253,7 +302,7 @@ public class SparkApplication extends BaseEntity {
      * 1) if dynamic allocation is disabled, it depends on "spark.executor.instances".
      * 2) if dynamic allocation is enabled and "spark.dynamicAllocation.maxExecutors" is set, it depends on it.
      * 3) if dynamic allocation is enabled and "spark.dynamicAllocation.maxExecutors" is not set,
-     *    the number of executors can up to infinity.
+     * the number of executors can up to infinity.
      *
      * @param map The configuration map integrated with default configurations,
      *            configuration template and custom configurations.
@@ -328,7 +377,9 @@ public class SparkApplication extends BaseEntity {
         return SparkDeployMode.of(deployMode);
     }
 
-    /** Local compilation and packaging working directory */
+    /**
+     * Local compilation and packaging working directory
+     */
     @JsonIgnore
     public String getDistHome() {
         String path = String.format("%s/%s/%s", Workspace.APP_LOCAL_DIST(), projectId.toString(), getModule());
@@ -350,7 +401,9 @@ public class SparkApplication extends BaseEntity {
         return path;
     }
 
-    /** Automatically identify remoteAppHome or localAppHome based on app SparkDeployMode */
+    /**
+     * Automatically identify remoteAppHome or localAppHome based on app SparkDeployMode
+     */
     @JsonIgnore
     public String getAppHome() {
         switch (this.getDeployModeEnum()) {
@@ -467,6 +520,7 @@ public class SparkApplication extends BaseEntity {
             case YARN_CLIENT:
                 return StorageType.HDFS;
             case REMOTE:
+            case LOCAL:
                 return StorageType.LFS;
             default:
                 throw new UnsupportedOperationException("Unsupported ".concat(deployModeEnum.getName()));
