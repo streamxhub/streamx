@@ -25,9 +25,9 @@ package org.apache.streampark.flink.packer.docker
  * @param sparkBaseImage
  *   Spark base docker image name, see https://hub.docker.com/r/apache/spark.
  * @param sparkMainJarPath
- *   Path of flink job main jar which would copy to $FLINK_HOME/usrlib/
+ *   Path of spark job main jar which would copy to $SPARK_HOME/usrlib/
  * @param sparkExtraLibPaths
- *   Path of additional flink lib path which would copy to $FLINK_HOME/lib/
+ *   Path of additional spark lib path which would copy to $SPARK_HOME/lib/
  */
 case class SparkDockerfileTemplate(
     workspacePath: String,
@@ -39,10 +39,10 @@ case class SparkDockerfileTemplate(
   /** offer content of DockerFile */
   override def offerDockerfileContent: String = {
     s"""FROM $sparkBaseImage
+       |USER root
        |RUN mkdir -p $SPARK_HOME/usrlib
-       |COPY $extraLibName $SPARK_HOME/lib/
        |COPY $mainJarName $SPARK_HOME/usrlib/$mainJarName
+       |COPY $extraLibName $SPARK_HOME/lib/
        |""".stripMargin
   }
-
 }

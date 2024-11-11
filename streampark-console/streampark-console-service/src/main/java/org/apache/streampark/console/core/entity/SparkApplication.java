@@ -34,8 +34,8 @@ import org.apache.streampark.console.core.enums.ResourceFromEnum;
 import org.apache.streampark.console.core.enums.SparkAppStateEnum;
 import org.apache.streampark.console.core.metrics.spark.SparkApplicationSummary;
 import org.apache.streampark.console.core.util.YarnQueueLabelExpression;
-import org.apache.streampark.flink.kubernetes.model.K8sPodTemplates;
 import org.apache.streampark.flink.packer.maven.DependencyInfo;
+import org.apache.streampark.spark.kubernetes.model.SparkK8sPodTemplates;
 
 import org.apache.commons.lang3.StringUtils;
 
@@ -50,7 +50,6 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.streampark.spark.kubernetes.model.SparkK8sPodTemplates;
 
 import java.util.Date;
 import java.util.HashMap;
@@ -141,13 +140,13 @@ public class SparkApplication extends BaseEntity {
     /** k8s namespace */
     private String k8sNamespace = Constants.DEFAULT;
 
-    /** spark-hadoop integration on spark-k8s mode */
-    private Boolean k8sHadoopIntegration;
-
     /** spark kubernetes pod template */
     private String k8sDriverPodTemplate;
 
     private String k8sExecutorPodTemplate;
+
+    /** spark-hadoop integration on spark-k8s mode */
+    private Boolean k8sHadoopIntegration;
 
     @TableField("HADOOP_USER")
     private String hadoopUser;
@@ -366,6 +365,8 @@ public class SparkApplication extends BaseEntity {
         switch (this.getDeployModeEnum()) {
             case REMOTE:
             case LOCAL:
+            case KUBERNETES_NATIVE_CLIENT:
+            case KUBERNETES_NATIVE_CLUSTER:
                 return getLocalAppHome();
             case YARN_CLIENT:
             case YARN_CLUSTER:
@@ -389,7 +390,6 @@ public class SparkApplication extends BaseEntity {
     public SparkK8sPodTemplates getK8sPodTemplates() {
         return SparkK8sPodTemplates.of(k8sDriverPodTemplate, k8sExecutorPodTemplate);
     }
-
 
     @JsonIgnore
     @SneakyThrows
@@ -481,6 +481,8 @@ public class SparkApplication extends BaseEntity {
             case YARN_CLUSTER:
             case YARN_CLIENT:
                 return StorageType.HDFS;
+            case KUBERNETES_NATIVE_CLUSTER:
+            case KUBERNETES_NATIVE_CLIENT:
             case REMOTE:
                 return StorageType.LFS;
             default:

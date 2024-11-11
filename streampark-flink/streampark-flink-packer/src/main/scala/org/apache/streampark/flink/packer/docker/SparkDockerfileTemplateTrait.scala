@@ -31,7 +31,7 @@ trait SparkDockerfileTemplateTrait {
   /** Path of dockerfile workspace, it should be a directory. */
   def workspacePath: String
 
-  /** Flink base docker image name, see https://hub.docker.com/_/flink. */
+  /** Spark base docker image name, see https://hub.docker.com/r/apache/spark */
   def sparkBaseImage: String
 
   /** Path of spark job main jar which would copy to $SPARK_HOME/usrlib/ */
@@ -59,7 +59,7 @@ trait SparkDockerfileTemplateTrait {
   }
 
   /**
-   * flink main jar name, the main jar would copy from `flinkMainjarPath` to
+   * spark main jar name, the main jar would copy from `sparkMainjarPath` to
    * `workspacePath/mainJarName.jar`.
    */
   lazy val mainJarName: String = {

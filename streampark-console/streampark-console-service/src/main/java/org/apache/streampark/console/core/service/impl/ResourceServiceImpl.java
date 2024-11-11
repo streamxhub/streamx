@@ -215,6 +215,7 @@ public class ResourceServiceImpl extends ServiceImpl<ResourceMapper, Resource>
         if (resource.getResourceType() == ResourceTypeEnum.APP) {
             findResource.setMainClass(resource.getMainClass());
         }
+        findResource.setResourceType(resource.getResourceType());
         findResource.setDescription(resource.getDescription());
         baseMapper.updateById(findResource);
     }

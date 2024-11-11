@@ -19,18 +19,20 @@ package org.apache.streampark.flink.packer.pipeline.impl
 
 import org.apache.streampark.common.fs.LfsOperator
 import org.apache.streampark.common.util.ThreadUtils
+import org.apache.streampark.flink.kubernetes.PodTemplateTool
 import org.apache.streampark.flink.packer.docker._
-import org.apache.streampark.flink.packer.maven.MavenTool
 import org.apache.streampark.flink.packer.pipeline._
 import org.apache.streampark.flink.packer.pipeline.BuildPipeline.executor
+
 import com.github.dockerjava.api.command.PushImageCmd
 import com.github.dockerjava.core.command.{HackBuildImageCmd, HackPullImageCmd, HackPushImageCmd}
 import com.google.common.collect.Sets
 import org.apache.commons.lang3.StringUtils
-import org.apache.streampark.flink.kubernetes.PodTemplateTool
 
 import java.io.File
+import java.nio.file.Paths
 import java.util.concurrent.{LinkedBlockingQueue, ThreadPoolExecutor, TimeUnit}
+
 import scala.concurrent.{ExecutionContext, Future}
 
 /** Building pipeline for Spark kubernetes-native application mode */
@@ -71,7 +73,7 @@ class SparkK8sApplicationBuildPipeline(request: SparkK8sApplicationBuildRequest)
       }.getOrElse(throw getError.exception)
 
     // Step-2: export k8s pod template files
-    val podTemplatePaths = request.flinkPodTemplate match {
+    val podTemplatePaths = request.sparkPodTemplate match {
       case podTemplate if podTemplate.isEmpty =>
         skipStep(2)
         Map[String, String]()
@@ -86,18 +88,17 @@ class SparkK8sApplicationBuildPipeline(request: SparkK8sApplicationBuildRequest)
         }.getOrElse(throw getError.exception)
     }
 
-    // Step-3: build shaded spark job jar and handle extra jars
-    // the output shaded jar file name like: streampark-sparkjob_myjob-test.jar
-    val (shadedJar, extJarLibs) =
+    // Step-3: due with spark jar
+    val (mainJarPath, extJarLibs) =
       execStep(3) {
-        val shadedJarOutputPath = request.getShadedJarPath(buildWorkspace)
-        val shadedJar =
-          MavenTool.buildFatJar(request.mainClass, request.providedLibs, shadedJarOutputPath)
-        logInfo(s"Output shaded spark job jar: ${shadedJar.getAbsolutePath}")
-        shadedJar -> request.dependencyInfo.extJarLibs
+        val mainJarName = Paths.get(request.mainJar).getFileName
+        val mainJarPath = s"$buildWorkspace/$mainJarName"
+        LfsOperator.copy(request.mainJar, mainJarPath)
+        logInfo(s"Prepared spark job jar: $mainJarPath")
+        mainJarPath -> Set[String]()
       }.getOrElse(throw getError.exception)
 
-    // Step-4: generate and Export flink image dockerfiles
+    // Step-4: generate and Export spark image dockerfiles
     val (dockerfile, dockerFileTemplate) =
       execStep(4) {
         val dockerFileTemplate = {
@@ -105,13 +106,13 @@ class SparkK8sApplicationBuildPipeline(request: SparkK8sApplicationBuildRequest)
             SparkHadoopDockerfileTemplate.fromSystemHadoopConf(
               buildWorkspace,
               request.sparkBaseImage,
-              shadedJar.getAbsolutePath,
+              mainJarPath,
               extJarLibs)
           } else {
             SparkDockerfileTemplate(
               buildWorkspace,
               request.sparkBaseImage,
-              shadedJar.getAbsolutePath,
+              mainJarPath,
               extJarLibs)
           }
         }
@@ -208,7 +209,7 @@ class SparkK8sApplicationBuildPipeline(request: SparkK8sApplicationBuildRequest)
     DockerImageBuildResponse(
       buildWorkspace,
       pushImageTag,
-      Map[String, String](),
+      podTemplatePaths,
       dockerFileTemplate.innerMainJarPath)
   }
 

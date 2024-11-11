@@ -24,13 +24,14 @@ set foreign_key_checks = 0;
 -- ----------------------------
 -- Table structure for t_app
 -- ----------------------------
-create table if not exists `t_app` (
-`id` bigint not null,
-`job_type` tinyint default null,
-`create_time` datetime default null comment 'create time',
-`modify_time` datetime default null comment 'modify time',
-primary key(`id`)
-);
+drop table if exists `t_app`;
+create table `t_app` (
+    `id` bigint not null auto_increment,
+    `job_type` tinyint default null,
+    `create_time` datetime default null comment 'create time',
+    `modify_time` datetime default null comment 'modify time',
+    primary key(`id`)
+) engine=innodb auto_increment=100000 default charset=utf8mb4 collate=utf8mb4_general_ci;
 
 -- ----------------------------
 -- Table structure for t_flink_app
@@ -605,13 +606,16 @@ create table `t_spark_app` (
   `jar_check_sum` bigint default null,
   `app_properties` text collate utf8mb4_general_ci comment 'Arbitrary Spark configuration property in key=value format (e.g. spark.driver.cores=1)',
   `app_args` text collate utf8mb4_general_ci comment 'Arguments passed to the main method of your main class',
-  `app_id` varchar(64) collate utf8mb4_general_ci default null comment '(1)application_id on yarn(2)driver_pod_name on k8s',
+  `cluster_id` varchar(64) collate utf8mb4_general_ci default null comment '(1)application_id on yarn(2)driver_pod_name on k8s',
   `yarn_queue` varchar(128) collate utf8mb4_general_ci default null,
   `k8s_master_url` varchar(128) collate utf8mb4_general_ci default null,
   `k8s_container_image` varchar(128) collate utf8mb4_general_ci default null,
   `k8s_image_pull_policy` tinyint default 1,
   `k8s_service_account` varchar(64) collate utf8mb4_general_ci default null,
   `k8s_namespace` varchar(64) collate utf8mb4_general_ci default null,
+  `k8s_driver_pod_template` text collate utf8mb4_general_ci,
+  `k8s_executor_pod_template` text collate utf8mb4_general_ci,
+  `k8s_hadoop_integration` tinyint default 0,
   `hadoop_user` varchar(64) collate utf8mb4_general_ci default null,
   `restart_size` int default null,
   `restart_count` int default null,

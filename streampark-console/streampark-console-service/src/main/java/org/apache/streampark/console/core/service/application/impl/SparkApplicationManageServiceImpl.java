@@ -345,6 +345,9 @@ public class SparkApplicationManageServiceImpl
         newApp.setK8sImagePullPolicy(oldApp.getK8sImagePullPolicy());
         newApp.setK8sServiceAccount(oldApp.getK8sServiceAccount());
         newApp.setK8sNamespace(oldApp.getK8sNamespace());
+        newApp.setK8sDriverPodTemplate(oldApp.getK8sDriverPodTemplate());
+        newApp.setK8sExecutorPodTemplate(oldApp.getK8sExecutorPodTemplate());
+        newApp.setK8sHadoopIntegration(oldApp.getK8sHadoopIntegration());
 
         newApp.setHadoopUser(oldApp.getHadoopUser());
         newApp.setRestartSize(oldApp.getRestartSize());

@@ -66,10 +66,8 @@ import org.apache.streampark.flink.packer.pipeline.PipeWatcher;
 import org.apache.streampark.flink.packer.pipeline.PipelineSnapshot;
 import org.apache.streampark.flink.packer.pipeline.PipelineStatusEnum;
 import org.apache.streampark.flink.packer.pipeline.SparkK8sApplicationBuildRequest;
-import org.apache.streampark.flink.packer.pipeline.SparkYarnApplicationBuildRequest;
-import org.apache.streampark.flink.packer.pipeline.impl.SparkK8sApplicationBuildPipeline;
-import org.apache.streampark.flink.packer.pipeline.impl.SparkYarnApplicationBuildPipeline;
 import org.apache.streampark.flink.packer.pipeline.SparkYarnBuildRequest;
+import org.apache.streampark.flink.packer.pipeline.impl.SparkK8sApplicationBuildPipeline;
 import org.apache.streampark.flink.packer.pipeline.impl.SparkYarnBuildPipeline;
 
 import org.apache.commons.collections.CollectionUtils;
@@ -421,14 +419,14 @@ public class SparkApplicationBuildPipelineServiceImpl
     private SparkK8sApplicationBuildRequest buildSparkK8sApplicationBuildRequest(
                                                                                  @Nonnull SparkApplication app,
                                                                                  String mainClass,
-                                                                                 String sparkUserJar,
+                                                                                 String mainJar,
                                                                                  SparkEnv sparkEnv,
                                                                                  DockerConfig dockerConfig) {
         SparkK8sApplicationBuildRequest k8sApplicationBuildRequest = new SparkK8sApplicationBuildRequest(
             app.getAppName(),
-            app.getLocalAppHome(),
+            app.getAppHome(),
             mainClass,
-            sparkUserJar,
+            mainJar,
             app.getDeployModeEnum(),
             app.getJobTypeEnum(),
             sparkEnv.getSparkVersion(),
