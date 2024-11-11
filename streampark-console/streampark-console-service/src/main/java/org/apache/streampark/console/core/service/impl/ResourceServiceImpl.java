@@ -494,11 +494,18 @@ public class ResourceServiceImpl extends ServiceImpl<ResourceMapper, Resource>
             .collect(Collectors.toMap(FlinkApplication::getId, application -> application));
 
         // Get the application that depends on this resource
+        for (FlinkApplication app : applications) {
+            if (resource.getResourceName().equals(app.getJar())
+                && !dependApplications.contains(app)) {
+                dependApplications.add(app);
+            }
+        }
+
         List<FlinkSql> flinkSqls = flinkSqlService.listByTeamId(resource.getTeamId());
         for (FlinkSql flinkSql : flinkSqls) {
             String sqlTeamResource = flinkSql.getTeamResource();
             if (sqlTeamResource != null
-                && sqlTeamResource.contains(String.valueOf(resource.getTeamId()))) {
+                && sqlTeamResource.contains(String.valueOf(resource.getId()))) {
                 FlinkApplication app = applicationMap.get(flinkSql.getAppId());
                 if (!dependApplications.contains(app)) {
                     dependApplications.add(applicationMap.get(flinkSql.getAppId()));

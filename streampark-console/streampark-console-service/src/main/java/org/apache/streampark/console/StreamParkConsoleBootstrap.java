@@ -54,5 +54,4 @@ public class StreamParkConsoleBootstrap {
             .sources(StreamParkConsoleBootstrap.class)
             .run(args);
     }
-
 }
