@@ -88,7 +88,7 @@ class SparkK8sApplicationBuildPipeline(request: SparkK8sApplicationBuildRequest)
         }.getOrElse(throw getError.exception)
     }
 
-    // Step-3: due with spark jar
+    // Step-3: prepare spark job jar
     val (mainJarPath, extJarLibs) =
       execStep(3) {
         val mainJarName = Paths.get(request.mainJar).getFileName
@@ -133,7 +133,7 @@ class SparkK8sApplicationBuildPipeline(request: SparkK8sApplicationBuildRequest)
       compileTag(expectedImageTag, dockerConf.registerAddress, dockerConf.imageNamespace)
     }
 
-    // Step-5: pull flink base image
+    // Step-5: pull spark base image
     execStep(5) {
       usingDockerClient {
         dockerClient =>

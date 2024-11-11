@@ -33,7 +33,6 @@
         <module>streampark-spark-connector</module>
         <module>streampark-spark-client</module>
         <module>streampark-spark-sqlclient</module>
-        <module>streampark-spark-kubernetes</module>
     </modules>
 
     <dependencies>

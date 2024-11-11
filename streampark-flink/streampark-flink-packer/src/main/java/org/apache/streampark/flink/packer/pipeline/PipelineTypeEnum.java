@@ -97,7 +97,7 @@ public enum PipelineTypeEnum {
         ImmutableMap.<Integer, String>builder()
             .put(1, "Create building workspace")
             .put(2, "Export kubernetes pod template")
-            .put(3, "Build shaded spark app jar")
+            .put(3, "Prepare spark job jar")
             .put(4, "Export spark app dockerfile")
             .put(5, "Pull spark app base docker image")
             .put(6, "Build spark app docker image")
