@@ -89,8 +89,10 @@ public class FlinkApplicationConfigServiceImpl
     }
 
     public void setLatest(Long appId, Long configId) {
-        this.lambdaUpdate().set(FlinkApplicationConfig::getLatest, false).eq(FlinkApplicationConfig::getAppId, appId).update();
-        this.lambdaUpdate().set(FlinkApplicationConfig::getLatest, true).eq(FlinkApplicationConfig::getId, configId).update();
+        this.lambdaUpdate().set(FlinkApplicationConfig::getLatest, false).eq(FlinkApplicationConfig::getAppId, appId)
+            .update();
+        this.lambdaUpdate().set(FlinkApplicationConfig::getLatest, true).eq(FlinkApplicationConfig::getId, configId)
+            .update();
     }
 
     @Override
