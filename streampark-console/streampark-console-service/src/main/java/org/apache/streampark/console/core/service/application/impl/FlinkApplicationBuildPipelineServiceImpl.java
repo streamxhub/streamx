@@ -85,7 +85,6 @@ import org.apache.streampark.flink.packer.pipeline.impl.FlinkYarnApplicationBuil
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.github.benmanes.caffeine.cache.Cache;
@@ -631,10 +630,8 @@ public class FlinkApplicationBuildPipelineServiceImpl
         if (CollectionUtils.isEmpty(appIds)) {
             return new HashMap<>();
         }
-        LambdaQueryWrapper<ApplicationBuildPipeline> queryWrapper = new LambdaQueryWrapper<ApplicationBuildPipeline>()
-            .in(ApplicationBuildPipeline::getAppId, appIds);
-
-        List<ApplicationBuildPipeline> appBuildPipelines = baseMapper.selectList(queryWrapper);
+        List<ApplicationBuildPipeline> appBuildPipelines =
+            this.lambdaQuery().in(ApplicationBuildPipeline::getAppId, appIds).list();
         if (CollectionUtils.isEmpty(appBuildPipelines)) {
             return new HashMap<>();
         }
@@ -644,8 +641,7 @@ public class FlinkApplicationBuildPipelineServiceImpl
 
     @Override
     public void removeByAppId(Long appId) {
-        baseMapper.delete(
-            new LambdaQueryWrapper<ApplicationBuildPipeline>().eq(ApplicationBuildPipeline::getAppId, appId));
+        this.lambdaUpdate().eq(ApplicationBuildPipeline::getAppId, appId).remove();
     }
 
     /**

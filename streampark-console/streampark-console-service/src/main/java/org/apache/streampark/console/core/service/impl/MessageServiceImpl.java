@@ -25,7 +25,6 @@ import org.apache.streampark.console.core.mapper.MessageMapper;
 import org.apache.streampark.console.core.service.MessageService;
 import org.apache.streampark.console.core.websocket.WebSocketEndpoint;
 
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
@@ -50,10 +49,8 @@ public class MessageServiceImpl extends ServiceImpl<MessageMapper, Message>
     @Override
     public IPage<Message> getUnReadPage(NoticeTypeEnum noticeTypeEnum, RestRequest request) {
         Page<Message> page = MybatisPager.getPage(request);
-        LambdaQueryWrapper<Message> queryWrapper = new LambdaQueryWrapper<Message>()
-            .eq(Message::getIsRead, false)
+        return this.baseMapper.selectPage(page, this.lambdaQuery().eq(Message::getIsRead, false)
             .orderByDesc(Message::getCreateTime)
-            .eq(Message::getType, noticeTypeEnum);
-        return this.baseMapper.selectPage(page, queryWrapper);
+            .eq(Message::getType, noticeTypeEnum));
     }
 }

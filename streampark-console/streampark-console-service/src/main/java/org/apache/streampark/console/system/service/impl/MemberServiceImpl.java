@@ -30,7 +30,6 @@ import org.apache.streampark.console.system.service.RoleService;
 import org.apache.streampark.console.system.service.TeamService;
 import org.apache.streampark.console.system.service.UserService;
 
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
@@ -70,8 +69,7 @@ public class MemberServiceImpl extends ServiceImpl<MemberMapper, Member> impleme
 
     @Override
     public void removeByTeamId(Long teamId) {
-        LambdaQueryWrapper<Member> queryWrapper = new LambdaQueryWrapper<Member>().eq(Member::getTeamId, teamId);
-        this.remove(queryWrapper);
+        this.lambdaUpdate().eq(Member::getTeamId, teamId).remove();
     }
 
     @Override
@@ -102,16 +100,13 @@ public class MemberServiceImpl extends ServiceImpl<MemberMapper, Member> impleme
 
     private Member findByUserId(Long teamId, Long userId) {
         ApiAlertException.throwIfNull(teamId, "The team id is required.");
-        LambdaQueryWrapper<Member> queryWrapper = new LambdaQueryWrapper<Member>()
-            .eq(Member::getTeamId, teamId)
-            .eq(Member::getUserId, userId);
-        return baseMapper.selectOne(queryWrapper);
+        return this.lambdaQuery().eq(Member::getTeamId, teamId)
+            .eq(Member::getUserId, userId).getEntity();
     }
 
     @Override
     public List<Long> listUserIdsByRoleId(Long roleId) {
-        LambdaQueryWrapper<Member> queryWrapper = new LambdaQueryWrapper<Member>().eq(Member::getRoleId, roleId);
-        List<Member> memberList = baseMapper.selectList(queryWrapper);
+        List<Member> memberList = this.lambdaQuery().eq(Member::getRoleId, roleId).list();
         return memberList.stream().map(Member::getUserId).collect(Collectors.toList());
     }
 

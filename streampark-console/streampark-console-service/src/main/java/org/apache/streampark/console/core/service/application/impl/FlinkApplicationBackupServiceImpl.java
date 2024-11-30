@@ -35,7 +35,6 @@ import org.apache.streampark.console.core.service.application.FlinkApplicationBa
 import org.apache.streampark.console.core.service.application.FlinkApplicationConfigService;
 import org.apache.streampark.console.core.service.application.FlinkApplicationManageService;
 
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
@@ -70,9 +69,8 @@ public class FlinkApplicationBackupServiceImpl
     @Override
     public IPage<FlinkApplicationBackup> getPage(FlinkApplicationBackup bakParam, RestRequest request) {
         Page<FlinkApplicationBackup> page = MybatisPager.getPage(request);
-        LambdaQueryWrapper<FlinkApplicationBackup> queryWrapper = new LambdaQueryWrapper<FlinkApplicationBackup>()
-            .eq(FlinkApplicationBackup::getAppId, bakParam.getAppId());
-        return this.baseMapper.selectPage(page, queryWrapper);
+        return this.baseMapper.selectPage(page,
+            this.lambdaQuery().eq(FlinkApplicationBackup::getAppId, bakParam.getAppId()));
     }
 
     @Override
@@ -135,11 +133,9 @@ public class FlinkApplicationBackupServiceImpl
     public void revoke(FlinkApplication appParam) {
         Page<FlinkApplicationBackup> page = new Page<>();
         page.setCurrent(0).setSize(1).setSearchCount(false);
-        LambdaQueryWrapper<FlinkApplicationBackup> queryWrapper = new LambdaQueryWrapper<FlinkApplicationBackup>()
-            .eq(FlinkApplicationBackup::getAppId, appParam.getId())
-            .orderByDesc(FlinkApplicationBackup::getCreateTime);
-
-        Page<FlinkApplicationBackup> backUpPages = baseMapper.selectPage(page, queryWrapper);
+        Page<FlinkApplicationBackup> backUpPages =
+            baseMapper.selectPage(page, this.lambdaQuery().eq(FlinkApplicationBackup::getAppId, appParam.getId())
+                .orderByDesc(FlinkApplicationBackup::getCreateTime));
         if (!backUpPages.getRecords().isEmpty()) {
             FlinkApplicationBackup backup = backUpPages.getRecords().get(0);
             String path = backup.getPath();
@@ -151,9 +147,7 @@ public class FlinkApplicationBackupServiceImpl
     @Override
     public void remove(FlinkApplication appParam) {
         try {
-            baseMapper.delete(
-                new LambdaQueryWrapper<FlinkApplicationBackup>()
-                    .eq(FlinkApplicationBackup::getAppId, appParam.getId()));
+            this.lambdaUpdate().eq(FlinkApplicationBackup::getAppId, appParam.getId()).remove();
             appParam
                 .getFsOperator()
                 .delete(
@@ -169,10 +163,9 @@ public class FlinkApplicationBackupServiceImpl
 
     @Override
     public void rollbackFlinkSql(FlinkApplication appParam, FlinkSql flinkSqlParam) {
-        LambdaQueryWrapper<FlinkApplicationBackup> queryWrapper = new LambdaQueryWrapper<FlinkApplicationBackup>()
-            .eq(FlinkApplicationBackup::getAppId, appParam.getId())
-            .eq(FlinkApplicationBackup::getSqlId, flinkSqlParam.getId());
-        FlinkApplicationBackup backUp = baseMapper.selectOne(queryWrapper);
+        FlinkApplicationBackup backUp =
+            baseMapper.selectOne(this.lambdaQuery().eq(FlinkApplicationBackup::getAppId, appParam.getId())
+                .eq(FlinkApplicationBackup::getSqlId, flinkSqlParam.getId()));
         ApiAlertException.throwIfNull(
             backUp, "Application backup can't be null. Rollback flink sql failed.");
         // rollback config and sql

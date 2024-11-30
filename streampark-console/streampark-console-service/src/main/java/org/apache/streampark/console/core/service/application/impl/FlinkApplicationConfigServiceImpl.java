@@ -30,10 +30,7 @@ import org.apache.streampark.console.core.mapper.FlinkApplicationConfigMapper;
 import org.apache.streampark.console.core.service.FlinkEffectiveService;
 import org.apache.streampark.console.core.service.application.FlinkApplicationConfigService;
 
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
-import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import lombok.extern.slf4j.Slf4j;
@@ -92,13 +89,10 @@ public class FlinkApplicationConfigServiceImpl
     }
 
     public void setLatest(Long appId, Long configId) {
-        LambdaUpdateWrapper<FlinkApplicationConfig> updateWrapper = Wrappers.lambdaUpdate();
-        updateWrapper.set(FlinkApplicationConfig::getLatest, false).eq(FlinkApplicationConfig::getAppId, appId);
-        this.update(updateWrapper);
-
-        updateWrapper.clear();
-        updateWrapper.set(FlinkApplicationConfig::getLatest, true).eq(FlinkApplicationConfig::getId, configId);
-        this.update(updateWrapper);
+        this.lambdaUpdate().eq(FlinkApplicationConfig::getAppId, appId).set(FlinkApplicationConfig::getLatest, false)
+            .update();
+        this.lambdaUpdate().eq(FlinkApplicationConfig::getId, configId).set(FlinkApplicationConfig::getLatest, true)
+            .update();
     }
 
     @Override
@@ -187,9 +181,8 @@ public class FlinkApplicationConfigServiceImpl
 
     @Override
     public void toEffective(Long appId, Long configId) {
-        LambdaUpdateWrapper<FlinkApplicationConfig> updateWrapper = Wrappers.lambdaUpdate();
-        updateWrapper.eq(FlinkApplicationConfig::getAppId, appId).set(FlinkApplicationConfig::getLatest, false);
-        this.update(updateWrapper);
+        this.lambdaUpdate().eq(FlinkApplicationConfig::getAppId, appId).set(FlinkApplicationConfig::getLatest, false)
+            .update();
         effectiveService.saveOrUpdate(appId, EffectiveTypeEnum.CONFIG, configId);
     }
 
@@ -225,11 +218,9 @@ public class FlinkApplicationConfigServiceImpl
 
     @Override
     public List<FlinkApplicationConfig> list(Long appId) {
-        LambdaQueryWrapper<FlinkApplicationConfig> queryWrapper = new LambdaQueryWrapper<FlinkApplicationConfig>()
-            .eq(FlinkApplicationConfig::getAppId, appId)
-            .orderByDesc(FlinkApplicationConfig::getVersion);
-
-        List<FlinkApplicationConfig> configList = this.baseMapper.selectList(queryWrapper);
+        List<FlinkApplicationConfig> configList =
+            this.baseMapper.selectList(this.lambdaQuery().eq(FlinkApplicationConfig::getAppId, appId)
+                .orderByDesc(FlinkApplicationConfig::getVersion));
         fillEffectiveField(appId, configList);
         return configList;
     }
@@ -257,8 +248,7 @@ public class FlinkApplicationConfigServiceImpl
 
     @Override
     public void removeByAppId(Long appId) {
-        baseMapper.delete(
-            new LambdaQueryWrapper<FlinkApplicationConfig>().eq(FlinkApplicationConfig::getAppId, appId));
+        this.lambdaUpdate().eq(FlinkApplicationConfig::getAppId, appId).remove();
     }
 
     private void fillEffectiveField(Long id, List<FlinkApplicationConfig> configList) {

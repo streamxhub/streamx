@@ -28,7 +28,6 @@ import org.apache.streampark.console.core.service.SettingService;
 
 import org.apache.commons.lang3.StringUtils;
 
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.github.dockerjava.api.DockerClient;
 import com.github.dockerjava.api.model.AuthConfig;
@@ -69,8 +68,7 @@ public class SettingServiceImpl extends ServiceImpl<SettingMapper, Setting>
 
     @Override
     public Setting get(String key) {
-        LambdaQueryWrapper<Setting> queryWrapper = new LambdaQueryWrapper<Setting>().eq(Setting::getSettingKey, key);
-        return this.getOne(queryWrapper);
+        return this.lambdaQuery().eq(Setting::getSettingKey, key).getEntity();
     }
 
     @Override
@@ -81,9 +79,8 @@ public class SettingServiceImpl extends ServiceImpl<SettingMapper, Setting>
 
             Setting entity = new Setting();
             entity.setSettingValue(setting.getSettingValue());
-            LambdaQueryWrapper<Setting> queryWrapper = new LambdaQueryWrapper<Setting>().eq(Setting::getSettingKey,
-                setting.getSettingKey());
-            this.update(entity, queryWrapper);
+
+            this.lambdaUpdate().set(Setting::getSettingKey, setting.getSettingKey()).update(entity);
 
             getMavenConfig().updateConfig();
 

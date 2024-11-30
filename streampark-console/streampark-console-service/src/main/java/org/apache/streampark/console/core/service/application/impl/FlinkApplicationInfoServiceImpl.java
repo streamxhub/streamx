@@ -53,7 +53,6 @@ import org.apache.hadoop.yarn.api.records.ApplicationReport;
 import org.apache.hadoop.yarn.api.records.YarnApplicationState;
 import org.apache.hadoop.yarn.client.api.YarnClient;
 
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.google.common.collect.Sets;
 import lombok.extern.slf4j.Slf4j;
@@ -251,14 +250,12 @@ public class FlinkApplicationInfoServiceImpl extends ServiceImpl<FlinkApplicatio
 
     @Override
     public boolean existsByTeamId(Long teamId) {
-        return baseMapper.exists(
-            new LambdaQueryWrapper<FlinkApplication>().eq(FlinkApplication::getTeamId, teamId));
+        return this.lambdaQuery().eq(FlinkApplication::getTeamId, teamId).exists();
     }
 
     @Override
     public boolean existsByUserId(Long userId) {
-        return baseMapper.exists(
-            new LambdaQueryWrapper<FlinkApplication>().eq(FlinkApplication::getUserId, userId));
+        return this.lambdaQuery().eq(FlinkApplication::getUserId, userId).exists();
     }
 
     @Override
@@ -273,17 +270,13 @@ public class FlinkApplicationInfoServiceImpl extends ServiceImpl<FlinkApplicatio
 
     @Override
     public boolean existsByClusterId(Long clusterId) {
-        return baseMapper.exists(
-            new LambdaQueryWrapper<FlinkApplication>().eq(FlinkApplication::getFlinkClusterId, clusterId));
+        return this.lambdaQuery().eq(FlinkApplication::getFlinkClusterId, clusterId).exists();
     }
 
     @Override
     public Integer countByClusterId(Long clusterId) {
-        return baseMapper
-            .selectCount(
-                new LambdaQueryWrapper<FlinkApplication>().eq(FlinkApplication::getFlinkClusterId,
-                    clusterId))
-            .intValue();
+        return this.lambdaQuery().eq(FlinkApplication::getFlinkClusterId,
+            clusterId).count().intValue();
     }
 
     @Override
@@ -293,8 +286,7 @@ public class FlinkApplicationInfoServiceImpl extends ServiceImpl<FlinkApplicatio
 
     @Override
     public boolean existsByFlinkEnvId(Long flinkEnvId) {
-        return baseMapper.exists(
-            new LambdaQueryWrapper<FlinkApplication>().eq(FlinkApplication::getVersionId, flinkEnvId));
+        return this.lambdaQuery().eq(FlinkApplication::getVersionId, flinkEnvId).exists();
     }
 
     @Override
@@ -434,8 +426,8 @@ public class FlinkApplicationInfoServiceImpl extends ServiceImpl<FlinkApplicatio
             return AppExistsStateEnum.INVALID;
         }
 
-        FlinkApplication application = baseMapper.selectOne(
-            new LambdaQueryWrapper<FlinkApplication>().eq(FlinkApplication::getJobName, jobName));
+        FlinkApplication application = this.lambdaQuery().eq(FlinkApplication::getJobName, jobName).getEntity();
+
         if (application != null && !application.getId().equals(appParamId)) {
             return AppExistsStateEnum.IN_DB;
         }

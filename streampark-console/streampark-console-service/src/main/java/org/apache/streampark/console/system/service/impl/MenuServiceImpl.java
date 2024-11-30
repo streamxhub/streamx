@@ -78,9 +78,8 @@ public class MenuServiceImpl extends ServiceImpl<MenuMapper, Menu> implements Me
                     String.format("The userId:[%s] not found", userId)));
         // Admin has the permission for all menus.
         if (UserTypeEnum.ADMIN == user.getUserType()) {
-            LambdaQueryWrapper<Menu> queryWrapper = new LambdaQueryWrapper<Menu>().eq(Menu::getType, "0")
-                .orderByAsc(Menu::getOrderNum);
-            return this.list(queryWrapper);
+            return this.lambdaQuery().eq(Menu::getType, "0")
+                .orderByAsc(Menu::getOrderNum).list();
         }
         return this.baseMapper.selectMenus(userId, teamId);
     }
