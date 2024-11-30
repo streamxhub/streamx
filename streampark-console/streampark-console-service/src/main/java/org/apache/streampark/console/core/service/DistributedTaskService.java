@@ -61,7 +61,7 @@ public interface DistributedTaskService extends IService<DistributedTask> {
      * @param appId Long
      * @return boolean
      */
-    public boolean isLocalProcessing(Long appId);
+    boolean isLocalProcessing(Long appId);
 
     /**
      * Save Distributed Task.
@@ -70,5 +70,5 @@ public interface DistributedTaskService extends IService<DistributedTask> {
      * @param autoStart boolean
      * @param action It may be one of the following values: START, RESTART, REVOKE, CANCEL, ABORT
      */
-    public void saveDistributedTask(BaseEntity appParam, boolean autoStart, DistributedTaskEnum action);
+    void saveDistributedTask(BaseEntity appParam, boolean autoStart, DistributedTaskEnum action);
 }

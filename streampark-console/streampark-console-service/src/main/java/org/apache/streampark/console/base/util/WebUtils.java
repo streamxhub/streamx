@@ -18,6 +18,7 @@
 package org.apache.streampark.console.base.util;
 
 import org.apache.streampark.common.conf.ConfigKeys;
+import org.apache.streampark.common.util.SystemPropertyUtils;
 
 import org.apache.commons.lang3.StringUtils;
 
@@ -90,4 +91,9 @@ public final class WebUtils {
     public static File getPluginDir() {
         return getAppDir(PLUGINS);
     }
+
+    public static boolean isHaEnable() {
+        return SystemPropertyUtils.getBoolean("high-availability.enable", false);
+    }
+
 }
