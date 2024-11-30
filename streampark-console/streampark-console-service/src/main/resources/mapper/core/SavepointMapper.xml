@@ -17,17 +17,5 @@
   -->
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="org.apache.streampark.console.core.mapper.SavepointMapper">
-    <select id="findLatestByTime" resultType="org.apache.streampark.console.core.entity.Savepoint">
-        select * from t_flink_savepoint
-        where app_id = #{appId}
-        order by trigger_time desc
-        limit 1;
-    </select>
-
-    <update id="cleanLatest">
-        update t_flink_savepoint
-        set latest = 0
-        where app_id = #{appId}
-    </update>
 
 </mapper>

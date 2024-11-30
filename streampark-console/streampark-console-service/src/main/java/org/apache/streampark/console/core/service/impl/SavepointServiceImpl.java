@@ -117,10 +117,10 @@ public class SavepointServiceImpl extends ServiceImpl<SavepointMapper, Savepoint
 
   @Override
   public void expire(Long appId) {
-    savepointMapper.cleanLatest(appId);
+    this.cleanLatest(appId);
   }
 
-  private void expire(Savepoint entity) {
+  private void clearExpire(Savepoint entity) {
     FlinkEnv flinkEnv = flinkEnvService.getByAppId(entity.getAppId());
     Application application = applicationService.getById(entity.getAppId());
     Utils.notNull(flinkEnv);
@@ -222,16 +222,20 @@ public class SavepointServiceImpl extends ServiceImpl<SavepointMapper, Savepoint
 
   @Override
   public Savepoint getLatest(Long id) {
-    LambdaQueryWrapper<Savepoint> queryWrapper =
-        new LambdaQueryWrapper<Savepoint>()
+    List<Savepoint> savepointList =
+        this.lambdaQuery()
             .eq(Savepoint::getAppId, id)
             .eq(Savepoint::getLatest, true)
-            .orderByDesc(Savepoint::getCreateTime);
-    List<Savepoint> savepointList = this.baseMapper.selectList(queryWrapper);
+            .orderByDesc(Savepoint::getCreateTime)
+            .list();
+
     if (!savepointList.isEmpty()) {
       return savepointList.get(0);
     }
-    return this.baseMapper.findLatestByTime(id);
+    return this.lambdaQuery()
+        .eq(Savepoint::getAppId, id)
+        .orderByDesc(Savepoint::getTriggerTime)
+        .one();
   }
 
   @Override
@@ -314,13 +318,13 @@ public class SavepointServiceImpl extends ServiceImpl<SavepointMapper, Savepoint
 
   @Override
   public void saveSavePoint(Savepoint savepoint) {
-    this.expire(savepoint);
+    this.clearExpire(savepoint);
     this.cleanLatest(savepoint.getAppId());
     super.save(savepoint);
   }
 
   private void cleanLatest(Long appId) {
-    savepointMapper.cleanLatest(appId);
+    this.lambdaUpdate().eq(Savepoint::getAppId, appId).set(Savepoint::getLatest, false).update();
   }
 
   @Override
