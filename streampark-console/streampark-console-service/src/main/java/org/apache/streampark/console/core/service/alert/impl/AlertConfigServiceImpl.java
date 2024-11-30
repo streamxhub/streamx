@@ -68,8 +68,7 @@ public class AlertConfigServiceImpl extends ServiceImpl<AlertConfigMapper, Alert
 
     @Override
     public boolean exist(AlertConfig alertConfig) {
-        AlertConfig confByName = this.baseMapper.selectAlertConfByName(alertConfig);
-        return confByName != null;
+        return this.lambdaQuery().eq(AlertConfig::getAlertName, alertConfig.getAlertName()).exists();
     }
 
     @Override
