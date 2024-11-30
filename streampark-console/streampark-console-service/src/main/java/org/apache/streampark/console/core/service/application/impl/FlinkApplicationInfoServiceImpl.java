@@ -426,7 +426,7 @@ public class FlinkApplicationInfoServiceImpl extends ServiceImpl<FlinkApplicatio
             return AppExistsStateEnum.INVALID;
         }
 
-        FlinkApplication application = this.lambdaQuery().eq(FlinkApplication::getJobName, jobName).getEntity();
+        FlinkApplication application = this.lambdaQuery().eq(FlinkApplication::getJobName, jobName).one();
 
         if (application != null && !application.getId().equals(appParamId)) {
             return AppExistsStateEnum.IN_DB;

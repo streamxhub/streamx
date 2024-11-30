@@ -31,7 +31,6 @@ import org.apache.commons.collections.CollectionUtils;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
-import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import lombok.extern.slf4j.Slf4j;
@@ -58,7 +57,7 @@ public class AlertConfigServiceImpl extends ServiceImpl<AlertConfigMapper, Alert
         Page<AlertConfig> page = MybatisPager.getPage(request);
         IPage<AlertConfig> resultPage = getBaseMapper().selectPage(
             page,
-            Wrappers.<AlertConfig>lambdaQuery().eq(userId != null, AlertConfig::getUserId, userId));
+            this.lambdaQuery().eq(userId != null, AlertConfig::getUserId, userId).getWrapper());
 
         Page<AlertConfigParams> result = new Page<>();
         if (CollectionUtils.isNotEmpty(resultPage.getRecords())) {

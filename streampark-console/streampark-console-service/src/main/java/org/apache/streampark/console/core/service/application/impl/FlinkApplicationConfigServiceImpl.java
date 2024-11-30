@@ -219,8 +219,10 @@ public class FlinkApplicationConfigServiceImpl
     @Override
     public List<FlinkApplicationConfig> list(Long appId) {
         List<FlinkApplicationConfig> configList =
-            this.baseMapper.selectList(this.lambdaQuery().eq(FlinkApplicationConfig::getAppId, appId)
-                .orderByDesc(FlinkApplicationConfig::getVersion));
+            this.baseMapper.selectList(
+                this.lambdaQuery().eq(FlinkApplicationConfig::getAppId, appId)
+                    .orderByDesc(FlinkApplicationConfig::getVersion)
+                    .getWrapper());
         fillEffectiveField(appId, configList);
         return configList;
     }
@@ -228,9 +230,8 @@ public class FlinkApplicationConfigServiceImpl
     @Override
     public synchronized String readTemplate() {
         if (flinkConfTemplate == null) {
-            try {
-                Resource resource = resourceLoader.getResource("classpath:flink-application.conf");
-                Scanner scanner = new Scanner(resource.getInputStream());
+            Resource resource = resourceLoader.getResource("classpath:flink-application.conf");
+            try (Scanner scanner = new Scanner(resource.getInputStream())) {
                 StringBuilder stringBuffer = new StringBuilder();
                 while (scanner.hasNextLine()) {
                     stringBuffer.append(scanner.nextLine()).append(System.lineSeparator());

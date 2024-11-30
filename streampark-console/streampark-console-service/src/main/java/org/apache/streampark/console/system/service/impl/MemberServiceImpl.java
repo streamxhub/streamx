@@ -100,8 +100,10 @@ public class MemberServiceImpl extends ServiceImpl<MemberMapper, Member> impleme
 
     private Member findByUserId(Long teamId, Long userId) {
         ApiAlertException.throwIfNull(teamId, "The team id is required.");
-        return this.lambdaQuery().eq(Member::getTeamId, teamId)
-            .eq(Member::getUserId, userId).getEntity();
+        return this.lambdaQuery()
+            .eq(Member::getTeamId, teamId)
+            .eq(Member::getUserId, userId)
+            .one();
     }
 
     @Override

@@ -68,6 +68,7 @@ import org.apache.commons.lang3.StringUtils;
 
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.core.toolkit.support.SFunction;
+import com.baomidou.mybatisplus.extension.conditions.update.LambdaUpdateChainWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.google.common.annotations.VisibleForTesting;
@@ -701,11 +702,17 @@ public class FlinkApplicationManageServiceImpl extends ServiceImpl<FlinkApplicat
     public boolean checkBuildAndUpdate(FlinkApplication appParam) {
         boolean build = appParam.getBuild();
         if (!build) {
-            this.lambdaUpdate().eq(FlinkApplication::getId, appParam.getId())
-                .set(appParam.isRunning(), FlinkApplication::getRelease, ReleaseStateEnum.NEED_RESTART.get())
-                .set(!appParam.isRunning(), FlinkApplication::getRelease, ReleaseStateEnum.DONE.get())
-                .set(!appParam.isRunning(), FlinkApplication::getOptionState, OptionStateEnum.NONE.getValue())
-                .update();
+            LambdaUpdateChainWrapper<FlinkApplication> update = this.lambdaUpdate()
+                .eq(FlinkApplication::getId, appParam.getId());
+            if (appParam.isRunning()) {
+                update.set(FlinkApplication::getRelease, ReleaseStateEnum.NEED_RESTART.get());
+            } else {
+                update
+                    .set(FlinkApplication::getRelease, ReleaseStateEnum.DONE.get())
+                    .set(FlinkApplication::getOptionState, OptionStateEnum.NONE.getValue());
+            }
+            this.update(update);
+
             // backup
             if (appParam.isFlinkSqlJob()) {
                 FlinkSql newFlinkSql = flinkSqlService.getCandidate(appParam.getId(), CandidateTypeEnum.NEW);

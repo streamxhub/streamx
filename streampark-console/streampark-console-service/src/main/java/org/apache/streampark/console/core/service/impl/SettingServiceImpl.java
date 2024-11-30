@@ -68,19 +68,16 @@ public class SettingServiceImpl extends ServiceImpl<SettingMapper, Setting>
 
     @Override
     public Setting get(String key) {
-        return this.lambdaQuery().eq(Setting::getSettingKey, key).getEntity();
+        return this.lambdaQuery().eq(Setting::getSettingKey, key).one();
     }
 
     @Override
     public boolean update(Setting setting) {
         try {
             String value = StringUtils.trimToNull(setting.getSettingValue());
-            setting.setSettingValue(value);
-
-            Setting entity = new Setting();
-            entity.setSettingValue(setting.getSettingValue());
-
-            this.lambdaUpdate().set(Setting::getSettingKey, setting.getSettingKey()).update(entity);
+            this.lambdaUpdate().eq(Setting::getSettingKey, setting.getSettingKey())
+                .set(Setting::getSettingValue, value)
+                .update();
 
             getMavenConfig().updateConfig();
 

@@ -190,9 +190,8 @@ public class SparkApplicationConfigServiceImpl
 
     @Override
     public void toEffective(Long appId, Long configId) {
-        LambdaUpdateWrapper<SparkApplicationConfig> updateWrapper = Wrappers.lambdaUpdate();
-        updateWrapper.eq(SparkApplicationConfig::getAppId, appId).set(SparkApplicationConfig::getLatest, false);
-        this.update(updateWrapper);
+        this.lambdaUpdate().eq(SparkApplicationConfig::getAppId, appId).set(SparkApplicationConfig::getLatest, false)
+            .update();
         effectiveService.saveOrUpdate(appId, EffectiveTypeEnum.SPARKCONFIG, configId);
     }
 
