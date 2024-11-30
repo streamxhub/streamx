@@ -200,7 +200,10 @@ public class DistributedTaskServiceImpl extends ServiceImpl<DistributedTaskMappe
      */
     @Override
     public boolean isLocalProcessing(Long appId) {
-        return !WebUtils.isHaEnable() && consistentHash.get(appId).equals(serverId);
+        if (!WebUtils.isHaEnable()) {
+            return true;
+        }
+        return consistentHash.get(appId).equals(serverId);
     }
 
     /**
