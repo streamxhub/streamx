@@ -453,24 +453,18 @@ public class FlinkSavepointServiceImpl extends ServiceImpl<FlinkSavepointMapper,
         cpThreshold = CHECKPOINT == CheckPointTypeEnum.of(entity.getType()) ? cpThreshold - 1 : cpThreshold;
 
         if (cpThreshold == 0) {
-            LambdaQueryWrapper<FlinkSavepoint> queryWrapper = new LambdaQueryWrapper<FlinkSavepoint>()
-                .eq(FlinkSavepoint::getAppId, entity.getAppId())
-                .eq(FlinkSavepoint::getType, CHECKPOINT.get());
-            this.remove(queryWrapper);
+            this.lambdaUpdate().eq(FlinkSavepoint::getAppId, entity.getAppId())
+                .eq(FlinkSavepoint::getType, CHECKPOINT.get()).remove();
             return;
         }
-
-        LambdaQueryWrapper<FlinkSavepoint> queryWrapper = new LambdaQueryWrapper<FlinkSavepoint>()
-            .select(FlinkSavepoint::getTriggerTime)
-            .eq(FlinkSavepoint::getAppId, entity.getAppId())
-            .eq(FlinkSavepoint::getType, CHECKPOINT.get())
-            .orderByDesc(FlinkSavepoint::getTriggerTime);
 
         Page<FlinkSavepoint> savepointPage = this.lambdaQuery().select(FlinkSavepoint::getTriggerTime)
             .eq(FlinkSavepoint::getAppId, entity.getAppId())
             .eq(FlinkSavepoint::getType, CHECKPOINT.get())
-            .orderByDesc(FlinkSavepoint::getTriggerTime).page(
+            .orderByDesc(FlinkSavepoint::getTriggerTime)
+            .page(
                 new Page<>(1, cpThreshold + 1));
+
         if (CollectionUtils.isEmpty(savepointPage.getRecords())
             || savepointPage.getRecords().size() <= cpThreshold) {
             return;
