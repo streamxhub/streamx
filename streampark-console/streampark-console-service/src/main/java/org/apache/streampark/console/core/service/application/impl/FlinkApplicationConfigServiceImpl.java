@@ -89,10 +89,8 @@ public class FlinkApplicationConfigServiceImpl
     }
 
     public void setLatest(Long appId, Long configId) {
-        this.lambdaUpdate().eq(FlinkApplicationConfig::getAppId, appId).set(FlinkApplicationConfig::getLatest, false)
-            .update();
-        this.lambdaUpdate().eq(FlinkApplicationConfig::getId, configId).set(FlinkApplicationConfig::getLatest, true)
-            .update();
+        this.lambdaUpdate().set(FlinkApplicationConfig::getLatest, false).eq(FlinkApplicationConfig::getAppId, appId).update();
+        this.lambdaUpdate().set(FlinkApplicationConfig::getLatest, true).eq(FlinkApplicationConfig::getId, configId).update();
     }
 
     @Override
@@ -218,11 +216,8 @@ public class FlinkApplicationConfigServiceImpl
 
     @Override
     public List<FlinkApplicationConfig> list(Long appId) {
-        List<FlinkApplicationConfig> configList =
-            this.baseMapper.selectList(
-                this.lambdaQuery().eq(FlinkApplicationConfig::getAppId, appId)
-                    .orderByDesc(FlinkApplicationConfig::getVersion)
-                    .getWrapper());
+        List<FlinkApplicationConfig> configList = this.lambdaQuery().eq(FlinkApplicationConfig::getAppId, appId)
+            .orderByDesc(FlinkApplicationConfig::getVersion).list();
         fillEffectiveField(appId, configList);
         return configList;
     }

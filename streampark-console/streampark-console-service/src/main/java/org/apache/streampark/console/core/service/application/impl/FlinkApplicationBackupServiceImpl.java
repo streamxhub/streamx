@@ -165,9 +165,8 @@ public class FlinkApplicationBackupServiceImpl
 
     @Override
     public void rollbackFlinkSql(FlinkApplication appParam, FlinkSql flinkSqlParam) {
-        FlinkApplicationBackup backUp =
-            baseMapper.selectOne(this.lambdaQuery().eq(FlinkApplicationBackup::getAppId, appParam.getId())
-                .eq(FlinkApplicationBackup::getSqlId, flinkSqlParam.getId()));
+        FlinkApplicationBackup backUp = this.lambdaQuery().eq(FlinkApplicationBackup::getAppId, appParam.getId())
+            .eq(FlinkApplicationBackup::getSqlId, flinkSqlParam.getId()).one();
         ApiAlertException.throwIfNull(
             backUp, "Application backup can't be null. Rollback flink sql failed.");
         // rollback config and sql
