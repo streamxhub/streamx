@@ -241,8 +241,7 @@ public class ResourceServiceImpl extends ServiceImpl<ResourceMapper, Resource>
     }
 
     public List<Resource> listByTeamId(Long teamId) {
-        LambdaQueryWrapper<Resource> queryWrapper = new LambdaQueryWrapper<Resource>().eq(Resource::getTeamId, teamId);
-        return baseMapper.selectList(queryWrapper);
+        return this.lambdaQuery().eq(Resource::getTeamId, teamId).list();
     }
 
     /**

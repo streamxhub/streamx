@@ -69,8 +69,7 @@ public class FlinkApplicationBackupServiceImpl
     @Override
     public IPage<FlinkApplicationBackup> getPage(FlinkApplicationBackup bakParam, RestRequest request) {
         Page<FlinkApplicationBackup> page = MybatisPager.getPage(request);
-        return this.baseMapper.selectPage(page,
-            this.lambdaQuery().eq(FlinkApplicationBackup::getAppId, bakParam.getAppId()).getWrapper());
+        return this.lambdaQuery().eq(FlinkApplicationBackup::getAppId, bakParam.getAppId()).page(page);
     }
 
     @Override
@@ -134,11 +133,11 @@ public class FlinkApplicationBackupServiceImpl
         Page<FlinkApplicationBackup> page = new Page<>();
         page.setCurrent(0).setSize(1).setSearchCount(false);
 
-        Page<FlinkApplicationBackup> backUpPages =
-            baseMapper.selectPage(page, this.lambdaQuery().eq(
-                FlinkApplicationBackup::getAppId,
-                appParam.getId())
-                .orderByDesc(FlinkApplicationBackup::getCreateTime).getWrapper());
+        Page<FlinkApplicationBackup> backUpPages = this.lambdaQuery().eq(
+            FlinkApplicationBackup::getAppId,
+            appParam.getId())
+            .orderByDesc(FlinkApplicationBackup::getCreateTime).page(page);
+
         if (!backUpPages.getRecords().isEmpty()) {
             FlinkApplicationBackup backup = backUpPages.getRecords().get(0);
             String path = backup.getPath();

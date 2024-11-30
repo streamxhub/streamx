@@ -26,7 +26,6 @@ import org.apache.streampark.console.core.service.MessageService;
 import org.apache.streampark.console.core.websocket.WebSocketEndpoint;
 
 import com.baomidou.mybatisplus.core.metadata.IPage;
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -48,13 +47,10 @@ public class MessageServiceImpl extends ServiceImpl<MessageMapper, Message>
 
     @Override
     public IPage<Message> getUnReadPage(NoticeTypeEnum noticeTypeEnum, RestRequest request) {
-        Page<Message> page = MybatisPager.getPage(request);
-        return this.baseMapper.selectPage(
-            page,
-            this.lambdaQuery()
-                .eq(Message::getIsRead, false)
-                .orderByDesc(Message::getCreateTime)
-                .eq(Message::getType, noticeTypeEnum)
-                .getWrapper());
+        return this.lambdaQuery()
+            .eq(Message::getIsRead, false)
+            .orderByDesc(Message::getCreateTime)
+            .eq(Message::getType, noticeTypeEnum)
+            .page(MybatisPager.getPage(request));
     }
 }

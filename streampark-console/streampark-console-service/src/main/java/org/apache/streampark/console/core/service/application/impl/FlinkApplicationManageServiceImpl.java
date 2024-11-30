@@ -686,16 +686,15 @@ public class FlinkApplicationManageServiceImpl extends ServiceImpl<FlinkApplicat
     public List<FlinkApplication> listByTeamIdAndDeployModes(
                                                              Long teamId,
                                                              @Nonnull Collection<FlinkDeployMode> deployModeEnums) {
-        return getBaseMapper()
-            .selectList(
-                this.lambdaQuery()
-                    .eq((SFunction<FlinkApplication, Long>) FlinkApplication::getTeamId,
-                        teamId)
-                    .in(
-                        FlinkApplication::getDeployMode,
-                        deployModeEnums.stream()
-                            .map(FlinkDeployMode::getMode)
-                            .collect(Collectors.toSet())));
+        return this.lambdaQuery()
+            .eq((SFunction<FlinkApplication, Long>) FlinkApplication::getTeamId,
+                teamId)
+            .in(
+                FlinkApplication::getDeployMode,
+                deployModeEnums.stream()
+                    .map(FlinkDeployMode::getMode)
+                    .collect(Collectors.toSet()))
+            .list();
     }
 
     @Override

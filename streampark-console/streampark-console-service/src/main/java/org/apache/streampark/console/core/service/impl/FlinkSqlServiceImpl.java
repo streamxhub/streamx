@@ -81,8 +81,9 @@ public class FlinkSqlServiceImpl extends ServiceImpl<FlinkSqlMapper, FlinkSql>
     public FlinkSql getLatestFlinkSql(Long appId, boolean decode) {
         Page<FlinkSql> page = new Page<>();
         page.setCurrent(0).setSize(1).setSearchCount(false);
-        Page<FlinkSql> flinkSqlPage = baseMapper.selectPage(page, this.lambdaQuery().eq(FlinkSql::getAppId, appId)
-            .orderByDesc(FlinkSql::getVersion).getWrapper());
+        Page<FlinkSql> flinkSqlPage = this.lambdaQuery()
+            .eq(FlinkSql::getAppId, appId)
+            .orderByDesc(FlinkSql::getVersion).page(page);
         return Optional.ofNullable(flinkSqlPage.getRecords())
             .filter(records -> !records.isEmpty())
             .map(records -> records.get(0))
@@ -121,8 +122,8 @@ public class FlinkSqlServiceImpl extends ServiceImpl<FlinkSqlMapper, FlinkSql>
 
     @Override
     public List<FlinkSql> listFlinkSqlHistory(Long appId) {
-        List<FlinkSql> sqlList = this.baseMapper
-            .selectList(this.lambdaQuery().eq(FlinkSql::getAppId, appId).orderByDesc(FlinkSql::getVersion));
+        List<FlinkSql> sqlList =
+            this.lambdaQuery().eq(FlinkSql::getAppId, appId).orderByDesc(FlinkSql::getVersion).list();
         FlinkSql effective = getEffective(appId, false);
         if (effective != null) {
             sqlList.stream()
@@ -212,8 +213,7 @@ public class FlinkSqlServiceImpl extends ServiceImpl<FlinkSqlMapper, FlinkSql>
     public IPage<FlinkSql> getPage(Long appId, RestRequest request) {
         request.setSortField("version");
         Page<FlinkSql> page = MybatisPager.getPage(request);
-        IPage<FlinkSql> sqlList =
-            this.baseMapper.selectPage(page, this.lambdaQuery().eq(FlinkSql::getAppId, appId).getWrapper());
+        IPage<FlinkSql> sqlList = this.lambdaQuery().eq(FlinkSql::getAppId, appId).page(page);
         FlinkSql effectiveSql = baseMapper.getEffective(appId);
         if (effectiveSql != null) {
             for (FlinkSql sql : sqlList.getRecords()) {

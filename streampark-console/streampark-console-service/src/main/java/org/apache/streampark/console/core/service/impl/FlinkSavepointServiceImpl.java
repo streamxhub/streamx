@@ -466,7 +466,11 @@ public class FlinkSavepointServiceImpl extends ServiceImpl<FlinkSavepointMapper,
             .eq(FlinkSavepoint::getType, CHECKPOINT.get())
             .orderByDesc(FlinkSavepoint::getTriggerTime);
 
-        Page<FlinkSavepoint> savepointPage = this.baseMapper.selectPage(new Page<>(1, cpThreshold + 1), queryWrapper);
+        Page<FlinkSavepoint> savepointPage = this.lambdaQuery().select(FlinkSavepoint::getTriggerTime)
+            .eq(FlinkSavepoint::getAppId, entity.getAppId())
+            .eq(FlinkSavepoint::getType, CHECKPOINT.get())
+            .orderByDesc(FlinkSavepoint::getTriggerTime).page(
+                new Page<>(1, cpThreshold + 1));
         if (CollectionUtils.isEmpty(savepointPage.getRecords())
             || savepointPage.getRecords().size() <= cpThreshold) {
             return;

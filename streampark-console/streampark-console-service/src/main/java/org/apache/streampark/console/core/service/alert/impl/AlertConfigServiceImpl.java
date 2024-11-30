@@ -55,10 +55,8 @@ public class AlertConfigServiceImpl extends ServiceImpl<AlertConfigMapper, Alert
     public IPage<AlertConfigParams> page(Long userId, RestRequest request) {
         // build query conditions
         Page<AlertConfig> page = MybatisPager.getPage(request);
-        IPage<AlertConfig> resultPage = getBaseMapper().selectPage(
-            page,
-            this.lambdaQuery().eq(userId != null, AlertConfig::getUserId, userId).getWrapper());
-
+        IPage<AlertConfig> resultPage =
+            this.lambdaQuery().eq(userId != null, AlertConfig::getUserId, userId).page(page);
         Page<AlertConfigParams> result = new Page<>();
         if (CollectionUtils.isNotEmpty(resultPage.getRecords())) {
             result.setRecords(

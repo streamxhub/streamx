@@ -489,10 +489,8 @@ public class SparkApplicationBuildPipelineServiceImpl
         if (CollectionUtils.isEmpty(appIds)) {
             return new HashMap<>();
         }
-        LambdaQueryWrapper<ApplicationBuildPipeline> queryWrapper = new LambdaQueryWrapper<ApplicationBuildPipeline>()
-            .in(ApplicationBuildPipeline::getAppId, appIds);
-
-        List<ApplicationBuildPipeline> appBuildPipelines = baseMapper.selectList(queryWrapper);
+        List<ApplicationBuildPipeline> appBuildPipelines =
+            this.lambdaQuery().in(ApplicationBuildPipeline::getAppId, appIds).list();
         if (CollectionUtils.isEmpty(appBuildPipelines)) {
             return new HashMap<>();
         }
