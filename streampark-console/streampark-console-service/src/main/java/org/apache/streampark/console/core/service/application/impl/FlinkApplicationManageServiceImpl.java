@@ -66,11 +66,9 @@ import org.apache.streampark.flink.packer.pipeline.PipelineStatusEnum;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
-import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.core.toolkit.support.SFunction;
+import com.baomidou.mybatisplus.extension.conditions.update.LambdaUpdateChainWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.google.common.annotations.VisibleForTesting;
@@ -317,10 +315,8 @@ public class FlinkApplicationManageServiceImpl extends ServiceImpl<FlinkApplicat
 
     @Override
     public void changeOwnership(Long userId, Long targetUserId) {
-        LambdaUpdateWrapper<FlinkApplication> updateWrapper = new LambdaUpdateWrapper<FlinkApplication>()
-            .eq(FlinkApplication::getUserId, userId)
-            .set(FlinkApplication::getUserId, targetUserId);
-        this.baseMapper.update(null, updateWrapper);
+        this.lambdaUpdate().eq(FlinkApplication::getUserId, userId)
+            .set(FlinkApplication::getUserId, targetUserId).update();
     }
 
     @SneakyThrows
@@ -375,8 +371,7 @@ public class FlinkApplicationManageServiceImpl extends ServiceImpl<FlinkApplicat
     }
 
     private boolean existsByJobName(String jobName) {
-        return baseMapper.exists(
-            new LambdaQueryWrapper<FlinkApplication>().eq(FlinkApplication::getJobName, jobName));
+        return this.lambdaQuery().eq(FlinkApplication::getJobName, jobName).exists();
     }
 
     @SuppressWarnings("checkstyle:WhitespaceAround")
@@ -669,14 +664,12 @@ public class FlinkApplicationManageServiceImpl extends ServiceImpl<FlinkApplicat
 
     @Override
     public void updateRelease(FlinkApplication appParam) {
-        LambdaUpdateWrapper<FlinkApplication> updateWrapper = Wrappers.lambdaUpdate();
-        updateWrapper.eq(FlinkApplication::getId, appParam.getId());
-        updateWrapper.set(FlinkApplication::getRelease, appParam.getRelease());
-        updateWrapper.set(FlinkApplication::getBuild, appParam.getBuild());
-        if (appParam.getOptionState() != null) {
-            updateWrapper.set(FlinkApplication::getOptionState, appParam.getOptionState());
-        }
-        this.update(updateWrapper);
+        this.lambdaUpdate()
+            .eq(FlinkApplication::getId, appParam.getId())
+            .set(FlinkApplication::getRelease, appParam.getRelease())
+            .set(FlinkApplication::getBuild, appParam.getBuild())
+            .set(appParam.getOptionState() != null, FlinkApplication::getOptionState, appParam.getOptionState())
+            .update();
     }
 
     @Override
@@ -693,31 +686,31 @@ public class FlinkApplicationManageServiceImpl extends ServiceImpl<FlinkApplicat
     public List<FlinkApplication> listByTeamIdAndDeployModes(
                                                              Long teamId,
                                                              @Nonnull Collection<FlinkDeployMode> deployModeEnums) {
-        return getBaseMapper()
-            .selectList(
-                new LambdaQueryWrapper<FlinkApplication>()
-                    .eq((SFunction<FlinkApplication, Long>) FlinkApplication::getTeamId,
-                        teamId)
-                    .in(
-                        FlinkApplication::getDeployMode,
-                        deployModeEnums.stream()
-                            .map(FlinkDeployMode::getMode)
-                            .collect(Collectors.toSet())));
+        return this.lambdaQuery()
+            .eq((SFunction<FlinkApplication, Long>) FlinkApplication::getTeamId,
+                teamId)
+            .in(
+                FlinkApplication::getDeployMode,
+                deployModeEnums.stream()
+                    .map(FlinkDeployMode::getMode)
+                    .collect(Collectors.toSet()))
+            .list();
     }
 
     @Override
     public boolean checkBuildAndUpdate(FlinkApplication appParam) {
         boolean build = appParam.getBuild();
         if (!build) {
-            LambdaUpdateWrapper<FlinkApplication> updateWrapper = Wrappers.lambdaUpdate();
-            updateWrapper.eq(FlinkApplication::getId, appParam.getId());
+            LambdaUpdateChainWrapper<FlinkApplication> update = this.lambdaUpdate()
+                .eq(FlinkApplication::getId, appParam.getId());
             if (appParam.isRunning()) {
-                updateWrapper.set(FlinkApplication::getRelease, ReleaseStateEnum.NEED_RESTART.get());
+                update.set(FlinkApplication::getRelease, ReleaseStateEnum.NEED_RESTART.get());
             } else {
-                updateWrapper.set(FlinkApplication::getRelease, ReleaseStateEnum.DONE.get());
-                updateWrapper.set(FlinkApplication::getOptionState, OptionStateEnum.NONE.getValue());
+                update
+                    .set(FlinkApplication::getRelease, ReleaseStateEnum.DONE.get())
+                    .set(FlinkApplication::getOptionState, OptionStateEnum.NONE.getValue());
             }
-            this.update(updateWrapper);
+            this.update(update);
 
             // backup
             if (appParam.isFlinkSqlJob()) {

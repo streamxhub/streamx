@@ -60,7 +60,6 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
-import com.baomidou.mybatisplus.core.toolkit.support.SFunction;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.google.common.annotations.VisibleForTesting;
@@ -345,6 +344,9 @@ public class SparkApplicationManageServiceImpl
         newApp.setK8sImagePullPolicy(oldApp.getK8sImagePullPolicy());
         newApp.setK8sServiceAccount(oldApp.getK8sServiceAccount());
         newApp.setK8sNamespace(oldApp.getK8sNamespace());
+        newApp.setK8sDriverPodTemplate(oldApp.getK8sDriverPodTemplate());
+        newApp.setK8sExecutorPodTemplate(oldApp.getK8sExecutorPodTemplate());
+        newApp.setK8sHadoopIntegration(oldApp.getK8sHadoopIntegration());
 
         newApp.setHadoopUser(oldApp.getHadoopUser());
         newApp.setRestartSize(oldApp.getRestartSize());
@@ -578,16 +580,14 @@ public class SparkApplicationManageServiceImpl
     public List<SparkApplication> listByTeamIdAndDeployModes(
                                                              Long teamId,
                                                              Collection<SparkDeployMode> deployModeEnums) {
-        return getBaseMapper()
-            .selectList(
-                new LambdaQueryWrapper<SparkApplication>()
-                    .eq((SFunction<SparkApplication, Long>) SparkApplication::getTeamId,
-                        teamId)
-                    .in(
-                        SparkApplication::getDeployMode,
-                        deployModeEnums.stream()
-                            .map(SparkDeployMode::getMode)
-                            .collect(Collectors.toSet())));
+
+        return this.lambdaQuery().eq(SparkApplication::getTeamId, teamId)
+            .in(
+                SparkApplication::getDeployMode,
+                deployModeEnums.stream()
+                    .map(SparkDeployMode::getMode)
+                    .collect(Collectors.toSet()))
+            .list();
     }
 
     @Override

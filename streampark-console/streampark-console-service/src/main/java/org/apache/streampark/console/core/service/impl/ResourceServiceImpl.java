@@ -215,6 +215,7 @@ public class ResourceServiceImpl extends ServiceImpl<ResourceMapper, Resource>
         if (resource.getResourceType() == ResourceTypeEnum.APP) {
             findResource.setMainClass(resource.getMainClass());
         }
+        findResource.setResourceType(resource.getResourceType());
         findResource.setDescription(resource.getDescription());
         baseMapper.updateById(findResource);
     }
@@ -240,8 +241,7 @@ public class ResourceServiceImpl extends ServiceImpl<ResourceMapper, Resource>
     }
 
     public List<Resource> listByTeamId(Long teamId) {
-        LambdaQueryWrapper<Resource> queryWrapper = new LambdaQueryWrapper<Resource>().eq(Resource::getTeamId, teamId);
-        return baseMapper.selectList(queryWrapper);
+        return this.lambdaQuery().eq(Resource::getTeamId, teamId).list();
     }
 
     /**

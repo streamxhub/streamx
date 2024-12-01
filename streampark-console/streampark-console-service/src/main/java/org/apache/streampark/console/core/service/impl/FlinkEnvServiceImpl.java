@@ -138,8 +138,7 @@ public class FlinkEnvServiceImpl extends ServiceImpl<FlinkEnvMapper, FlinkEnv>
 
     @Override
     public FlinkEnv getDefault() {
-        return this.baseMapper.selectOne(
-            new LambdaQueryWrapper<FlinkEnv>().eq(FlinkEnv::getIsDefault, true));
+        return this.lambdaQuery().eq(FlinkEnv::getIsDefault, true).one();
     }
 
     @Override

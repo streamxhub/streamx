@@ -53,7 +53,8 @@ public class RegistryServiceImpl implements RegistryService {
     private String zkAddress;
     private ZooKeeper zk;
     private String nodePath;
-    private Watcher watcher = event -> {
+
+    private final Watcher watcher = event -> {
         if (event.getType() == Watcher.Event.EventType.NodeChildrenChanged
             && event.getPath().equals(REGISTRY_PATH)) {
             handleNodeChanges();
@@ -72,7 +73,6 @@ public class RegistryServiceImpl implements RegistryService {
         try {
             zkAddress = SystemPropertyUtils.get("high-availability.zookeeper.quorum", "localhost:2181");
             zk = new ZooKeeper(zkAddress, HEARTBEAT_TIMEOUT, watcher);
-
             if (zk.exists(REGISTRY_PATH, false) == null) {
                 zk.create(REGISTRY_PATH, new byte[0], OPEN_ACL_UNSAFE, CreateMode.PERSISTENT);
             }

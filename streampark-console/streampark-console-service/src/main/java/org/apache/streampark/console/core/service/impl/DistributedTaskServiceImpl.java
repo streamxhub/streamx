@@ -20,6 +20,7 @@ package org.apache.streampark.console.core.service.impl;
 import org.apache.streampark.console.base.mybatis.entity.BaseEntity;
 import org.apache.streampark.console.base.util.ConsistentHash;
 import org.apache.streampark.console.base.util.JacksonUtils;
+import org.apache.streampark.console.base.util.WebUtils;
 import org.apache.streampark.console.core.bean.FlinkTaskItem;
 import org.apache.streampark.console.core.bean.SparkTaskItem;
 import org.apache.streampark.console.core.entity.DistributedTask;
@@ -199,7 +200,10 @@ public class DistributedTaskServiceImpl extends ServiceImpl<DistributedTaskMappe
      */
     @Override
     public boolean isLocalProcessing(Long appId) {
-        return true;
+        if (!WebUtils.isHaEnable()) {
+            return true;
+        }
+        return consistentHash.get(appId).equals(serverId);
     }
 
     /**

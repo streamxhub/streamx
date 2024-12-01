@@ -69,10 +69,8 @@ public class SparkApplicationBackupServiceImpl
 
     @Override
     public IPage<SparkApplicationBackup> getPage(SparkApplicationBackup bakParam, RestRequest request) {
-        Page<SparkApplicationBackup> page = MybatisPager.getPage(request);
-        LambdaQueryWrapper<SparkApplicationBackup> queryWrapper = new LambdaQueryWrapper<SparkApplicationBackup>()
-            .eq(SparkApplicationBackup::getAppId, bakParam.getAppId());
-        return this.baseMapper.selectPage(page, queryWrapper);
+        return this.lambdaQuery().eq(SparkApplicationBackup::getAppId, bakParam.getAppId())
+            .page(MybatisPager.getPage(request));
     }
 
     @Override
@@ -135,11 +133,9 @@ public class SparkApplicationBackupServiceImpl
     public void revoke(SparkApplication appParam) {
         Page<SparkApplicationBackup> page = new Page<>();
         page.setCurrent(0).setSize(1).setSearchCount(false);
-        LambdaQueryWrapper<SparkApplicationBackup> queryWrapper = new LambdaQueryWrapper<SparkApplicationBackup>()
-            .eq(SparkApplicationBackup::getAppId, appParam.getId())
-            .orderByDesc(SparkApplicationBackup::getCreateTime);
-
-        Page<SparkApplicationBackup> backUpPages = baseMapper.selectPage(page, queryWrapper);
+        Page<SparkApplicationBackup> backUpPages =
+            this.lambdaQuery().eq(SparkApplicationBackup::getAppId, appParam.getId())
+                .orderByDesc(SparkApplicationBackup::getCreateTime).page(page);
         if (!backUpPages.getRecords().isEmpty()) {
             SparkApplicationBackup backup = backUpPages.getRecords().get(0);
             String path = backup.getPath();

@@ -81,11 +81,9 @@ public class SparkSqlServiceImpl extends ServiceImpl<SparkSqlMapper, SparkSql>
     public SparkSql getLatestSparkSql(Long appId, boolean decode) {
         Page<SparkSql> page = new Page<>();
         page.setCurrent(0).setSize(1).setSearchCount(false);
-        LambdaQueryWrapper<SparkSql> queryWrapper = new LambdaQueryWrapper<SparkSql>()
+        Page<SparkSql> sparkSqlPage = this.lambdaQuery()
             .eq(SparkSql::getAppId, appId)
-            .orderByDesc(SparkSql::getVersion);
-
-        Page<SparkSql> sparkSqlPage = baseMapper.selectPage(page, queryWrapper);
+            .orderByDesc(SparkSql::getVersion).page(page);
         return Optional.ofNullable(sparkSqlPage.getRecords())
             .filter(records -> !records.isEmpty())
             .map(records -> records.get(0))
@@ -124,11 +122,8 @@ public class SparkSqlServiceImpl extends ServiceImpl<SparkSqlMapper, SparkSql>
 
     @Override
     public List<SparkSql> listSparkSqlHistory(Long appId) {
-        LambdaQueryWrapper<SparkSql> queryWrapper = new LambdaQueryWrapper<SparkSql>()
-            .eq(SparkSql::getAppId, appId)
-            .orderByDesc(SparkSql::getVersion);
-
-        List<SparkSql> sqlList = this.baseMapper.selectList(queryWrapper);
+        List<SparkSql> sqlList = this.lambdaQuery().eq(SparkSql::getAppId, appId)
+            .orderByDesc(SparkSql::getVersion).list();
         SparkSql effective = getEffective(appId, false);
         if (effective != null) {
             sqlList.stream()
@@ -219,8 +214,7 @@ public class SparkSqlServiceImpl extends ServiceImpl<SparkSqlMapper, SparkSql>
     public IPage<SparkSql> getPage(Long appId, RestRequest request) {
         request.setSortField("version");
         Page<SparkSql> page = MybatisPager.getPage(request);
-        LambdaQueryWrapper<SparkSql> queryWrapper = new LambdaQueryWrapper<SparkSql>().eq(SparkSql::getAppId, appId);
-        IPage<SparkSql> sqlList = this.baseMapper.selectPage(page, queryWrapper);
+        IPage<SparkSql> sqlList = this.lambdaQuery().eq(SparkSql::getAppId, appId).page(page);
         SparkSql effectiveSql = baseMapper.getEffective(appId);
         if (effectiveSql != null) {
             for (SparkSql sql : sqlList.getRecords()) {

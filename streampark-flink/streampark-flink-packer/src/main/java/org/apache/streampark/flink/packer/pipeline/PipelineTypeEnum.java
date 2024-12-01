@@ -89,7 +89,21 @@ public enum PipelineTypeEnum {
             .put(2, "Resolve maven dependencies")
             .put(3, "upload jar to yarn.provided.lib.dirs")
             .build(),
-        SimpleBuildResponse.class);
+        SimpleBuildResponse.class),
+
+    SPARK_NATIVE_K8S_APPLICATION(
+        7,
+        "spark native kubernetes application mode task building pipeline",
+        ImmutableMap.<Integer, String>builder()
+            .put(1, "Create building workspace")
+            .put(2, "Export kubernetes pod template")
+            .put(3, "Prepare spark job jar")
+            .put(4, "Export spark app dockerfile")
+            .put(5, "Pull spark app base docker image")
+            .put(6, "Build spark app docker image")
+            .put(7, "Push spark app docker image")
+            .build(),
+        DockerImageBuildResponse.class);
 
     private final Integer code;
     /** short description of pipeline type. */

@@ -44,7 +44,6 @@ import org.apache.streampark.console.system.service.UserService;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.lang3.StringUtils;
 
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
@@ -93,8 +92,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
 
     @Override
     public User getByUsername(String username) {
-        LambdaQueryWrapper<User> queryWrapper = new LambdaQueryWrapper<User>().eq(User::getUsername, username);
-        return baseMapper.selectOne(queryWrapper);
+        return this.lambdaQuery().eq(User::getUsername, username).one();
     }
 
     @Override
@@ -110,10 +108,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
 
     @Override
     public void updateLoginTime(String username) {
-        User user = new User();
-        user.setLastLoginTime(new Date());
-        LambdaQueryWrapper<User> queryWrapper = new LambdaQueryWrapper<User>().eq(User::getUsername, username);
-        this.baseMapper.update(user, queryWrapper);
+        this.lambdaUpdate().eq(User::getUsername, username).set(User::getLastLoginTime, new Date()).update();
     }
 
     @Override
@@ -186,8 +181,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         String password = ShaHashUtils.encrypt(salt, newPassword);
         user.setSalt(salt);
         user.setPassword(password);
-        LambdaQueryWrapper<User> queryWrapper = new LambdaQueryWrapper<User>().eq(User::getUsername, username);
-        this.baseMapper.update(user, queryWrapper);
+        this.lambdaUpdate().eq(User::getUsername, username).update(user);
         return newPassword;
     }
 

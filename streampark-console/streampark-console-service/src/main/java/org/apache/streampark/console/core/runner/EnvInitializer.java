@@ -116,8 +116,7 @@ public class EnvInitializer implements ApplicationRunner {
     }
 
     private void initRegistryService() {
-        boolean enable = SystemPropertyUtils.get("high-availability.enable", "false").equals("true");
-        if (enable) {
+        if (WebUtils.isHaEnable()) {
             RegistryService registryService = SpringContextUtils.getBean(RegistryService.class);
             registryService.registry();
             Runtime.getRuntime().addShutdownHook(new Thread(() -> {

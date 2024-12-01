@@ -17,11 +17,12 @@
 
 package org.apache.streampark.flink.packer.pipeline
 
-import org.apache.streampark.common.conf.{FlinkVersion, Workspace}
+import org.apache.streampark.common.conf.{FlinkVersion, SparkVersion, Workspace}
 import org.apache.streampark.common.enums.{FlinkDeployMode, FlinkJobType, SparkDeployMode, SparkJobType}
-import org.apache.streampark.flink.kubernetes.model.K8sPodTemplates
+import org.apache.streampark.flink.kubernetes.model.{K8sPodTemplates => FlinkK8sPodTemplates}
 import org.apache.streampark.flink.packer.docker.DockerConf
 import org.apache.streampark.flink.packer.maven.DependencyInfo
+import org.apache.streampark.spark.kubernetes.model.SparkK8sPodTemplates
 
 import scala.collection.mutable.ArrayBuffer
 
@@ -96,7 +97,7 @@ case class FlinkK8sApplicationBuildRequest(
     clusterId: String,
     k8sNamespace: String,
     flinkBaseImage: String,
-    flinkPodTemplate: K8sPodTemplates,
+    flinkPodTemplate: FlinkK8sPodTemplates,
     integrateWithHadoop: Boolean = false,
     dockerConfig: DockerConf,
     ingressTemplate: String)
@@ -131,3 +132,18 @@ case class SparkYarnBuildRequest(
     jobType: SparkJobType,
     deployMode: SparkDeployMode,
     dependencyInfo: DependencyInfo) extends BuildParam
+
+case class SparkK8sApplicationBuildRequest(
+    appName: String,
+    workspace: String,
+    mainClass: String,
+    mainJar: String,
+    deployMode: SparkDeployMode,
+    jobType: SparkJobType,
+    sparkVersion: SparkVersion,
+    dependencyInfo: DependencyInfo,
+    k8sNamespace: String,
+    sparkBaseImage: String,
+    sparkPodTemplate: SparkK8sPodTemplates,
+    integrateWithHadoop: Boolean = false,
+    dockerConfig: DockerConf) extends BuildParam

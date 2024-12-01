@@ -190,9 +190,8 @@ public class SparkApplicationConfigServiceImpl
 
     @Override
     public void toEffective(Long appId, Long configId) {
-        LambdaUpdateWrapper<SparkApplicationConfig> updateWrapper = Wrappers.lambdaUpdate();
-        updateWrapper.eq(SparkApplicationConfig::getAppId, appId).set(SparkApplicationConfig::getLatest, false);
-        this.update(updateWrapper);
+        this.lambdaUpdate().eq(SparkApplicationConfig::getAppId, appId).set(SparkApplicationConfig::getLatest, false)
+            .update();
         effectiveService.saveOrUpdate(appId, EffectiveTypeEnum.SPARKCONFIG, configId);
     }
 
@@ -228,11 +227,9 @@ public class SparkApplicationConfigServiceImpl
 
     @Override
     public List<SparkApplicationConfig> list(Long appId) {
-        LambdaQueryWrapper<SparkApplicationConfig> queryWrapper = new LambdaQueryWrapper<SparkApplicationConfig>()
+        List<SparkApplicationConfig> configList = this.lambdaQuery()
             .eq(SparkApplicationConfig::getAppId, appId)
-            .orderByDesc(SparkApplicationConfig::getVersion);
-
-        List<SparkApplicationConfig> configList = this.baseMapper.selectList(queryWrapper);
+            .orderByDesc(SparkApplicationConfig::getVersion).list();
         fillEffectiveField(appId, configList);
         return configList;
     }

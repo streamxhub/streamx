@@ -36,7 +36,12 @@ public enum SparkDeployMode {
     YARN_CLUSTER(2, "yarn-cluster"),
 
     /** yarn client */
-    YARN_CLIENT(3, "yarn-client");
+    YARN_CLIENT(3, "yarn-client"),
+
+    /** yarn-cluster mode */
+    KUBERNETES_NATIVE_CLUSTER(4, "kubernetes-native-cluster"),
+
+    KUBERNETES_NATIVE_CLIENT(5, "kubernetes-native-client");
 
     private final Integer mode;
 

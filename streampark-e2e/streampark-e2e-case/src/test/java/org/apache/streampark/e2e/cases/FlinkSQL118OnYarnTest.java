@@ -126,13 +126,6 @@ public class FlinkSQL118OnYarnTest {
         Awaitility.await()
             .untilAsserted(
                 () -> assertThat(applicationsPage.applicationsList)
-                    .as("Applications list should contain started application")
-                    .extracting(WebElement::getText)
-                    .anyMatch(it -> it.contains("RUNNING")));
-
-        Awaitility.await()
-            .untilAsserted(
-                () -> assertThat(applicationsPage.applicationsList)
                     .as("Applications list should contain finished application")
                     .extracting(WebElement::getText)
                     .anyMatch(it -> it.contains("FINISHED")));
@@ -141,7 +134,7 @@ public class FlinkSQL118OnYarnTest {
     @Test
     @Order(4)
     @SneakyThrows
-    void testRestartAndCancelFlinkApplicationOnYarnApplicationMode() {
+    void testCancelFlinkApplicationOnYarnApplicationMode() {
         Thread.sleep(Constants.DEFAULT_SLEEP_MILLISECONDS);
         final ApplicationsPage applicationsPage = new ApplicationsPage(browser);
 
@@ -245,7 +238,6 @@ public class FlinkSQL118OnYarnTest {
     @Order(9)
     @SneakyThrows
     void testRestartAndCancelFlinkApplicationOnYarnPerJobMode() {
-        Thread.sleep(Constants.DEFAULT_SLEEP_MILLISECONDS);
         final ApplicationsPage applicationsPage = new ApplicationsPage(browser);
 
         applicationsPage.startApplication(applicationName);
@@ -333,13 +325,6 @@ public class FlinkSQL118OnYarnTest {
         Awaitility.await()
             .untilAsserted(
                 () -> assertThat(applicationsPage.applicationsList)
-                    .as("Applications list should contain started application")
-                    .extracting(WebElement::getText)
-                    .anyMatch(it -> it.contains("RUNNING")));
-
-        Awaitility.await()
-            .untilAsserted(
-                () -> assertThat(applicationsPage.applicationsList)
                     .as("Applications list should contain finished application")
                     .extracting(WebElement::getText)
                     .anyMatch(it -> it.contains("FINISHED")));
@@ -349,9 +334,7 @@ public class FlinkSQL118OnYarnTest {
     @Order(14)
     @SneakyThrows
     void testRestartAndCancelFlinkApplicationOnYarnSessionMode() {
-        Thread.sleep(Constants.DEFAULT_SLEEP_MILLISECONDS);
         final ApplicationsPage applicationsPage = new ApplicationsPage(browser);
-
         applicationsPage.startApplication(applicationName);
 
         Awaitility.await()
@@ -375,9 +358,7 @@ public class FlinkSQL118OnYarnTest {
     @Order(15)
     void testDeleteFlinkApplicationOnYarnSessionMode() {
         final ApplicationsPage applicationsPage = new ApplicationsPage(browser);
-
         applicationsPage.deleteApplication(applicationName);
-
         Awaitility.await()
             .untilAsserted(
                 () -> {

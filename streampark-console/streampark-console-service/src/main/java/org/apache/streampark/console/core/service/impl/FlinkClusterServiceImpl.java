@@ -298,14 +298,13 @@ public class FlinkClusterServiceImpl extends ServiceImpl<FlinkClusterMapper, Fli
     @Override
     public List<FlinkCluster> listByDeployModes(
                                                 Collection<FlinkDeployMode> deployModeEnums) {
-        return getBaseMapper()
-            .selectList(
-                new LambdaQueryWrapper<FlinkCluster>()
-                    .in(
-                        FlinkCluster::getDeployMode,
-                        deployModeEnums.stream()
-                            .map(FlinkDeployMode::getMode)
-                            .collect(Collectors.toSet())));
+
+        return this.lambdaQuery().in(
+            FlinkCluster::getDeployMode,
+            deployModeEnums.stream()
+                .map(FlinkDeployMode::getMode)
+                .collect(Collectors.toSet()))
+            .list();
     }
 
     @Override

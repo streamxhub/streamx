@@ -54,12 +54,9 @@ public class AlertConfigServiceImpl extends ServiceImpl<AlertConfigMapper, Alert
     @Override
     public IPage<AlertConfigParams> page(Long userId, RestRequest request) {
         // build query conditions
-        LambdaQueryWrapper<AlertConfig> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(userId != null, AlertConfig::getUserId, userId);
-
         Page<AlertConfig> page = MybatisPager.getPage(request);
-        IPage<AlertConfig> resultPage = getBaseMapper().selectPage(page, wrapper);
-
+        IPage<AlertConfig> resultPage =
+            this.lambdaQuery().eq(userId != null, AlertConfig::getUserId, userId).page(page);
         Page<AlertConfigParams> result = new Page<>();
         if (CollectionUtils.isNotEmpty(resultPage.getRecords())) {
             result.setRecords(
@@ -71,8 +68,7 @@ public class AlertConfigServiceImpl extends ServiceImpl<AlertConfigMapper, Alert
 
     @Override
     public boolean exist(AlertConfig alertConfig) {
-        AlertConfig confByName = this.baseMapper.selectAlertConfByName(alertConfig);
-        return confByName != null;
+        return this.lambdaQuery().eq(AlertConfig::getAlertName, alertConfig.getAlertName()).exists();
     }
 
     @Override
