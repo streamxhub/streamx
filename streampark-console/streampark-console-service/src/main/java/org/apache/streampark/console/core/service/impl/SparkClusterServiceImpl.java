@@ -155,35 +155,22 @@ public class SparkClusterServiceImpl extends ServiceImpl<SparkClusterMapper, Spa
 
     @Override
     public Boolean existsByClusterId(String clusterId, Long id) {
-        LambdaQueryWrapper<SparkCluster> lambdaQueryWrapper = new LambdaQueryWrapper<>();
-        lambdaQueryWrapper.ne(SparkCluster::getClusterId, id);
-        if (id != null) {
-            lambdaQueryWrapper.ne(SparkCluster::getId, id);
-        }
-        lambdaQueryWrapper.last("limit 1");
-        return this.getOne(lambdaQueryWrapper) != null;
+        return this.lambdaQuery().ne(SparkCluster::getId, id).ne(id != null, SparkCluster::getClusterId, id).exists();
     }
 
     @Override
     public Boolean existsByClusterName(String clusterName) {
-        LambdaQueryWrapper<SparkCluster> lambdaQueryWrapper = new LambdaQueryWrapper<>();
-        lambdaQueryWrapper.eq(SparkCluster::getClusterName, clusterName);
-        lambdaQueryWrapper.last("limit 1");
-        return this.getOne(lambdaQueryWrapper) != null;
+        return this.lambdaQuery().eq(SparkCluster::getClusterName, clusterName).exists();
     }
 
     @Override
     public Boolean existsBySparkEnvId(Long id) {
-        LambdaQueryWrapper<SparkCluster> lambdaQueryWrapper = new LambdaQueryWrapper<>();
-        lambdaQueryWrapper.eq(SparkCluster::getVersionId, id);
-        return this.getOne(lambdaQueryWrapper) != null;
+        return this.lambdaQuery().eq(SparkCluster::getVersionId, id).exists();
     }
 
     @Override
     public List<SparkCluster> listByDeployModes(Collection<SparkDeployMode> deployModeEnums) {
-        LambdaQueryWrapper<SparkCluster> lambdaQueryWrapper = new LambdaQueryWrapper<>();
-        lambdaQueryWrapper.in(SparkCluster::getDeployModeEnum, deployModeEnums);
-        return this.list(lambdaQueryWrapper);
+        return this.lambdaQuery().in(SparkCluster::getDeployModeEnum, deployModeEnums).list();
     }
 
     @Override

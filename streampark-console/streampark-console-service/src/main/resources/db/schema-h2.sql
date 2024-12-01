@@ -689,9 +689,9 @@ create table if not exists t_spark_cluster (
   `resolve_order` INT,
   `exception` VARCHAR(255),
   `cluster_state` INT,
-  `create_time` TIMESTAMP,
-  `start_time` TIMESTAMP,
-  `end_time` TIMESTAMP,
+  `create_time` datetime,
+  `start_time` datetime,
+  `end_time` datetime,
   `alert_id` BIGINT,
   primary key(`id`)
 );
