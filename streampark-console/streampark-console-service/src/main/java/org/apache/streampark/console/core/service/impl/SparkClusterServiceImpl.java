@@ -65,9 +65,7 @@ public class SparkClusterServiceImpl extends ServiceImpl<SparkClusterMapper, Spa
 
     @Override
     public List<SparkCluster> listAvailableCluster() {
-        LambdaQueryWrapper<SparkCluster> lambdaQueryWrapper = new LambdaQueryWrapper<>();
-        lambdaQueryWrapper.eq(SparkCluster::getClusterState, ClusterState.RUNNING.getState());
-        return this.list(lambdaQueryWrapper);
+        return this.lambdaQuery().eq(SparkCluster::getClusterState, ClusterState.RUNNING.getState()).list();
     }
 
     @Override
