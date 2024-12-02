@@ -81,10 +81,10 @@ private[flink] object FlinkSqlValidator extends Logger {
     var sqlDialect = "default"
     var hasInsert = false
     for (call <- sqlCommands) {
-      val args = call.operands.head
       lazy val command = call.command
       command match {
         case SET | RESET =>
+          val args = call.operands.head
           if (command == SET && args == TableConfigOptions.TABLE_SQL_DIALECT.key()) {
             sqlDialect = call.operands.last
           }
