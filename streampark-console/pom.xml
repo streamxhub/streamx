@@ -31,7 +31,6 @@
 
     <modules>
         <module>streampark-console-service</module>
-        <module>streampark-console-registry</module>
     </modules>
 
     <profiles>

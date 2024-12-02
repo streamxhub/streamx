@@ -36,10 +36,10 @@ drop table if exists "public"."t_flink_cluster";
 drop table if exists "public"."t_flink_app";
 drop table if exists "public"."t_distributed_task";
 drop table if exists "public"."t_app_build_pipe";
-drop table if exists "public"."t_app_backup";
+drop table if exists "public"."t_flink_app_backup";
 drop table if exists "public"."t_alert_config";
 drop table if exists "public"."t_access_token";
-drop table if exists "public"."t_flink_log";
+drop table if exists "public"."t_app_log";
 drop table if exists "public"."t_team";
 drop table if exists "public"."t_variable";
 drop table if exists "public"."t_external_link";
@@ -63,10 +63,10 @@ drop sequence if exists "public"."streampark_t_flink_config_id_seq";
 drop sequence if exists "public"."streampark_t_flink_cluster_id_seq";
 drop sequence if exists "public"."streampark_t_flink_app_id_seq";
 drop sequence if exists "public"."streampark_t_distributed_task_id_seq";
-drop sequence if exists "public"."streampark_t_app_backup_id_seq";
+drop sequence if exists "public"."streampark_t_flink_app_backup_id_seq";
 drop sequence if exists "public"."streampark_t_alert_config_id_seq";
 drop sequence if exists "public"."streampark_t_access_token_id_seq";
-drop sequence if exists "public"."streampark_t_flink_log_id_seq";
+drop sequence if exists "public"."streampark_t_app_log_id_seq";
 drop sequence if exists "public"."streampark_t_team_id_seq";
 drop sequence if exists "public"."streampark_t_variable_id_seq";
 drop sequence if exists "public"."streampark_t_external_link_id_seq";
@@ -148,13 +148,13 @@ create index "inx_alert_user" on "public"."t_alert_config" using btree (
 
 
 -- ----------------------------
--- table structure for t_app_backup
+-- table structure for t_flink_app_backup
 -- ----------------------------
-create sequence "public"."streampark_t_app_backup_id_seq"
+create sequence "public"."streampark_t_flink_app_backup_id_seq"
     increment 1 start 10000 cache 1 minvalue 10000 maxvalue 9223372036854775807;
 
-create table "public"."t_app_backup" (
-  "id" int8 not null default nextval('streampark_t_app_backup_id_seq'::regclass),
+create table "public"."t_flink_app_backup" (
+  "id" int8 not null default nextval('streampark_t_flink_app_backup_id_seq'::regclass),
   "app_id" int8,
   "sql_id" int8,
   "config_id" int8,
@@ -164,7 +164,7 @@ create table "public"."t_app_backup" (
   "create_time" timestamp(6)
 )
 ;
-alter table "public"."t_app_backup" add constraint "t_app_backup_pkey" primary key ("id");
+alter table "public"."t_flink_app_backup" add constraint "t_flink_app_backup_pkey" primary key ("id");
 
 
 -- ----------------------------
@@ -192,10 +192,10 @@ create sequence "public"."streampark_t_flink_app_id_seq"
     increment 1 start 10000 cache 1 minvalue 10000 maxvalue 9223372036854775807;
 
 create table "public"."t_flink_app" (
-  "id" int8 not null default nextval('streampark_t_flink_app_id_seq'::regclass),
+  "id" int8 not null,
   "team_id" int8,
   "job_type" int2,
-  "execution_mode" int2,
+  "deploy_mode" int2,
   "resource_from" int2,
   "project_id" bigint,
   "job_name" varchar(255) collate "pg_catalog"."default",
@@ -280,7 +280,7 @@ create table "public"."t_flink_cluster" (
   "cluster_name" varchar(128) collate "pg_catalog"."default" not null,
   "options" text collate "pg_catalog"."default",
   "yarn_queue" varchar(128) collate "pg_catalog"."default",
-  "execution_mode" int2 not null default 1,
+  "deploy_mode" int2 not null default 1,
   "version_id" int8 not null,
   "k8s_namespace" varchar(63) collate "pg_catalog"."default",
   "service_account" varchar(64) collate "pg_catalog"."default",
@@ -306,7 +306,7 @@ comment on column "public"."t_flink_cluster"."cluster_id" is 'clusterid of sessi
 comment on column "public"."t_flink_cluster"."cluster_name" is 'cluster name';
 comment on column "public"."t_flink_cluster"."options" is 'parameter collection json form';
 comment on column "public"."t_flink_cluster"."yarn_queue" is 'the yarn queue where the task is located';
-comment on column "public"."t_flink_cluster"."execution_mode" is 'k8s execution session mode(1:remote,3:yarn-session,5:kubernetes-session)';
+comment on column "public"."t_flink_cluster"."deploy_mode" is 'k8s execution session mode(1:remote,3:yarn-session,5:kubernetes-session)';
 comment on column "public"."t_flink_cluster"."version_id" is 'flink version id';
 comment on column "public"."t_flink_cluster"."k8s_namespace" is 'k8s namespace';
 comment on column "public"."t_flink_cluster"."service_account" is 'k8s service account';
@@ -323,7 +323,7 @@ alter table "public"."t_flink_cluster" add constraint "t_flink_cluster_pkey" pri
 create index "id" on "public"."t_flink_cluster" using btree (
   "cluster_id" collate "pg_catalog"."default" "pg_catalog"."text_ops" asc nulls last,
   "address" collate "pg_catalog"."default" "pg_catalog"."text_ops" asc nulls last,
-  "execution_mode" "pg_catalog"."int2_ops" asc nulls last
+  "deploy_mode" "pg_catalog"."int2_ops" asc nulls last
 );
 
 
@@ -403,16 +403,16 @@ create index "un_env_name" on "public"."t_flink_env" using btree (
 
 
 -- ----------------------------
--- table structure for t_flink_log
+-- table structure for t_app_log
 -- ----------------------------
-create sequence "public"."streampark_t_flink_log_id_seq"
+create sequence "public"."streampark_t_app_log_id_seq"
     increment 1 start 10000 cache 1 minvalue 10000 maxvalue 9223372036854775807;
 
-create table "public"."t_flink_log" (
-  "id" int8 not null default nextval('streampark_t_flink_log_id_seq'::regclass),
+create table "public"."t_app_log" (
+  "id" int8 not null default nextval('streampark_t_app_log_id_seq'::regclass),
   "app_id" int8,
-  "yarn_app_id" varchar(64) collate "pg_catalog"."default",
-  "job_manager_url" varchar(255) collate "pg_catalog"."default",
+  "cluster_id" varchar(64) collate "pg_catalog"."default",
+  "tracking_url" varchar(255) collate "pg_catalog"."default",
   "success" boolean,
   "exception" text collate "pg_catalog"."default",
   "option_time" timestamp(6),
@@ -420,7 +420,7 @@ create table "public"."t_flink_log" (
   "user_id" int8
 )
 ;
-alter table "public"."t_flink_log" add constraint "t_flink_log_pkey" primary key ("id");
+alter table "public"."t_app_log" add constraint "t_app_log_pkey" primary key ("id");
 
 
 -- ----------------------------
@@ -816,6 +816,26 @@ create table "public"."t_external_link" (
 ;
 alter table "public"."t_external_link" add constraint "t_external_link_pkey" primary key ("id");
 
+-- ----------------------------
+-- table structure for t_flink_catalog
+-- ----------------------------
+
+create sequence "public"."streampark_t_flink_catalog_id_seq"
+    increment 1 start 10000 cache 1 minvalue 10000 maxvalue 9223372036854775807;
+
+CREATE TABLE "public"."t_flink_catalog" (
+    "id" int8 not null default nextval('streampark_t_flink_catalog_id_seq'::regclass),
+    "team_id" BIGINT NOT NULL,
+    "user_id" BIGINT DEFAULT NULL,
+    "catalog_type" VARCHAR(255) NOT NULL,
+    "catalog_name" VARCHAR(255) NOT NULL,
+    "configuration" TEXT,
+    "create_time" TIMESTAMP WITHOUT TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    "update_time" TIMESTAMP WITHOUT TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT uniq_catalog_name UNIQUE (catalog_name)
+);
+alter table "public"."t_flink_catalog" add constraint "t_flink_catalog_pkey" primary key ("id");
+
 
 -- ----------------------------
 -- table structure for t_yarn_queue
@@ -863,55 +883,3 @@ create trigger "streampark_t_flink_project_modify_time_tri" before update on "pu
 create trigger "streampark_t_menu_modify_time_tri" before update on "public"."t_menu" for each row execute procedure "public"."update_modify_time"();
 create trigger "streampark_t_role_modify_time_tri" before update on "public"."t_role" for each row execute procedure "public"."update_modify_time"();
 create trigger "streampark_t_user_modify_time_tri" before update on "public"."t_user" for each row execute procedure "public"."update_modify_time"();
-
--- ----------------------------
--- Table structure for jdbc registry
--- ----------------------------
-DROP TABLE IF EXISTS t_jdbc_registry_data;
-create table t_jdbc_registry_data
-(
-    id               bigserial not null,
-    data_key         varchar   not null,
-    data_value       text      not null,
-    data_type        varchar   not null,
-    client_id        bigint    not null,
-    create_time      timestamp not null default current_timestamp,
-    last_update_time timestamp not null default current_timestamp,
-    primary key (id)
-);
-create unique index uk_t_jdbc_registry_dataKey on t_jdbc_registry_data (data_key);
-
-
-DROP TABLE IF EXISTS t_jdbc_registry_lock;
-create table t_jdbc_registry_lock
-(
-    id          bigserial not null,
-    lock_key    varchar   not null,
-    lock_owner  varchar   not null,
-    client_id   bigint    not null,
-    create_time timestamp not null default current_timestamp,
-    primary key (id)
-);
-create unique index uk_t_jdbc_registry_lockKey on t_jdbc_registry_lock (lock_key);
-
-
-DROP TABLE IF EXISTS t_jdbc_registry_client_heartbeat;
-create table t_jdbc_registry_client_heartbeat
-(
-    id                  bigint    not null,
-    client_name         varchar   not null,
-    last_heartbeat_time bigint    not null,
-    connection_config   text      not null,
-    create_time         timestamp not null default current_timestamp,
-    primary key (id)
-);
-
-DROP TABLE IF EXISTS t_jdbc_registry_data_change_event;
-create table t_jdbc_registry_data_change_event
-(
-    id                 bigserial not null,
-    event_type         varchar   not null,
-    jdbc_registry_data text      not null,
-    create_time        timestamp not null default current_timestamp,
-    primary key (id)
-);

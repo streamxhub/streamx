@@ -17,11 +17,12 @@
 
 package org.apache.streampark.flink.packer.pipeline
 
-import org.apache.streampark.common.conf.{FlinkVersion, Workspace}
-import org.apache.streampark.common.enums.{FlinkDevelopmentMode, FlinkExecutionMode, SparkDevelopmentMode}
-import org.apache.streampark.flink.kubernetes.model.K8sPodTemplates
+import org.apache.streampark.common.conf.{FlinkVersion, SparkVersion, Workspace}
+import org.apache.streampark.common.enums.{FlinkDeployMode, FlinkJobType, SparkDeployMode, SparkJobType}
+import org.apache.streampark.flink.kubernetes.model.{K8sPodTemplates => FlinkK8sPodTemplates}
 import org.apache.streampark.flink.packer.docker.DockerConf
 import org.apache.streampark.flink.packer.maven.DependencyInfo
+import org.apache.streampark.spark.kubernetes.model.SparkK8sPodTemplates
 
 import scala.collection.mutable.ArrayBuffer
 
@@ -38,9 +39,9 @@ sealed trait FlinkBuildParam extends BuildParam {
 
   def workspace: String
 
-  def executionMode: FlinkExecutionMode
+  def deployMode: FlinkDeployMode
 
-  def developmentMode: FlinkDevelopmentMode
+  def flinkJobType: FlinkJobType
 
   def flinkVersion: FlinkVersion
 
@@ -51,7 +52,7 @@ sealed trait FlinkBuildParam extends BuildParam {
   lazy val providedLibs: DependencyInfo = {
     val providedLibs =
       ArrayBuffer(localWorkspace.APP_JARS, customFlinkUserJar)
-    if (developmentMode == FlinkDevelopmentMode.FLINK_SQL) {
+    if (flinkJobType == FlinkJobType.FLINK_SQL) {
       providedLibs += s"${localWorkspace.APP_SHIMS}/flink-${flinkVersion.majorVersion}"
     }
     dependencyInfo.merge(providedLibs.toSet)
@@ -76,8 +77,8 @@ case class FlinkK8sSessionBuildRequest(
     workspace: String,
     mainClass: String,
     customFlinkUserJar: String,
-    executionMode: FlinkExecutionMode,
-    developmentMode: FlinkDevelopmentMode,
+    deployMode: FlinkDeployMode,
+    flinkJobType: FlinkJobType,
     flinkVersion: FlinkVersion,
     dependencyInfo: DependencyInfo,
     clusterId: String,
@@ -89,14 +90,14 @@ case class FlinkK8sApplicationBuildRequest(
     workspace: String,
     mainClass: String,
     customFlinkUserJar: String,
-    executionMode: FlinkExecutionMode,
-    developmentMode: FlinkDevelopmentMode,
+    deployMode: FlinkDeployMode,
+    flinkJobType: FlinkJobType,
     flinkVersion: FlinkVersion,
     dependencyInfo: DependencyInfo,
     clusterId: String,
     k8sNamespace: String,
     flinkBaseImage: String,
-    flinkPodTemplate: K8sPodTemplates,
+    flinkPodTemplate: FlinkK8sPodTemplates,
     integrateWithHadoop: Boolean = false,
     dockerConfig: DockerConf,
     ingressTemplate: String)
@@ -108,8 +109,8 @@ case class FlinkRemotePerJobBuildRequest(
     mainClass: String,
     customFlinkUserJar: String,
     skipBuild: Boolean,
-    executionMode: FlinkExecutionMode,
-    developmentMode: FlinkDevelopmentMode,
+    deployMode: FlinkDeployMode,
+    flinkJobType: FlinkJobType,
     flinkVersion: FlinkVersion,
     dependencyInfo: DependencyInfo)
   extends FlinkBuildParam
@@ -119,15 +120,30 @@ case class FlinkYarnApplicationBuildRequest(
     mainClass: String,
     localWorkspace: String,
     yarnProvidedPath: String,
-    developmentMode: FlinkDevelopmentMode,
+    flinkJobType: FlinkJobType,
     dependencyInfo: DependencyInfo)
   extends BuildParam
 
-case class SparkYarnApplicationBuildRequest(
+case class SparkYarnBuildRequest(
     appName: String,
     mainClass: String,
     localWorkspace: String,
     yarnProvidedPath: String,
-    developmentMode: SparkDevelopmentMode,
-    dependencyInfo: DependencyInfo)
-  extends BuildParam
+    jobType: SparkJobType,
+    deployMode: SparkDeployMode,
+    dependencyInfo: DependencyInfo) extends BuildParam
+
+case class SparkK8sApplicationBuildRequest(
+    appName: String,
+    workspace: String,
+    mainClass: String,
+    mainJar: String,
+    deployMode: SparkDeployMode,
+    jobType: SparkJobType,
+    sparkVersion: SparkVersion,
+    dependencyInfo: DependencyInfo,
+    k8sNamespace: String,
+    sparkBaseImage: String,
+    sparkPodTemplate: SparkK8sPodTemplates,
+    integrateWithHadoop: Boolean = false,
+    dockerConfig: DockerConf) extends BuildParam

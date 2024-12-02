@@ -17,22 +17,6 @@
   -->
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="org.apache.streampark.console.core.mapper.ResourceMapper">
-    <resultMap id="ResourceMap" type="org.apache.streampark.console.core.entity.Resource">
-        <result column="id" jdbcType="BIGINT" property="id"/>
-        <result column="resource_name" jdbcType="VARCHAR" property="resourceName"/>
-        <result column="connector_path" jdbcType="VARCHAR" property="connectorPath"/>
-        <result column="description" jdbcType="VARCHAR" property="description"/>
-        <result column="resource_type" jdbcType="BIGINT" property="resourceType"/>
-        <result column="resource" jdbcType="VARCHAR" property="resource"/>
-        <result column="engine_type" jdbcType="BIGINT" property="engineType"/>
-        <result column="creator_id" jdbcType="BIGINT" property="creatorId"/>
-        <result column="connector_required_options" jdbcType="LONGVARCHAR" property="connectorRequiredOptions"/>
-        <result column="connector_optional_options" jdbcType="LONGVARCHAR" property="connectorOptionalOptions"/>
-        <result column="team_id" jdbcType="BIGINT" property="teamId"/>
-        <result column="create_time" jdbcType="TIMESTAMP" property="createTime"/>
-        <result column="modify_time" jdbcType="TIMESTAMP" property="modifyTime"/>
-    </resultMap>
-
     <select id="selectPage" resultType="org.apache.streampark.console.core.entity.Resource" parameterType="org.apache.streampark.console.core.entity.Resource">
         select
         v.*,
@@ -40,12 +24,22 @@
         from t_resource v
         inner join t_user u
         on v.creator_id = u.user_id
-        and v.team_id = ${resource.teamId}
+        and v.team_id = #{resource.teamId}
         <if test="resource.resourceName != null and resource.resourceName != ''">
-            and v.resourceName like concat('%', '${resource.resourceName}', '%')
+            <if test="_databaseId == 'mysql'">
+                and v.resourceName like concat('%', #{resource.resourceName},'%')
+            </if>
+            <if test="_databaseId == 'pgsql'">
+                and v.resourceName like '%' || #{resource.resourceName} || '%'
+            </if>
         </if>
         <if test="resource.description != null and resource.description != ''">
-            and v.description like concat('%', '${resource.description}', '%')
+            <if test="_databaseId == 'mysql'">
+                and v.description like concat('%', #{resource.description},'%')
+            </if>
+            <if test="_databaseId == 'pgsql'">
+                and v.description like '%' || #{resource.description} || '%'
+            </if>
         </if>
     </select>
 
@@ -56,7 +50,7 @@
                 END
         from t_resource
         where creator_id = #{userId}
-        limit 1
+         limit 1
     </select>
 
 

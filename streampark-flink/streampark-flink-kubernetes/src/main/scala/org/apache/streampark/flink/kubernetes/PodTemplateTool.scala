@@ -18,6 +18,7 @@
 package org.apache.streampark.flink.kubernetes
 
 import org.apache.streampark.flink.kubernetes.model.K8sPodTemplates
+import org.apache.streampark.spark.kubernetes.model.SparkK8sPodTemplates
 
 import org.apache.commons.io.FileUtils
 import org.apache.commons.lang3.StringUtils
@@ -37,6 +38,12 @@ object PodTemplateTool {
 
   val KUBERNETES_TM_POD_TEMPLATE: PodTemplateType =
     PodTemplateType("kubernetes.pod-template-file.taskmanager", "tm-pod-template.yaml")
+
+  val KUBERNETES_DRIVER_POD_TEMPLATE: PodTemplateType =
+    PodTemplateType("spark.kubernetes.driver.podTemplateFile", "driver-pod-template.yaml")
+
+  val KUBERNETES_EXECUTOR_POD_TEMPLATE: PodTemplateType =
+    PodTemplateType("spark.kubernetes.executor.podTemplateFile", "executor-pod-template.yaml")
 
   /**
    * Prepare kubernetes pod template file to buildWorkspace direactory.
@@ -72,6 +79,38 @@ object PodTemplateTool {
     K8sPodTemplateFiles(podTempleMap.toMap)
   }
 
+  /**
+   * Prepare kubernetes pod template file to buildWorkspace direactory.
+   *
+   * @param buildWorkspace
+   *   project workspace dir of spark job
+   * @param podTemplates
+   *   spark kubernetes pod templates
+   * @return
+   *   Map[k8s pod template option, template file output path]
+   */
+  def preparePodTemplateFiles(
+      buildWorkspace: String,
+      podTemplates: SparkK8sPodTemplates): K8sPodTemplateFiles = {
+    val workspaceDir = new File(buildWorkspace)
+    if (!workspaceDir.exists()) {
+      workspaceDir.mkdir()
+    }
+
+    val podTempleMap = mutable.Map[String, String]()
+    val outputTmplContent = (tmplContent: String, podTmpl: PodTemplateType) => {
+      if (StringUtils.isNotBlank(tmplContent)) {
+        val outputPath = s"$buildWorkspace/${podTmpl.fileName}"
+        val outputFile = new File(outputPath)
+        FileUtils.write(outputFile, tmplContent, "UTF-8")
+        podTempleMap += (podTmpl.key -> outputPath)
+      }
+    }
+
+    outputTmplContent(podTemplates.driverPodTemplate, KUBERNETES_DRIVER_POD_TEMPLATE)
+    outputTmplContent(podTemplates.executorPodTemplate, KUBERNETES_EXECUTOR_POD_TEMPLATE)
+    K8sPodTemplateFiles(podTempleMap.toMap)
+  }
 }
 
 /**

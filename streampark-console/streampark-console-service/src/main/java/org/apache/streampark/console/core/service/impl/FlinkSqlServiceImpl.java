@@ -22,16 +22,16 @@ import org.apache.streampark.common.util.DeflaterUtils;
 import org.apache.streampark.common.util.ExceptionUtils;
 import org.apache.streampark.console.base.domain.RestRequest;
 import org.apache.streampark.console.base.mybatis.pager.MybatisPager;
-import org.apache.streampark.console.core.entity.Application;
+import org.apache.streampark.console.core.entity.FlinkApplication;
 import org.apache.streampark.console.core.entity.FlinkEnv;
 import org.apache.streampark.console.core.entity.FlinkSql;
 import org.apache.streampark.console.core.enums.CandidateTypeEnum;
 import org.apache.streampark.console.core.enums.EffectiveTypeEnum;
 import org.apache.streampark.console.core.mapper.FlinkSqlMapper;
-import org.apache.streampark.console.core.service.ApplicationBackUpService;
-import org.apache.streampark.console.core.service.EffectiveService;
+import org.apache.streampark.console.core.service.FlinkEffectiveService;
 import org.apache.streampark.console.core.service.FlinkEnvService;
 import org.apache.streampark.console.core.service.FlinkSqlService;
+import org.apache.streampark.console.core.service.application.FlinkApplicationBackupService;
 import org.apache.streampark.flink.core.FlinkSqlValidationResult;
 import org.apache.streampark.flink.proxy.FlinkShimsProxy;
 
@@ -58,10 +58,10 @@ public class FlinkSqlServiceImpl extends ServiceImpl<FlinkSqlMapper, FlinkSql>
         FlinkSqlService {
 
     @Autowired
-    private EffectiveService effectiveService;
+    private FlinkEffectiveService effectiveService;
 
     @Autowired
-    private ApplicationBackUpService backUpService;
+    private FlinkApplicationBackupService backUpService;
 
     @Autowired
     private FlinkEnvService flinkEnvService;
@@ -81,11 +81,9 @@ public class FlinkSqlServiceImpl extends ServiceImpl<FlinkSqlMapper, FlinkSql>
     public FlinkSql getLatestFlinkSql(Long appId, boolean decode) {
         Page<FlinkSql> page = new Page<>();
         page.setCurrent(0).setSize(1).setSearchCount(false);
-        LambdaQueryWrapper<FlinkSql> queryWrapper = new LambdaQueryWrapper<FlinkSql>()
+        Page<FlinkSql> flinkSqlPage = this.lambdaQuery()
             .eq(FlinkSql::getAppId, appId)
-            .orderByDesc(FlinkSql::getVersion);
-
-        Page<FlinkSql> flinkSqlPage = baseMapper.selectPage(page, queryWrapper);
+            .orderByDesc(FlinkSql::getVersion).page(page);
         return Optional.ofNullable(flinkSqlPage.getRecords())
             .filter(records -> !records.isEmpty())
             .map(records -> records.get(0))
@@ -124,11 +122,8 @@ public class FlinkSqlServiceImpl extends ServiceImpl<FlinkSqlMapper, FlinkSql>
 
     @Override
     public List<FlinkSql> listFlinkSqlHistory(Long appId) {
-        LambdaQueryWrapper<FlinkSql> queryWrapper = new LambdaQueryWrapper<FlinkSql>()
-            .eq(FlinkSql::getAppId, appId)
-            .orderByDesc(FlinkSql::getVersion);
-
-        List<FlinkSql> sqlList = this.baseMapper.selectList(queryWrapper);
+        List<FlinkSql> sqlList =
+            this.lambdaQuery().eq(FlinkSql::getAppId, appId).orderByDesc(FlinkSql::getVersion).list();
         FlinkSql effective = getEffective(appId, false);
         if (effective != null) {
             sqlList.stream()
@@ -165,13 +160,12 @@ public class FlinkSqlServiceImpl extends ServiceImpl<FlinkSqlMapper, FlinkSql>
 
     @Override
     public void removeByAppId(Long appId) {
-        LambdaQueryWrapper<FlinkSql> queryWrapper = new LambdaQueryWrapper<FlinkSql>().eq(FlinkSql::getAppId, appId);
-        baseMapper.delete(queryWrapper);
+        this.lambdaUpdate().eq(FlinkSql::getAppId, appId).remove();
     }
 
     @Override
     @Transactional(propagation = Propagation.REQUIRES_NEW, rollbackFor = Exception.class)
-    public void rollback(Application application) {
+    public void rollback(FlinkApplication application) {
         FlinkSql sql = getCandidate(application.getId(), CandidateTypeEnum.HISTORY);
         AssertUtils.notNull(sql);
         try {
@@ -219,8 +213,7 @@ public class FlinkSqlServiceImpl extends ServiceImpl<FlinkSqlMapper, FlinkSql>
     public IPage<FlinkSql> getPage(Long appId, RestRequest request) {
         request.setSortField("version");
         Page<FlinkSql> page = MybatisPager.getPage(request);
-        LambdaQueryWrapper<FlinkSql> queryWrapper = new LambdaQueryWrapper<FlinkSql>().eq(FlinkSql::getAppId, appId);
-        IPage<FlinkSql> sqlList = this.baseMapper.selectPage(page, queryWrapper);
+        IPage<FlinkSql> sqlList = this.lambdaQuery().eq(FlinkSql::getAppId, appId).page(page);
         FlinkSql effectiveSql = baseMapper.getEffective(appId);
         if (effectiveSql != null) {
             for (FlinkSql sql : sqlList.getRecords()) {

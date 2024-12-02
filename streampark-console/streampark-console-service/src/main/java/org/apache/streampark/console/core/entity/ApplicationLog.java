@@ -20,28 +20,42 @@ package org.apache.streampark.console.core.entity;
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
-import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Date;
 
-@Data
-@TableName("t_flink_log")
+@Getter
+@Setter
+@TableName("t_app_log")
 @Slf4j
 public class ApplicationLog {
 
     @TableId(type = IdType.AUTO)
     private Long id;
+
     /** appId */
     private Long appId;
-    /** applicationId */
-    private String yarnAppId;
+
+    /**
+     * 1: flink
+     * 2: spark
+     */
+    private Integer jobType;
+
+    /** clusterId */
+    private String clusterId;
+
     /** The address of the jobmanager, that is, the direct access address of the Flink web UI */
-    private String jobManagerUrl;
+    private String trackingUrl;
+
     /** start status */
     private Boolean success;
+
     /** option name */
     private Integer optionName;
+
     /** option time */
     private Date optionTime;
     /** exception at the start */

@@ -19,10 +19,10 @@ package org.apache.streampark.console.core.service.impl;
 
 import org.apache.streampark.common.util.HadoopUtils;
 import org.apache.streampark.common.util.YarnUtils;
-import org.apache.streampark.console.core.entity.Application;
 import org.apache.streampark.console.core.entity.ApplicationLog;
+import org.apache.streampark.console.core.entity.FlinkApplication;
 import org.apache.streampark.console.core.entity.FlinkCluster;
-import org.apache.streampark.console.core.entity.SparkApplicationLog;
+import org.apache.streampark.console.core.entity.SparkApplication;
 import org.apache.streampark.console.core.service.FlinkClusterService;
 import org.apache.streampark.console.core.service.ProxyService;
 import org.apache.streampark.console.core.watcher.FlinkK8sWatcherWrapper;
@@ -93,11 +93,10 @@ public class ProxyServiceImpl implements ProxyService {
     }
 
     @Override
-    public ResponseEntity<?> proxyFlink(HttpServletRequest request, Application app) throws Exception {
+    public ResponseEntity<?> proxyFlink(HttpServletRequest request, FlinkApplication app) throws Exception {
         ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE);
-
         String url = null;
-        switch (app.getFlinkExecutionMode()) {
+        switch (app.getDeployModeEnum()) {
             case YARN_PER_JOB:
             case YARN_APPLICATION:
             case YARN_SESSION:
@@ -115,7 +114,7 @@ public class ProxyServiceImpl implements ProxyService {
                 break;
             default:
                 throw new UnsupportedOperationException(
-                    "unsupported executionMode ".concat(app.getFlinkExecutionMode().getName()));
+                    "unsupported deployMode ".concat(app.getDeployModeEnum().getName()));
         }
 
         if (url == null) {
@@ -129,22 +128,25 @@ public class ProxyServiceImpl implements ProxyService {
     }
 
     @Override
-    public ResponseEntity<?> proxyYarn(HttpServletRequest request, ApplicationLog log) throws Exception {
-        ResponseEntity.BodyBuilder builder = ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE);
-        String yarnId = log.getYarnAppId();
-        if (StringUtils.isBlank(yarnId)) {
-            return builder.body("The yarn application id is null.");
+    public ResponseEntity<?> proxySpark(HttpServletRequest request, SparkApplication app) throws Exception {
+        ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE);
+        switch (app.getDeployModeEnum()) {
+            case YARN_CLIENT:
+            case YARN_CLUSTER:
+                String yarnURL = YarnUtils.getRMWebAppProxyURL();
+                String url = yarnURL + "/proxy/" + app.getClusterId();
+                url += getRequestURL(request, "/proxy/spark/" + app.getId());
+                return proxyYarnRequest(request, url);
+            default:
+                throw new UnsupportedOperationException(
+                    "unsupported deployMode ".concat(app.getDeployModeEnum().getName()));
         }
-        String yarnURL = YarnUtils.getRMWebAppProxyURL();
-        String url = yarnURL + "/proxy/" + yarnId + "/";
-        url += getRequestURL(request, "/proxy/yarn/" + log.getId());
-        return proxyYarnRequest(request, url);
     }
 
     @Override
-    public ResponseEntity<?> proxyYarn(HttpServletRequest request, SparkApplicationLog log) throws Exception {
+    public ResponseEntity<?> proxyYarn(HttpServletRequest request, ApplicationLog log) throws Exception {
         ResponseEntity.BodyBuilder builder = ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE);
-        String yarnId = log.getSparkAppId();
+        String yarnId = log.getClusterId();
         if (StringUtils.isBlank(yarnId)) {
             return builder.body("The yarn application id is null.");
         }
@@ -158,7 +160,7 @@ public class ProxyServiceImpl implements ProxyService {
     public ResponseEntity<?> proxyHistory(HttpServletRequest request, ApplicationLog log) throws Exception {
         ResponseEntity.BodyBuilder builder = ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE);
 
-        String url = log.getJobManagerUrl();
+        String url = log.getTrackingUrl();
         if (StringUtils.isBlank(url)) {
             return builder.body("The jobManager url is null.");
         }
@@ -167,7 +169,7 @@ public class ProxyServiceImpl implements ProxyService {
     }
 
     @Override
-    public ResponseEntity<?> proxyCluster(HttpServletRequest request, Long clusterId) throws Exception {
+    public ResponseEntity<?> proxyFlinkCluster(HttpServletRequest request, Long clusterId) throws Exception {
         ResponseEntity.BodyBuilder builder = ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE);
         FlinkCluster cluster = flinkClusterService.getById(clusterId);
         if (cluster == null) {
@@ -178,8 +180,8 @@ public class ProxyServiceImpl implements ProxyService {
             return builder.body("The cluster address is invalid.");
         }
 
-        url += getRequestURL(request, "/proxy/cluster/" + clusterId);
-        switch (cluster.getFlinkExecutionModeEnum()) {
+        url += getRequestURL(request, "/proxy/flink_cluster/" + clusterId);
+        switch (cluster.getFlinkDeployModeEnum()) {
             case YARN_PER_JOB:
             case YARN_APPLICATION:
             case YARN_SESSION:
@@ -190,7 +192,7 @@ public class ProxyServiceImpl implements ProxyService {
                 return proxyRequest(request, url);
             default:
                 throw new UnsupportedOperationException(
-                    "unsupported executionMode ".concat(cluster.getFlinkExecutionModeEnum().getName()));
+                    "unsupported deployMode ".concat(cluster.getFlinkDeployModeEnum().getName()));
         }
     }
 

@@ -21,8 +21,8 @@ import org.apache.streampark.common.conf.ConfigKeys;
 import org.apache.streampark.common.conf.Workspace;
 import org.apache.streampark.common.constants.Constants;
 import org.apache.streampark.common.enums.ApplicationType;
-import org.apache.streampark.common.enums.SparkDevelopmentMode;
-import org.apache.streampark.common.enums.SparkExecutionMode;
+import org.apache.streampark.common.enums.SparkDeployMode;
+import org.apache.streampark.common.enums.SparkJobType;
 import org.apache.streampark.common.enums.StorageType;
 import org.apache.streampark.common.fs.FsOperator;
 import org.apache.streampark.console.base.mybatis.entity.BaseEntity;
@@ -35,6 +35,7 @@ import org.apache.streampark.console.core.enums.SparkAppStateEnum;
 import org.apache.streampark.console.core.metrics.spark.SparkApplicationSummary;
 import org.apache.streampark.console.core.util.YarnQueueLabelExpression;
 import org.apache.streampark.flink.packer.maven.DependencyInfo;
+import org.apache.streampark.spark.kubernetes.model.SparkK8sPodTemplates;
 
 import org.apache.commons.lang3.StringUtils;
 
@@ -45,7 +46,8 @@ import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.baomidou.mybatisplus.core.toolkit.support.SFunction;
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 
@@ -54,12 +56,13 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 
-@Data
+@Getter
+@Setter
 @TableName("t_spark_app")
 @Slf4j
 public class SparkApplication extends BaseEntity {
 
-    @TableId(type = IdType.AUTO)
+    @TableId(type = IdType.INPUT)
     private Long id;
 
     private Long teamId;
@@ -76,7 +79,7 @@ public class SparkApplication extends BaseEntity {
     /** spark.app.name */
     private String appName;
 
-    private Integer executionMode;
+    private Integer deployMode;
 
     /** 1: cicd (build from csv) 2: upload (upload local jar job) */
     private Integer resourceFrom;
@@ -110,7 +113,7 @@ public class SparkApplication extends BaseEntity {
      * driver pod name for spark on K8s.(will be supported in the future)
      */
     @TableField(updateStrategy = FieldStrategy.IGNORED)
-    private String appId;
+    private String clusterId;
 
     private String yarnQueue;
 
@@ -136,6 +139,14 @@ public class SparkApplication extends BaseEntity {
 
     /** k8s namespace */
     private String k8sNamespace = Constants.DEFAULT;
+
+    /** spark kubernetes pod template */
+    private String k8sDriverPodTemplate;
+
+    private String k8sExecutorPodTemplate;
+
+    /** spark-hadoop integration on spark-k8s mode */
+    private Boolean k8sHadoopIntegration;
 
     @TableField("HADOOP_USER")
     private String hadoopUser;
@@ -233,8 +244,8 @@ public class SparkApplication extends BaseEntity {
     }
 
     public void resolveYarnQueue() {
-        if (!(SparkExecutionMode.YARN_CLIENT == this.getSparkExecutionMode()
-            || SparkExecutionMode.YARN_CLUSTER == this.getSparkExecutionMode())) {
+        if (!(SparkDeployMode.YARN_CLIENT == this.getDeployModeEnum()
+            || SparkDeployMode.YARN_CLUSTER == this.getDeployModeEnum())) {
             return;
         }
         if (StringUtils.isBlank(this.yarnQueue)) {
@@ -312,8 +323,8 @@ public class SparkApplication extends BaseEntity {
     }
 
     @JsonIgnore
-    public SparkDevelopmentMode getDevelopmentMode() {
-        return SparkDevelopmentMode.valueOf(jobType);
+    public SparkJobType getJobTypeEnum() {
+        return SparkJobType.valueOf(jobType);
     }
 
     @JsonIgnore
@@ -322,8 +333,8 @@ public class SparkApplication extends BaseEntity {
     }
 
     @JsonIgnore
-    public SparkExecutionMode getSparkExecutionMode() {
-        return SparkExecutionMode.of(executionMode);
+    public SparkDeployMode getDeployModeEnum() {
+        return SparkDeployMode.of(deployMode);
     }
 
     /** Local compilation and packaging working directory */
@@ -336,31 +347,33 @@ public class SparkApplication extends BaseEntity {
 
     @JsonIgnore
     public String getLocalAppHome() {
-        String path = String.format("%s/%s", Workspace.local().SPARK_APP_WORKSPACE(), id.toString());
+        String path = String.format("%s/%s", Workspace.local().APP_WORKSPACE(), id.toString());
         log.info("local appHome:{}", path);
         return path;
     }
 
     @JsonIgnore
     public String getRemoteAppHome() {
-        String path = String.format("%s/%s", Workspace.remote().SPARK_APP_WORKSPACE(), id.toString());
+        String path = String.format("%s/%s", Workspace.remote().APP_WORKSPACE(), id.toString());
         log.info("remote appHome:{}", path);
         return path;
     }
 
-    /** Automatically identify remoteAppHome or localAppHome based on app SparkExecutionMode */
+    /** Automatically identify remoteAppHome or localAppHome based on app SparkDeployMode */
     @JsonIgnore
     public String getAppHome() {
-        switch (this.getSparkExecutionMode()) {
+        switch (this.getDeployModeEnum()) {
             case REMOTE:
             case LOCAL:
+            case KUBERNETES_NATIVE_CLIENT:
+            case KUBERNETES_NATIVE_CLUSTER:
                 return getLocalAppHome();
             case YARN_CLIENT:
             case YARN_CLUSTER:
                 return getRemoteAppHome();
             default:
                 throw new UnsupportedOperationException(
-                    "unsupported executionMode ".concat(getSparkExecutionMode().getName()));
+                    "unsupported deployMode ".concat(getDeployModeEnum().getName()));
         }
     }
 
@@ -372,6 +385,10 @@ public class SparkApplication extends BaseEntity {
     @JsonIgnore
     public ApplicationType getApplicationType() {
         return ApplicationType.of(appType);
+    }
+
+    public SparkK8sPodTemplates getK8sPodTemplates() {
+        return SparkK8sPodTemplates.of(k8sDriverPodTemplate, k8sExecutorPodTemplate);
     }
 
     @JsonIgnore
@@ -388,24 +405,24 @@ public class SparkApplication extends BaseEntity {
 
     @JsonIgnore
     public boolean isSparkOnYarnJob() {
-        return SparkExecutionMode.YARN_CLUSTER.getMode() == (this.getExecutionMode())
-            || SparkExecutionMode.YARN_CLIENT.getMode() == (this.getExecutionMode());
+        return SparkDeployMode.YARN_CLUSTER.getMode() == (this.getDeployMode())
+            || SparkDeployMode.YARN_CLIENT.getMode() == (this.getDeployMode());
     }
 
     @JsonIgnore
     public boolean isSparkSqlJob() {
-        return SparkDevelopmentMode.SPARK_SQL.getMode().equals(this.getJobType());
+        return SparkJobType.SPARK_SQL.getMode().equals(this.getJobType());
     }
 
     @JsonIgnore
     public boolean isSparkJarJob() {
-        return SparkDevelopmentMode.SPARK_JAR.getMode().equals(this.getJobType());
+        return SparkJobType.SPARK_JAR.getMode().equals(this.getJobType());
     }
 
     @JsonIgnore
     public boolean isSparkJarOrPySparkJob() {
-        return SparkDevelopmentMode.SPARK_JAR.getMode().equals(this.getJobType())
-            || SparkDevelopmentMode.PYSPARK.getMode().equals(this.getJobType());
+        return SparkJobType.SPARK_JAR.getMode().equals(this.getJobType())
+            || SparkJobType.PYSPARK.getMode().equals(this.getJobType());
     }
 
     @JsonIgnore
@@ -455,19 +472,21 @@ public class SparkApplication extends BaseEntity {
 
     @JsonIgnore
     public StorageType getStorageType() {
-        return getStorageType(getExecutionMode());
+        return getStorageType(getDeployMode());
     }
 
-    public static StorageType getStorageType(Integer execMode) {
-        SparkExecutionMode executionModeEnum = SparkExecutionMode.of(execMode);
-        switch (Objects.requireNonNull(executionModeEnum)) {
+    public static StorageType getStorageType(Integer deployMode) {
+        SparkDeployMode deployModeEnum = SparkDeployMode.of(deployMode);
+        switch (Objects.requireNonNull(deployModeEnum)) {
             case YARN_CLUSTER:
             case YARN_CLIENT:
                 return StorageType.HDFS;
+            case KUBERNETES_NATIVE_CLUSTER:
+            case KUBERNETES_NATIVE_CLIENT:
             case REMOTE:
                 return StorageType.LFS;
             default:
-                throw new UnsupportedOperationException("Unsupported ".concat(executionModeEnum.getName()));
+                throw new UnsupportedOperationException("Unsupported ".concat(deployModeEnum.getName()));
         }
     }
 
@@ -509,12 +528,12 @@ public class SparkApplication extends BaseEntity {
     public static class SFunc {
 
         public static final SFunction<SparkApplication, Long> ID = SparkApplication::getId;
-        public static final SFunction<SparkApplication, String> APP_ID = SparkApplication::getAppId;
+        public static final SFunction<SparkApplication, String> APP_ID = SparkApplication::getClusterId;
         public static final SFunction<SparkApplication, Date> START_TIME = SparkApplication::getStartTime;
         public static final SFunction<SparkApplication, Date> END_TIME = SparkApplication::getEndTime;
         public static final SFunction<SparkApplication, Long> DURATION = SparkApplication::getDuration;
         public static final SFunction<SparkApplication, Integer> STATE = SparkApplication::getState;
         public static final SFunction<SparkApplication, String> OPTIONS = SparkApplication::getOptions;
-        public static final SFunction<SparkApplication, Integer> EXECUTION_MODE = SparkApplication::getExecutionMode;
+        public static final SFunction<SparkApplication, Integer> EXECUTION_MODE = SparkApplication::getDeployMode;
     }
 }

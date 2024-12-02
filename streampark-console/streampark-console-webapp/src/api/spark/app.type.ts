@@ -43,7 +43,7 @@ export interface SparkApplication {
   appType?: number;
   versionId?: string;
   appName?: string;
-  executionMode?: number;
+  deployMode?: number;
   resourceFrom?: number;
   projectId?: number;
   module?: string;
@@ -53,6 +53,7 @@ export interface SparkApplication {
   appProperties?: string;
   appArgs?: string;
   appId?: string;
+  clusterId?: string;
   yarnQueue?: string;
   yarnQueueName?: string;
   yarnQueueLabel?: string;
@@ -116,7 +117,7 @@ interface AppControl {
 // create Params
 export interface CreateParams {
   jobType: number;
-  executionMode: number;
+  deployMode: number;
   versionId: string;
   flinkSql: string;
   appType: number;

@@ -33,8 +33,8 @@ trait SparkClientTrait extends Logger {
          |    userSparkHome    : ${submitRequest.sparkVersion.sparkHome}
          |    sparkVersion     : ${submitRequest.sparkVersion.version}
          |    appName          : ${submitRequest.appName}
-         |    devMode          : ${submitRequest.developmentMode.name()}
-         |    execMode         : ${submitRequest.executionMode.name()}
+         |    jobType          : ${submitRequest.jobType.name()}
+         |    deployMode       : ${submitRequest.deployMode.name()}
          |    applicationType  : ${submitRequest.applicationType.getName}
          |    appArgs          : ${submitRequest.appArgs}
          |    appConf          : ${submitRequest.appConf}
@@ -51,7 +51,7 @@ trait SparkClientTrait extends Logger {
       case Failure(e) =>
         logError(
           s"spark job ${submitRequest.appName} start failed, " +
-            s"executionMode: ${submitRequest.executionMode.getName}, " +
+            s"deployMode: ${submitRequest.deployMode.getName}, " +
             s"detail: ${ExceptionUtils.stringifyException(e)}")
         throw e
     }
@@ -60,24 +60,24 @@ trait SparkClientTrait extends Logger {
   def setConfig(submitRequest: SubmitRequest): Unit
 
   @throws[Exception]
-  def stop(stopRequest: StopRequest): StopResponse = {
+  def cancel(stopRequest: CancelRequest): CancelResponse = {
     logInfo(
       s"""
-         |----------------------------------------- spark job stop ----------------------------------
+         |----------------------------------------- spark job cancel ----------------------------------
          |     userSparkHome     : ${stopRequest.sparkVersion.sparkHome}
          |     sparkVersion      : ${stopRequest.sparkVersion.version}
          |     appId             : ${stopRequest.appId}
          |-------------------------------------------------------------------------------------------
          |""".stripMargin)
 
-    doStop(stopRequest)
+    doCancel(stopRequest)
   }
 
   @throws[Exception]
   def doSubmit(submitRequest: SubmitRequest): SubmitResponse
 
   @throws[Exception]
-  def doStop(stopRequest: StopRequest): StopResponse
+  def doCancel(cancelRequest: CancelRequest): CancelResponse
 
   private def prepareConfig(submitRequest: SubmitRequest): Unit = {
     // 1) filter illegal configuration key

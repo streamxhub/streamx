@@ -19,17 +19,17 @@ package org.apache.streampark.flink.kubernetes
 
 import org.apache.streampark.common.util.Implicits._
 import org.apache.streampark.common.util.Logger
-import org.apache.streampark.flink.kubernetes.enums.FlinkK8sExecuteMode
+import org.apache.streampark.flink.kubernetes.enums.FlinkK8sDeployMode
 import org.apache.streampark.flink.kubernetes.ingress.IngressController
 import org.apache.streampark.flink.kubernetes.model.ClusterKey
 
-import io.fabric8.kubernetes.client.{DefaultKubernetesClient, KubernetesClient, KubernetesClientException}
 import org.apache.flink.client.cli.ClientOptions
 import org.apache.flink.client.deployment.DefaultClusterClientServiceLoader
 import org.apache.flink.client.program.ClusterClient
 import org.apache.flink.configuration.{Configuration, DeploymentOptions, RestOptions}
 import org.apache.flink.kubernetes.KubernetesClusterDescriptor
 import org.apache.flink.kubernetes.configuration.KubernetesConfigOptions
+import org.apache.flink.kubernetes.shaded.io.fabric8.kubernetes.client.{DefaultKubernetesClient, KubernetesClient, KubernetesClientException}
 import org.apache.hc.core5.util.Timeout
 
 import javax.annotation.Nullable
@@ -66,7 +66,7 @@ object KubernetesRetriever extends Logger {
   def newFinkClusterClient(
       clusterId: String,
       @Nullable namespace: String,
-      executeMode: FlinkK8sExecuteMode.Value): Option[ClusterClient[String]] = {
+      executeMode: FlinkK8sDeployMode.Value): Option[ClusterClient[String]] = {
     // build flink config
     val flinkConfig = new Configuration()
     flinkConfig.setString(DeploymentOptions.TARGET, executeMode.toString)

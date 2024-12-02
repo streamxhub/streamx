@@ -22,10 +22,10 @@ import org.apache.streampark.console.base.exception.AlertException;
 import org.apache.streampark.console.base.mybatis.pager.MybatisPager;
 import org.apache.streampark.console.core.bean.AlertConfigParams;
 import org.apache.streampark.console.core.entity.AlertConfig;
-import org.apache.streampark.console.core.entity.Application;
+import org.apache.streampark.console.core.entity.FlinkApplication;
 import org.apache.streampark.console.core.mapper.AlertConfigMapper;
 import org.apache.streampark.console.core.service.alert.AlertConfigService;
-import org.apache.streampark.console.core.service.application.ApplicationInfoService;
+import org.apache.streampark.console.core.service.application.FlinkApplicationInfoService;
 
 import org.apache.commons.collections.CollectionUtils;
 
@@ -49,17 +49,14 @@ public class AlertConfigServiceImpl extends ServiceImpl<AlertConfigMapper, Alert
         AlertConfigService {
 
     @Autowired
-    private ApplicationInfoService applicationInfoService;
+    private FlinkApplicationInfoService applicationInfoService;
 
     @Override
     public IPage<AlertConfigParams> page(Long userId, RestRequest request) {
         // build query conditions
-        LambdaQueryWrapper<AlertConfig> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(userId != null, AlertConfig::getUserId, userId);
-
         Page<AlertConfig> page = MybatisPager.getPage(request);
-        IPage<AlertConfig> resultPage = getBaseMapper().selectPage(page, wrapper);
-
+        IPage<AlertConfig> resultPage =
+            this.lambdaQuery().eq(userId != null, AlertConfig::getUserId, userId).page(page);
         Page<AlertConfigParams> result = new Page<>();
         if (CollectionUtils.isNotEmpty(resultPage.getRecords())) {
             result.setRecords(
@@ -71,14 +68,13 @@ public class AlertConfigServiceImpl extends ServiceImpl<AlertConfigMapper, Alert
 
     @Override
     public boolean exist(AlertConfig alertConfig) {
-        AlertConfig confByName = this.baseMapper.selectAlertConfByName(alertConfig);
-        return confByName != null;
+        return this.lambdaQuery().eq(AlertConfig::getAlertName, alertConfig.getAlertName()).exists();
     }
 
     @Override
     public boolean removeById(Long id) throws AlertException {
         long count = applicationInfoService.count(
-            new LambdaQueryWrapper<Application>().eq(id != null, Application::getAlertId, id));
+            new LambdaQueryWrapper<FlinkApplication>().eq(id != null, FlinkApplication::getAlertId, id));
         if (count > 0) {
             throw new AlertException(
                 String.format(

@@ -35,9 +35,9 @@ import java.nio.file.Files
 
 case class SubmitRequest(
     sparkVersion: SparkVersion,
-    executionMode: SparkExecutionMode,
+    deployMode: SparkDeployMode,
     sparkYaml: String,
-    developmentMode: SparkDevelopmentMode,
+    jobType: SparkJobType,
     id: Long,
     appName: String,
     mainClass: String,
@@ -59,18 +59,15 @@ case class SubmitRequest(
   lazy val sparkParameterMap: Map[String, String] = getParameterMap(
     KEY_SPARK_PROPERTY_PREFIX)
 
-  lazy val appMain: String = this.developmentMode match {
-    case SparkDevelopmentMode.SPARK_SQL => Constants.STREAMPARK_SPARKSQL_CLIENT_CLASS
-    case SparkDevelopmentMode.SPARK_JAR | SparkDevelopmentMode.PYSPARK => mainClass
-    case SparkDevelopmentMode.UNKNOWN => throw new IllegalArgumentException("Unknown deployment Mode")
+  lazy val appMain: String = this.jobType match {
+    case SparkJobType.SPARK_SQL => Constants.STREAMPARK_SPARKSQL_CLIENT_CLASS
+    case SparkJobType.SPARK_JAR | SparkJobType.PYSPARK => mainClass
+    case SparkJobType.UNKNOWN => throw new IllegalArgumentException("Unknown deployment Mode")
   }
 
   lazy val userJarPath: String = {
-    executionMode match {
-      case _ =>
-        checkBuildResult()
-        buildResult.asInstanceOf[ShadedBuildResponse].shadedJarPath
-    }
+    checkBuildResult()
+    buildResult.asInstanceOf[ShadedBuildResponse].shadedJarPath
   }
 
   def hasExtra(key: String): Boolean = MapUtils.isNotEmpty(extraParameter) && extraParameter.containsKey(key)
@@ -149,16 +146,13 @@ case class SubmitRequest(
 
   @throws[Exception]
   private def checkBuildResult(): Unit = {
-    executionMode match {
-      case _ =>
-        if (this.buildResult == null) {
-          throw new Exception(
-            s"[spark-submit] current job: $appName was not yet built, buildResult is empty")
-        }
-        if (!this.buildResult.pass) {
-          throw new Exception(
-            s"[spark-submit] current job $appName build failed, please check")
-        }
+    if (this.buildResult == null) {
+      throw new Exception(
+        s"[spark-submit] current job: $appName was not yet built, buildResult is empty")
+    }
+    if (!this.buildResult.pass) {
+      throw new Exception(
+        s"[spark-submit] current job $appName build failed, please check")
     }
   }
 

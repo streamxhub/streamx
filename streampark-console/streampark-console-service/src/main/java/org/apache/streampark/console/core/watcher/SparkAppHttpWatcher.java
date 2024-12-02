@@ -28,8 +28,7 @@ import org.apache.streampark.console.core.enums.StopFromEnum;
 import org.apache.streampark.console.core.metrics.spark.Job;
 import org.apache.streampark.console.core.metrics.spark.SparkApplicationSummary;
 import org.apache.streampark.console.core.metrics.yarn.YarnAppInfo;
-import org.apache.streampark.console.core.service.SparkApplicationLogService;
-import org.apache.streampark.console.core.service.SparkEnvService;
+import org.apache.streampark.console.core.service.DistributedTaskService;
 import org.apache.streampark.console.core.service.alert.AlertService;
 import org.apache.streampark.console.core.service.application.SparkApplicationActionService;
 import org.apache.streampark.console.core.service.application.SparkApplicationInfoService;
@@ -64,6 +63,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executor;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Component
@@ -79,10 +79,7 @@ public class SparkAppHttpWatcher {
     private SparkApplicationInfoService applicationInfoService;
 
     @Autowired
-    private SparkApplicationLogService applicationLogService;
-
-    @Autowired
-    private SparkEnvService sparkEnvService;
+    private DistributedTaskService distributedTaskService;
 
     @Autowired
     private AlertService alertService;
@@ -134,16 +131,19 @@ public class SparkAppHttpWatcher {
     @PostConstruct
     public void init() {
         WATCHING_APPS.clear();
-        List<SparkApplication> applications =
-            applicationManageService.list(
-                new LambdaQueryWrapper<SparkApplication>()
-                    .eq(SparkApplication::getTracking, 1)
-                    .ne(SparkApplication::getState, SparkAppStateEnum.LOST.getValue()));
-        applications.forEach(
-            (app) -> {
-                WATCHING_APPS.put(app.getId(), app);
-                STARTING_CACHE.put(app.getId(), DEFAULT_FLAG_BYTE);
-            });
+        List<SparkApplication> applications = applicationManageService.list(
+            new LambdaQueryWrapper<SparkApplication>()
+                .eq(SparkApplication::getTracking, 1)
+                .ne(SparkApplication::getState, SparkAppStateEnum.LOST.getValue()))
+            .stream()
+            .filter(application -> distributedTaskService.isLocalProcessing(application.getId()))
+            .collect(Collectors.toList());
+
+        applications.forEach(app -> {
+            Long appId = app.getId();
+            WATCHING_APPS.put(appId, app);
+            STARTING_CACHE.put(appId, DEFAULT_FLAG_BYTE);
+        });
     }
 
     @PreDestroy
@@ -219,7 +219,7 @@ public class SparkAppHttpWatcher {
                     log.info(
                         "[StreamPark][SparkAppHttpWatcher] getStateFromYarn, app {} was ended, appId is {}, state is {}",
                         application.getId(),
-                        application.getAppId(),
+                        application.getClusterId(),
                         sparkAppStateEnum);
                     application.setEndTime(new Date());
                     if (appFinalStatus.equals(FinalApplicationStatus.FAILED)) {
@@ -321,12 +321,12 @@ public class SparkAppHttpWatcher {
     }
 
     private YarnAppInfo httpYarnAppInfo(SparkApplication application) throws Exception {
-        String reqURL = "ws/v1/cluster/apps/".concat(application.getAppId());
+        String reqURL = "ws/v1/cluster/apps/".concat(application.getClusterId());
         return yarnRestRequest(reqURL, YarnAppInfo.class);
     }
     private Job[] httpJobsStatus(SparkApplication application) throws IOException {
         String format = "proxy/%s/api/v1/applications/%s/jobs";
-        String reqURL = String.format(format, application.getAppId(), application.getAppId());
+        String reqURL = String.format(format, application.getClusterId(), application.getClusterId());
         return yarnRestRequest(reqURL, Job[].class);
     }
 

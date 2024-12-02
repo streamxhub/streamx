@@ -22,7 +22,7 @@ import { fetchBuild, fetchBuildDetail } from '/@/api/flink/flinkBuild';
 import { fetchSavePointHistory } from '/@/api/flink/savepoint';
 import { fetchAppOwners } from '/@/api/system/user';
 import { SvgIcon } from '/@/components/Icon';
-import { AppStateEnum, ExecModeEnum, OptionStateEnum } from '/@/enums/flinkEnum';
+import { AppStateEnum, DeployMode, OptionStateEnum } from '/@/enums/flinkEnum';
 import { useI18n } from '/@/hooks/web/useI18n';
 import { useMessage } from '/@/hooks/web/useMessage';
 
@@ -130,7 +130,7 @@ export const useFlinkApplication = (openStartModal: Fn) => {
         historySavePoint.value = resp.records.filter((x: Recordable) => x.path);
         const latest = resp.records.find((x: Recordable) => x.latest) || null;
         openStartModal(true, {
-          executionMode: app.executionMode,
+          deployMode: app.deployMode,
           application: app,
           historySavePoint: historySavePoint.value,
           selected: latest,
@@ -226,11 +226,9 @@ export const useFlinkApplication = (openStartModal: Fn) => {
       ],
       content: () => {
         return (
-          <Form class="!pt-50px">
+          <Form class="!pt-50px" layout="vertical" baseColProps={{ span: 22, offset: 1 }}>
             <Form.Item
               label="Job Name"
-              labelCol={{ lg: { span: 7 }, sm: { span: 7 } }}
-              wrapperCol={{ lg: { span: 16 }, sm: { span: 4 } }}
               validateStatus={unref(validateStatus)}
               help={help}
               rules={[{ required: true }]}
@@ -319,24 +317,28 @@ export const useFlinkApplication = (openStartModal: Fn) => {
             class="!pt-40px"
             ref={mappingRef}
             name="mappingForm"
-            labelCol={{ lg: { span: 7 }, sm: { span: 7 } }}
-            wrapperCol={{ lg: { span: 16 }, sm: { span: 4 } }}
+            layout="vertical"
+            baseColProps={{ span: 22, offset: 1 }}
             v-model:model={formValue}
           >
             <Form.Item label="Job Name">
               <Alert message={app.jobName} type="info" />
             </Form.Item>
             {[
-              ExecModeEnum.YARN_PER_JOB,
-              ExecModeEnum.YARN_SESSION,
-              ExecModeEnum.YARN_APPLICATION,
-            ].includes(app.executionMode) && (
+              DeployMode.YARN_PER_JOB,
+              DeployMode.YARN_SESSION,
+              DeployMode.YARN_APPLICATION,
+            ].includes(app.deployMode) && (
               <Form.Item
                 label="YARN Application Id"
-                name="appId"
+                name="clusterId"
                 rules={[{ required: true, message: 'YARN ApplicationId is required' }]}
               >
-                <Input type="text" placeholder="ApplicationId" v-model:value={formValue.appId} />
+                <Input
+                  type="text"
+                  placeholder="ApplicationId"
+                  v-model:value={formValue.clusterId}
+                />
               </Form.Item>
             )}
             <Form.Item
@@ -356,7 +358,7 @@ export const useFlinkApplication = (openStartModal: Fn) => {
           await mappingRef.value.validate();
           await fetchMapping({
             id: app.id,
-            appId: formValue.appId,
+            clusterId: formValue.clusterId,
             jobId: formValue.jobId,
           });
           Swal.fire({

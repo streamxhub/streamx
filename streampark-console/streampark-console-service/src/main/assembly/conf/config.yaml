@@ -100,11 +100,13 @@ sso:
         # Optional, change by authentication client
         # Please replace and fill in your client config below when enabled SSO
 
-registry:
-  # default using jdbc as registry
-  type: jdbc
-  heartbeat-refresh-interval: 1s
-  session-timeout: 3s
+high-availability:
+  enable: false # true
+  # The list of ZooKeeper quorum peers that coordinate the high-availability
+  # setup. This must be a list of the form:
+  # "host1:clientPort,host2:clientPort,..." (default clientPort: 2181)
+  #
+  zookeeper.quorum: 192.168.100.128:2181,192.168.100.129:2181
 
 network:
   # network interface preferred like eth0, default: empty

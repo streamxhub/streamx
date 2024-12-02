@@ -48,7 +48,7 @@
   import {
     AppTypeEnum,
     ClusterStateEnum,
-    ExecModeEnum,
+    DeployMode,
     JobTypeEnum,
     ResourceFromEnum,
   } from '/@/enums/flinkEnum';
@@ -137,7 +137,7 @@
 
   function handleCluster(values: Recordable) {
     let flinkClusterId =
-      values.executionMode == ExecModeEnum.YARN_SESSION
+      values.deployMode == DeployMode.YARN_SESSION
         ? values.yarnSessionClusterId
         : values.flinkClusterId;
     const cluster =
@@ -148,7 +148,7 @@
       })[0] || null;
     if (cluster) {
       Object.assign(values, { flinkClusterId: cluster.id });
-      if (values.executionMode == ExecModeEnum.KUBERNETES_SESSION) {
+      if (values.deployMode == DeployMode.KUBERNETES_SESSION) {
         Object.assign(values, { clusterId: cluster.clusterId });
       }
     }
@@ -237,7 +237,7 @@
     }
 
     let config = values.configOverride;
-    if (config != null && config !== undefined && config.trim() != '') {
+    if (config != null && config.trim() != '') {
       config = encryptByBase64(config);
     } else {
       config = null;
@@ -257,7 +257,7 @@
           : JSON.stringify(dependency),
     };
     handleSubmitParams(params, values, k8sTemplate);
-    handleCreateApp(params);
+    await handleCreateApp(params);
   }
   /* Submit to create */
   async function handleAppCreate(formValue: Recordable) {
@@ -273,9 +273,9 @@
             throw new Error(access);
           }
         }
-        handleSubmitSQL(formValue);
+        await handleSubmitSQL(formValue);
       } else {
-        handleSubmitCustomJob(formValue);
+        await handleSubmitCustomJob(formValue);
       }
     } catch (error) {
       submitLoading.value = false;
@@ -286,7 +286,7 @@
     const param = {};
     for (const k in params) {
       const v = params[k];
-      if (v != null && v !== undefined) {
+      if (v != null) {
         param[k] = v;
       }
     }
