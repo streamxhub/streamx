@@ -79,7 +79,7 @@ public class AlertTemplate implements Serializable {
 
         public AlertTemplateBuilder duration(Date start, Date end) {
             long duration;
-            if (start == null && end == null) {
+            if (start == null) {
                 duration = 0L;
             } else if (end == null) {
                 duration = System.currentTimeMillis() - start.getTime();
