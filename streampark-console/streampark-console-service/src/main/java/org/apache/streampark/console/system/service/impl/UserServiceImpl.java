@@ -33,6 +33,7 @@ import org.apache.streampark.console.system.authentication.JWTToken;
 import org.apache.streampark.console.system.authentication.JWTUtil;
 import org.apache.streampark.console.system.entity.Member;
 import org.apache.streampark.console.system.entity.Role;
+import org.apache.streampark.console.system.entity.Team;
 import org.apache.streampark.console.system.entity.User;
 import org.apache.streampark.console.system.mapper.UserMapper;
 import org.apache.streampark.console.system.service.MemberService;
@@ -286,6 +287,13 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         // 2) user
         user.dataMasking();
         userInfo.put("user", user);
+
+        if (user.getLastTeamId() == null) {
+            List<Team> teams = this.teamService.listByUserId(user.getUserId());
+            if (!teams.isEmpty()) {
+                user.setLastTeamId(teams.get(0).getId());
+            }
+        }
 
         // 3) permissions
         Set<String> permissions = this.listPermissions(user.getUserId(), user.getLastTeamId());
