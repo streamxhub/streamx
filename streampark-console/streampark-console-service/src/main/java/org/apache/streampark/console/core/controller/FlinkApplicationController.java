@@ -244,7 +244,7 @@ public class FlinkApplicationController {
     }
 
     @PostMapping("check/jar")
-    public RestResponse checkjar(String jar) throws IOException {
+    public RestResponse checkJar(String jar) throws IOException {
         Utils.requireCheckJarFile(new File(jar).toURI().toURL());
         return RestResponse.success(true);
     }
