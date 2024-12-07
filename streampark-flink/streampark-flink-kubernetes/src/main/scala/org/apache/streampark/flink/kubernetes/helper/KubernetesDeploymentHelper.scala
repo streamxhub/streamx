@@ -29,7 +29,7 @@ import io.fabric8.kubernetes.client.DefaultKubernetesClient
 import java.io.File
 
 import scala.collection.JavaConversions._
-import scala.util.{Success, Try}
+import scala.util.{Failure, Success, Try}
 
 object KubernetesDeploymentHelper extends Logger {
 
@@ -91,12 +91,14 @@ object KubernetesDeploymentHelper extends Logger {
     deleteConfigMap(nameSpace, deploymentName)
   }
 
-  def checkConnection(): Boolean = {
+  def checkConnection(e: Throwable => Unit): Boolean = {
     Try(new DefaultKubernetesClient) match {
       case Success(client) =>
         client.close()
         true
-      case _ => false
+      case Failure(exception) =>
+        e(exception)
+        false
     }
   }
 
