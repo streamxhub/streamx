@@ -109,8 +109,7 @@ public class LdapService {
         sc.setReturningAttributes(new String[]{ldapUserIdentifyingAttribute});
         sc.setSearchScope(SearchControls.SUBTREE_SCOPE);
         EqualsFilter filter = new EqualsFilter(ldapUserIdentifyingAttribute, userId);
-        NamingEnumeration<SearchResult> results = ctx.search(ldapBaseDn, filter.toString(), sc);
-        return results;
+        return ctx.search(ldapBaseDn, filter.toString(), sc);
     }
 
     private void renderLdapEnv() {
