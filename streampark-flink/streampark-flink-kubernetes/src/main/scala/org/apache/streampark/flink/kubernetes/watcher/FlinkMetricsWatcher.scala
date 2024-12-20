@@ -89,14 +89,14 @@ class FlinkMetricWatcher(conf: MetricWatcherConfig = MetricWatcherConfig.default
         future.onComplete(_.getOrElse(None) match {
           case Some(metric) =>
             val clusterKey = id.toClusterKey
-            // update current flink cluster metrics on cache
-            watchController.flinkMetrics.put(clusterKey, metric)
             val isMetricChanged = {
               val preMetric = watchController.flinkMetrics.get(clusterKey)
               preMetric == null || !preMetric.equalsPayload(metric)
             }
             if (isMetricChanged) {
               eventBus.postAsync(FlinkClusterMetricChangeEvent(id, metric))
+              // update current flink cluster metrics on cache
+              watchController.flinkMetrics.put(clusterKey, metric)
             }
           case _ =>
         })
