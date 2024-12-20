@@ -26,7 +26,7 @@ import org.apache.streampark.console.core.metrics.flink.CheckPoints;
 import org.apache.streampark.console.core.service.SavepointService;
 import org.apache.streampark.console.core.service.alert.AlertService;
 import org.apache.streampark.console.core.service.application.FlinkApplicationActionService;
-import org.apache.streampark.console.core.utils.AlertTemplateUtils;
+import org.apache.streampark.console.core.util.AlertTemplateUtils;
 import org.apache.streampark.console.core.watcher.FlinkAppHttpWatcher;
 
 import com.github.benmanes.caffeine.cache.Cache;

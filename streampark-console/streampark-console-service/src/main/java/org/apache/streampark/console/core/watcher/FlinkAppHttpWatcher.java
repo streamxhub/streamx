@@ -42,7 +42,7 @@ import org.apache.streampark.console.core.service.alert.AlertService;
 import org.apache.streampark.console.core.service.application.FlinkApplicationActionService;
 import org.apache.streampark.console.core.service.application.FlinkApplicationInfoService;
 import org.apache.streampark.console.core.service.application.FlinkApplicationManageService;
-import org.apache.streampark.console.core.utils.AlertTemplateUtils;
+import org.apache.streampark.console.core.util.AlertTemplateUtils;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.hc.client5.http.config.RequestConfig;

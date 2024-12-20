@@ -31,7 +31,7 @@ import org.apache.streampark.console.core.metrics.yarn.YarnAppInfo;
 import org.apache.streampark.console.core.service.FlinkClusterService;
 import org.apache.streampark.console.core.service.alert.AlertService;
 import org.apache.streampark.console.core.service.application.FlinkApplicationInfoService;
-import org.apache.streampark.console.core.utils.AlertTemplateUtils;
+import org.apache.streampark.console.core.util.AlertTemplateUtils;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.yarn.api.records.YarnApplicationState;

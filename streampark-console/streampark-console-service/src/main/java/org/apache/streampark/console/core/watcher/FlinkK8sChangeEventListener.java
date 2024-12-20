@@ -25,7 +25,7 @@ import org.apache.streampark.console.core.enums.OptionStateEnum;
 import org.apache.streampark.console.core.metrics.flink.CheckPoints;
 import org.apache.streampark.console.core.service.alert.AlertService;
 import org.apache.streampark.console.core.service.application.FlinkApplicationManageService;
-import org.apache.streampark.console.core.utils.AlertTemplateUtils;
+import org.apache.streampark.console.core.util.AlertTemplateUtils;
 import org.apache.streampark.flink.kubernetes.enums.FlinkJobState;
 import org.apache.streampark.flink.kubernetes.enums.FlinkK8sDeployMode;
 import org.apache.streampark.flink.kubernetes.event.FlinkClusterMetricChangeEvent;

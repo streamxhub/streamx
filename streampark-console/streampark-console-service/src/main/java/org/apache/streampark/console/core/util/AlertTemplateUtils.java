@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-package org.apache.streampark.console.core.utils;
+package org.apache.streampark.console.core.util;
 
 import org.apache.streampark.common.enums.ClusterState;
 import org.apache.streampark.common.util.DateUtils;

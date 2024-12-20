@@ -33,7 +33,7 @@ import org.apache.streampark.console.core.service.alert.AlertService;
 import org.apache.streampark.console.core.service.application.SparkApplicationActionService;
 import org.apache.streampark.console.core.service.application.SparkApplicationInfoService;
 import org.apache.streampark.console.core.service.application.SparkApplicationManageService;
-import org.apache.streampark.console.core.utils.AlertTemplateUtils;
+import org.apache.streampark.console.core.util.AlertTemplateUtils;
 
 import org.apache.flink.annotation.VisibleForTesting;
 import org.apache.hadoop.yarn.api.records.FinalApplicationStatus;
