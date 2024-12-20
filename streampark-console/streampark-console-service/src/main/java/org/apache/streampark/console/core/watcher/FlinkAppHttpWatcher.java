@@ -305,7 +305,7 @@ public class FlinkAppHttpWatcher {
         FlinkDeployMode deployMode = application.getDeployModeEnum();
         if (FlinkDeployMode.YARN_APPLICATION.equals(deployMode)
             || FlinkDeployMode.YARN_PER_JOB.equals(deployMode)) {
-            if (jobsOverview.getJobs() != null) {
+            if (jobsOverview!= null && jobsOverview.getJobs() != null) {
                 optional =
                     jobsOverview.getJobs().size() > 1
                         ? jobsOverview.getJobs().stream()
@@ -316,10 +316,14 @@ public class FlinkAppHttpWatcher {
                 optional = Optional.empty();
             }
         } else {
-            optional =
-                jobsOverview.getJobs().stream()
-                    .filter(x -> x.getId().equals(application.getJobId()))
-                    .findFirst();
+            if (jobsOverview!= null) {
+                optional =
+                        jobsOverview.getJobs().stream()
+                                .filter(x -> x.getId().equals(application.getJobId()))
+                                .findFirst();
+            } else {
+                optional = Optional.empty();
+            }
         }
 
         if (optional.isPresent()) {
