@@ -17,6 +17,8 @@
 
 package org.apache.streampark.console.core.enums;
 
+import com.baomidou.mybatisplus.annotation.EnumValue;
+
 import java.util.Arrays;
 
 /** notification type */
@@ -27,6 +29,7 @@ public enum NoticeTypeEnum {
     /** message */
     MESSAGE(2);
 
+    @EnumValue
     private final int value;
 
     public int get() {

@@ -41,8 +41,12 @@ public class MessageServiceImpl extends ServiceImpl<MessageMapper, Message>
 
     @Override
     public void push(Message message) {
-        save(message);
-        WebSocketEndpoint.pushNotice(message);
+        try {
+            save(message);
+            WebSocketEndpoint.pushNotice(message);
+        } catch (Exception e) {
+            log.error("Error pushing notice: {}", e.getMessage(), e);
+        }
     }
 
     @Override
