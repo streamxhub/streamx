@@ -35,9 +35,9 @@ import org.apache.streampark.console.core.service.application.SparkApplicationBa
 import org.apache.streampark.spark.client.proxy.SparkShimsProxy;
 import org.apache.streampark.spark.core.util.SparkSqlValidationResult;
 
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.baomidou.mybatisplus.extension.conditions.query.LambdaQueryChainWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import lombok.extern.slf4j.Slf4j;
@@ -136,13 +136,11 @@ public class SparkSqlServiceImpl extends ServiceImpl<SparkSqlMapper, SparkSql>
 
     @Override
     public SparkSql getCandidate(Long appId, CandidateTypeEnum candidateTypeEnum) {
-        LambdaQueryWrapper<SparkSql> queryWrapper = new LambdaQueryWrapper<SparkSql>().eq(SparkSql::getAppId, appId);
-        if (candidateTypeEnum == null) {
-            queryWrapper.gt(SparkSql::getCandidate, CandidateTypeEnum.NONE.get());
-        } else {
-            queryWrapper.eq(SparkSql::getCandidate, candidateTypeEnum.get());
+        LambdaQueryChainWrapper<SparkSql> search = this.lambdaQuery().eq(SparkSql::getAppId, appId);
+        if (candidateTypeEnum != null) {
+            search.eq(SparkSql::getCandidate, candidateTypeEnum.get());
         }
-        return baseMapper.selectOne(queryWrapper);
+        return search.gt(candidateTypeEnum == null, SparkSql::getCandidate, CandidateTypeEnum.NONE.get()).one();
     }
 
     @Override
@@ -160,8 +158,7 @@ public class SparkSqlServiceImpl extends ServiceImpl<SparkSqlMapper, SparkSql>
 
     @Override
     public void removeByAppId(Long appId) {
-        LambdaQueryWrapper<SparkSql> queryWrapper = new LambdaQueryWrapper<SparkSql>().eq(SparkSql::getAppId, appId);
-        baseMapper.delete(queryWrapper);
+        this.lambdaUpdate().eq(SparkSql::getAppId, appId).remove();
     }
 
     @Override

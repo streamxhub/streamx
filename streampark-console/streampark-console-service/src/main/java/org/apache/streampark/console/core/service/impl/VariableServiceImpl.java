@@ -34,7 +34,6 @@ import org.apache.streampark.console.core.util.ServiceHelper;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
@@ -144,10 +143,10 @@ public class VariableServiceImpl extends ServiceImpl<VariableMapper, Variable>
 
     @Override
     public Variable findByVariableCode(Long teamId, String variableCode) {
-        LambdaQueryWrapper<Variable> queryWrapper = new LambdaQueryWrapper<Variable>()
+        return this.lambdaQuery()
             .eq(Variable::getVariableCode, variableCode)
-            .eq(Variable::getTeamId, teamId);
-        return baseMapper.selectOne(queryWrapper);
+            .eq(Variable::getTeamId, teamId)
+            .one();
     }
 
     /**

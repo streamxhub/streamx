@@ -22,7 +22,6 @@ import org.apache.streampark.console.core.enums.EffectiveTypeEnum;
 import org.apache.streampark.console.core.mapper.SparkEffectiveMapper;
 import org.apache.streampark.console.core.service.SparkEffectiveService;
 
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import lombok.extern.slf4j.Slf4j;
@@ -41,26 +40,26 @@ public class SparkEffectiveServiceImpl extends ServiceImpl<SparkEffectiveMapper,
 
     @Override
     public void remove(Long appId, EffectiveTypeEnum effectiveTypeEnum) {
-        LambdaQueryWrapper<SparkEffective> queryWrapper = new LambdaQueryWrapper<SparkEffective>()
+        this.lambdaUpdate()
             .eq(SparkEffective::getAppId, appId)
-            .eq(SparkEffective::getTargetType, effectiveTypeEnum.getType());
-        baseMapper.delete(queryWrapper);
+            .eq(SparkEffective::getTargetType, effectiveTypeEnum.getType())
+            .remove();
     }
 
     @Override
     public SparkEffective get(Long appId, EffectiveTypeEnum effectiveTypeEnum) {
-        LambdaQueryWrapper<SparkEffective> queryWrapper = new LambdaQueryWrapper<SparkEffective>()
+        return this.lambdaQuery()
             .eq(SparkEffective::getAppId, appId)
-            .eq(SparkEffective::getTargetType, effectiveTypeEnum.getType());
-        return this.getOne(queryWrapper);
+            .eq(SparkEffective::getTargetType, effectiveTypeEnum.getType())
+            .one();
     }
 
     @Override
     public void saveOrUpdate(Long appId, EffectiveTypeEnum type, Long id) {
-        LambdaQueryWrapper<SparkEffective> queryWrapper = new LambdaQueryWrapper<SparkEffective>()
+        long count = this.lambdaQuery()
             .eq(SparkEffective::getAppId, appId)
-            .eq(SparkEffective::getTargetType, type.getType());
-        long count = count(queryWrapper);
+            .eq(SparkEffective::getTargetType, type.getType())
+            .count();
         if (count == 0) {
             SparkEffective effective = new SparkEffective();
             effective.setAppId(appId);
@@ -79,8 +78,6 @@ public class SparkEffectiveServiceImpl extends ServiceImpl<SparkEffectiveMapper,
 
     @Override
     public void removeByAppId(Long appId) {
-        LambdaQueryWrapper<SparkEffective> queryWrapper =
-            new LambdaQueryWrapper<SparkEffective>().eq(SparkEffective::getAppId, appId);
-        this.remove(queryWrapper);
+        this.lambdaUpdate().eq(SparkEffective::getAppId, appId).remove();
     }
 }

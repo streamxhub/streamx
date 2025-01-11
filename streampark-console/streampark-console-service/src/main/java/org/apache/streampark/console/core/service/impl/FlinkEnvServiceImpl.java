@@ -28,7 +28,6 @@ import org.apache.streampark.console.core.service.FlinkClusterService;
 import org.apache.streampark.console.core.service.FlinkEnvService;
 import org.apache.streampark.console.core.service.application.FlinkApplicationInfoService;
 
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
@@ -61,12 +60,10 @@ public class FlinkEnvServiceImpl extends ServiceImpl<FlinkEnvMapper, FlinkEnv>
     @Override
     public FlinkEnvCheckEnum check(FlinkEnv version) {
         // 1) check name
-        LambdaQueryWrapper<FlinkEnv> queryWrapper = new LambdaQueryWrapper<FlinkEnv>().eq(FlinkEnv::getFlinkName,
-            version.getFlinkName());
-        if (version.getId() != null) {
-            queryWrapper.ne(FlinkEnv::getId, version.getId());
-        }
-        if (this.count(queryWrapper) > 0) {
+        Long count = this.lambdaQuery().eq(FlinkEnv::getFlinkName,
+            version.getFlinkName())
+            .ne(version.getId() != null, FlinkEnv::getId, version.getId()).count();
+        if (count > 0) {
             return FlinkEnvCheckEnum.NAME_REPEATED;
         }
 

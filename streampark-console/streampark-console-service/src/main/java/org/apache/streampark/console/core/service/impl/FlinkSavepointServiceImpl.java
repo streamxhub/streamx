@@ -53,7 +53,6 @@ import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.flink.configuration.RestOptions;
 
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
@@ -117,9 +116,7 @@ public class FlinkSavepointServiceImpl extends ServiceImpl<FlinkSavepointMapper,
     public void expire(Long appId) {
         FlinkSavepoint savepoint = new FlinkSavepoint();
         savepoint.setLatest(false);
-        LambdaQueryWrapper<FlinkSavepoint> queryWrapper =
-            new LambdaQueryWrapper<FlinkSavepoint>().eq(FlinkSavepoint::getAppId, appId);
-        this.update(savepoint, queryWrapper);
+        this.lambdaUpdate().eq(FlinkSavepoint::getAppId, appId).update(savepoint);
     }
 
     @Override
@@ -131,10 +128,10 @@ public class FlinkSavepointServiceImpl extends ServiceImpl<FlinkSavepointMapper,
 
     @Override
     public FlinkSavepoint getLatest(Long id) {
-        LambdaQueryWrapper<FlinkSavepoint> queryWrapper = new LambdaQueryWrapper<FlinkSavepoint>()
+        return this.lambdaQuery()
             .eq(FlinkSavepoint::getAppId, id)
-            .eq(FlinkSavepoint::getLatest, true);
-        return this.getOne(queryWrapper);
+            .eq(FlinkSavepoint::getLatest, true)
+            .one();
     }
 
     @Override
@@ -215,22 +212,17 @@ public class FlinkSavepointServiceImpl extends ServiceImpl<FlinkSavepointMapper,
 
     @Override
     public IPage<FlinkSavepoint> getPage(FlinkSavepoint savepoint, RestRequest request) {
-        request.setSortField("trigger_time");
         Page<FlinkSavepoint> page = MybatisPager.getPage(request);
-        LambdaQueryWrapper<FlinkSavepoint> queryWrapper =
-            new LambdaQueryWrapper<FlinkSavepoint>().eq(FlinkSavepoint::getAppId,
-                savepoint.getAppId());
-        return this.page(page, queryWrapper);
+        return this.lambdaQuery().eq(FlinkSavepoint::getAppId,
+            savepoint.getAppId())
+            .orderByDesc(FlinkSavepoint::getTriggerTime)
+            .page(page);
     }
 
     @Override
     public void remove(FlinkApplication appParam) {
         Long appId = appParam.getId();
-
-        LambdaQueryWrapper<FlinkSavepoint> queryWrapper =
-            new LambdaQueryWrapper<FlinkSavepoint>().eq(FlinkSavepoint::getAppId, appId);
-        this.remove(queryWrapper);
-
+        this.lambdaUpdate().eq(FlinkSavepoint::getAppId, appId).remove();
         try {
             appParam
                 .getFsOperator()
@@ -470,11 +462,11 @@ public class FlinkSavepointServiceImpl extends ServiceImpl<FlinkSavepointMapper,
             return;
         }
         FlinkSavepoint savepoint = savepointPage.getRecords().get(cpThreshold - 1);
-        LambdaQueryWrapper<FlinkSavepoint> lambdaQueryWrapper = new LambdaQueryWrapper<FlinkSavepoint>()
+        this.lambdaUpdate()
             .eq(FlinkSavepoint::getAppId, entity.getAppId())
             .eq(FlinkSavepoint::getType, CHECKPOINT.get())
-            .lt(FlinkSavepoint::getTriggerTime, savepoint.getTriggerTime());
-        this.remove(lambdaQueryWrapper);
+            .lt(FlinkSavepoint::getTriggerTime, savepoint.getTriggerTime())
+            .remove();
     }
 
     @Nonnull

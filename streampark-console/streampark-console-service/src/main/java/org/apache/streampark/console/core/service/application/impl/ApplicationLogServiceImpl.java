@@ -23,7 +23,6 @@ import org.apache.streampark.console.core.entity.ApplicationLog;
 import org.apache.streampark.console.core.mapper.ApplicationLogMapper;
 import org.apache.streampark.console.core.service.application.ApplicationLogService;
 
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
@@ -41,18 +40,17 @@ public class ApplicationLogServiceImpl extends ServiceImpl<ApplicationLogMapper,
 
     @Override
     public IPage<ApplicationLog> getPage(ApplicationLog applicationLog, RestRequest request) {
-        request.setSortField("option_time");
         Page<ApplicationLog> page = MybatisPager.getPage(request);
-        LambdaQueryWrapper<ApplicationLog> queryWrapper = new LambdaQueryWrapper<ApplicationLog>()
-            .eq(ApplicationLog::getAppId, applicationLog.getAppId());
-        return this.page(page, queryWrapper);
+        return this.lambdaQuery()
+            .eq(ApplicationLog::getAppId, applicationLog.getAppId())
+            .orderByDesc(ApplicationLog::getOptionTime).page(page);
     }
 
     @Override
     public void removeByAppId(Long appId) {
-        LambdaQueryWrapper<ApplicationLog> queryWrapper = new LambdaQueryWrapper<ApplicationLog>()
-            .eq(ApplicationLog::getAppId, appId);
-        this.remove(queryWrapper);
+        this.lambdaUpdate()
+            .eq(ApplicationLog::getAppId, appId)
+            .remove();
     }
 
     @Override

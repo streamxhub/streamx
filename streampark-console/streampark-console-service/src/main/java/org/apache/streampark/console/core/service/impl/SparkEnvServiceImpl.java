@@ -23,7 +23,6 @@ import org.apache.streampark.console.core.enums.FlinkEnvCheckEnum;
 import org.apache.streampark.console.core.mapper.SparkEnvMapper;
 import org.apache.streampark.console.core.service.SparkEnvService;
 
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -49,12 +48,13 @@ public class SparkEnvServiceImpl extends ServiceImpl<SparkEnvMapper, SparkEnv>
     @Override
     public FlinkEnvCheckEnum check(SparkEnv version) {
         // 1) check name
-        LambdaQueryWrapper<SparkEnv> queryWrapper = new LambdaQueryWrapper<SparkEnv>().eq(SparkEnv::getSparkName,
-            version.getSparkName());
-        if (version.getId() != null) {
-            queryWrapper.ne(SparkEnv::getId, version.getId());
-        }
-        if (this.count(queryWrapper) > 0) {
+        boolean exists = this.lambdaQuery()
+            .eq(SparkEnv::getSparkName,
+                version.getSparkName())
+            .ne(version.getId() != null, SparkEnv::getId, version.getId())
+            .exists();
+
+        if (exists) {
             return FlinkEnvCheckEnum.NAME_REPEATED;
         }
 
@@ -116,8 +116,7 @@ public class SparkEnvServiceImpl extends ServiceImpl<SparkEnvMapper, SparkEnv>
 
     @Override
     public SparkEnv getDefault() {
-        return this.baseMapper.selectOne(
-            new LambdaQueryWrapper<SparkEnv>().eq(SparkEnv::getIsDefault, true));
+        return this.lambdaQuery().eq(SparkEnv::getIsDefault, true).one();
     }
 
     @Override

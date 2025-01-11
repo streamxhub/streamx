@@ -30,7 +30,6 @@ import org.apache.streampark.console.core.mapper.SparkApplicationConfigMapper;
 import org.apache.streampark.console.core.service.SparkEffectiveService;
 import org.apache.streampark.console.core.service.application.SparkApplicationConfigService;
 
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
@@ -257,8 +256,7 @@ public class SparkApplicationConfigServiceImpl
 
     @Override
     public void removeByAppId(Long appId) {
-        baseMapper.delete(
-            new LambdaQueryWrapper<SparkApplicationConfig>().eq(SparkApplicationConfig::getAppId, appId));
+        this.lambdaUpdate().eq(SparkApplicationConfig::getAppId, appId).remove();
     }
 
     private void fillEffectiveField(Long id, List<SparkApplicationConfig> configList) {

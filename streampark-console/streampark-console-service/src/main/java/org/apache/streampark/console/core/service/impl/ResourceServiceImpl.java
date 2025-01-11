@@ -52,7 +52,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.flink.configuration.ConfigOption;
 import org.apache.flink.table.factories.Factory;
 
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
@@ -188,10 +187,10 @@ public class ResourceServiceImpl extends ServiceImpl<ResourceMapper, Resource>
 
     @Override
     public Resource findByResourceName(Long teamId, String name) {
-        LambdaQueryWrapper<Resource> queryWrapper = new LambdaQueryWrapper<Resource>()
+        return this.lambdaQuery()
             .eq(Resource::getResourceName, name)
-            .eq(Resource::getTeamId, teamId);
-        return baseMapper.selectOne(queryWrapper);
+            .eq(Resource::getTeamId, teamId)
+            .one();
     }
 
     @Override
@@ -378,12 +377,9 @@ public class ResourceServiceImpl extends ServiceImpl<ResourceMapper, Resource>
     }
 
     private boolean existsFlinkConnector(Long id, String connectorId) {
-        LambdaQueryWrapper<Resource> lambdaQueryWrapper = new LambdaQueryWrapper<Resource>()
-            .eq(Resource::getResourceName, connectorId);
-        if (id != null) {
-            lambdaQueryWrapper.ne(Resource::getId, id);
-        }
-        return getBaseMapper().exists(lambdaQueryWrapper);
+        return this.lambdaQuery().eq(Resource::getResourceName, connectorId)
+            .ne(id != null, Resource::getId, id)
+            .exists();
     }
 
     private FlinkConnector getConnectorResource(List<File> jars, List<String> factories) {

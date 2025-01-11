@@ -40,7 +40,6 @@ import org.apache.hadoop.yarn.api.records.ApplicationReport;
 import org.apache.hadoop.yarn.api.records.YarnApplicationState;
 import org.apache.hadoop.yarn.client.api.YarnClient;
 
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.google.common.collect.Sets;
 import lombok.extern.slf4j.Slf4j;
@@ -184,20 +183,17 @@ public class SparkApplicationInfoServiceImpl
 
     @Override
     public boolean existsByTeamId(Long teamId) {
-        return baseMapper.exists(
-            new LambdaQueryWrapper<SparkApplication>().eq(SparkApplication::getTeamId, teamId));
+        return this.lambdaQuery().eq(SparkApplication::getTeamId, teamId).exists();
     }
 
     @Override
     public boolean existsByUserId(Long userId) {
-        return baseMapper.exists(
-            new LambdaQueryWrapper<SparkApplication>().eq(SparkApplication::getUserId, userId));
+        return this.lambdaQuery().eq(SparkApplication::getUserId, userId).exists();
     }
 
     @Override
     public boolean existsBySparkEnvId(Long sparkEnvId) {
-        return baseMapper.exists(
-            new LambdaQueryWrapper<SparkApplication>().eq(SparkApplication::getVersionId, sparkEnvId));
+        return this.lambdaQuery().eq(SparkApplication::getVersionId, sparkEnvId).exists();
     }
 
     @Override
@@ -304,8 +300,7 @@ public class SparkApplicationInfoServiceImpl
     }
 
     private boolean existsByAppName(String jobName) {
-        return baseMapper.exists(
-            new LambdaQueryWrapper<SparkApplication>().eq(SparkApplication::getAppName, jobName));
+        return this.lambdaQuery().eq(SparkApplication::getAppName, jobName).exists();
     }
 
     @Override

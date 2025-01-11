@@ -122,11 +122,11 @@ public class ProjectServiceImpl extends ServiceImpl<ProjectMapper, Project>
                 return false;
             }
         }
-        LambdaQueryWrapper<Project> queryWrapper =
-            new LambdaQueryWrapper<Project>()
-                .eq(Project::getName, project.getName())
-                .eq(Project::getTeamId, project.getTeamId());
-        return this.baseMapper.selectCount(queryWrapper) > 0;
+
+        return this.lambdaQuery()
+            .eq(Project::getName, project.getName())
+            .eq(Project::getTeamId, project.getTeamId())
+            .exists();
     }
 
     @Override
@@ -299,10 +299,8 @@ public class ProjectServiceImpl extends ServiceImpl<ProjectMapper, Project>
                 return false;
             }
         }
-        return this.baseMapper.exists(
-            new LambdaQueryWrapper<Project>()
-                .eq(Project::getName, project.getName())
-                .eq(Project::getTeamId, project.getTeamId()));
+        return this.lambdaQuery().eq(Project::getName, project.getName())
+            .eq(Project::getTeamId, project.getTeamId()).exists();
     }
 
     @Override

@@ -35,7 +35,6 @@ import org.apache.streampark.console.core.service.application.FlinkApplicationMa
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
@@ -199,17 +198,14 @@ public class YarnQueueServiceImpl extends ServiceImpl<YarnQueueMapper, YarnQueue
 
     @Override
     public boolean existByQueueLabel(String queueLabel) {
-        return getBaseMapper()
-            .exists(new LambdaQueryWrapper<YarnQueue>().eq(YarnQueue::getQueueLabel, queueLabel));
+        return this.lambdaQuery().eq(YarnQueue::getQueueLabel, queueLabel).exists();
     }
 
     @Override
     public boolean existByTeamIdQueueLabel(Long teamId, String queueLabel) {
-        return getBaseMapper()
-            .exists(
-                new LambdaQueryWrapper<YarnQueue>()
-                    .eq(YarnQueue::getTeamId, teamId)
-                    .eq(YarnQueue::getQueueLabel, queueLabel));
+        return this.lambdaQuery().eq(YarnQueue::getTeamId, teamId)
+            .eq(YarnQueue::getQueueLabel, queueLabel)
+            .exists();
     }
 
     // --------- private methods------------

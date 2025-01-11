@@ -26,7 +26,6 @@ import org.apache.streampark.console.core.mapper.ExternalLinkMapper;
 import org.apache.streampark.console.core.service.ExternalLinkService;
 import org.apache.streampark.console.core.service.application.FlinkApplicationManageService;
 
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -51,7 +50,7 @@ public class ExternalLinkServiceImpl extends ServiceImpl<ExternalLinkMapper, Ext
 
     @Override
     public void create(ExternalLink externalLink) {
-        if (!this.check(externalLink)) {
+        if (this.check(externalLink)) {
             return;
         }
         externalLink.setId(null);
@@ -60,7 +59,7 @@ public class ExternalLinkServiceImpl extends ServiceImpl<ExternalLinkMapper, Ext
 
     @Override
     public void update(ExternalLink externalLink) {
-        if (!this.check(externalLink)) {
+        if (this.check(externalLink)) {
             return;
         }
         baseMapper.updateById(externalLink);
@@ -96,24 +95,21 @@ public class ExternalLinkServiceImpl extends ServiceImpl<ExternalLinkMapper, Ext
     }
 
     private boolean check(ExternalLink params) {
-        LambdaQueryWrapper<ExternalLink> queryWrapper = new LambdaQueryWrapper<ExternalLink>();
         // badgeName and LinkUrl cannot be duplicated
-        queryWrapper.nested(
+        ExternalLink result = this.lambdaQuery().nested(
             qw -> qw.eq(ExternalLink::getBadgeName, params.getBadgeName())
                 .or()
-                .eq(ExternalLink::getLinkUrl, params.getLinkUrl()));
-        if (params.getId() != null) {
-            queryWrapper.and(qw -> qw.ne(ExternalLink::getId, params.getId()));
-        }
-        ExternalLink result = this.getOne(queryWrapper);
+                .eq(ExternalLink::getLinkUrl, params.getLinkUrl()))
+            .and(params.getId() != null, qw -> qw.ne(ExternalLink::getId, params.getId())).one();
+
         if (result == null) {
-            return true;
+            return false;
         }
         ApiAlertException.throwIfTrue(result.getBadgeName().equals(params.getBadgeName()),
             String.format("The name: %s is already existing.", result.getBadgeName()));
         ApiAlertException.throwIfTrue(result.getLinkUrl().equals(params.getLinkUrl()),
             String.format("The linkUrl: %s is already existing.", result.getLinkUrl()));
 
-        return false;
+        return true;
     }
 }

@@ -33,7 +33,6 @@ import org.apache.streampark.console.system.service.MemberService;
 import org.apache.streampark.console.system.service.TeamService;
 import org.apache.streampark.console.system.service.UserService;
 
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
@@ -74,8 +73,7 @@ public class TeamServiceImpl extends ServiceImpl<TeamMapper, Team> implements Te
 
     @Override
     public Team getByName(String teamName) {
-        LambdaQueryWrapper<Team> queryWrapper = new LambdaQueryWrapper<Team>().eq(Team::getTeamName, teamName);
-        return baseMapper.selectOne(queryWrapper);
+        return this.lambdaQuery().eq(Team::getTeamName, teamName).one();
     }
 
     @Override

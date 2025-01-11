@@ -22,7 +22,6 @@ import org.apache.streampark.console.core.enums.EffectiveTypeEnum;
 import org.apache.streampark.console.core.mapper.FlinkEffectiveMapper;
 import org.apache.streampark.console.core.service.FlinkEffectiveService;
 
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import lombok.extern.slf4j.Slf4j;
@@ -41,26 +40,24 @@ public class FlinkEffectiveServiceImpl extends ServiceImpl<FlinkEffectiveMapper,
 
     @Override
     public void remove(Long appId, EffectiveTypeEnum effectiveTypeEnum) {
-        LambdaQueryWrapper<FlinkEffective> queryWrapper = new LambdaQueryWrapper<FlinkEffective>()
-            .eq(FlinkEffective::getAppId, appId)
-            .eq(FlinkEffective::getTargetType, effectiveTypeEnum.getType());
-        baseMapper.delete(queryWrapper);
+        this.lambdaUpdate().eq(FlinkEffective::getAppId, appId)
+            .eq(FlinkEffective::getTargetType, effectiveTypeEnum.getType())
+            .remove();
     }
 
     @Override
     public FlinkEffective get(Long appId, EffectiveTypeEnum effectiveTypeEnum) {
-        LambdaQueryWrapper<FlinkEffective> queryWrapper = new LambdaQueryWrapper<FlinkEffective>()
-            .eq(FlinkEffective::getAppId, appId)
-            .eq(FlinkEffective::getTargetType, effectiveTypeEnum.getType());
-        return this.getOne(queryWrapper);
+        return this.lambdaQuery().eq(FlinkEffective::getAppId, appId)
+            .eq(FlinkEffective::getTargetType, effectiveTypeEnum.getType())
+            .one();
     }
 
     @Override
     public void saveOrUpdate(Long appId, EffectiveTypeEnum type, Long id) {
-        LambdaQueryWrapper<FlinkEffective> queryWrapper = new LambdaQueryWrapper<FlinkEffective>()
+        long count = this.lambdaQuery()
             .eq(FlinkEffective::getAppId, appId)
-            .eq(FlinkEffective::getTargetType, type.getType());
-        long count = count(queryWrapper);
+            .eq(FlinkEffective::getTargetType, type.getType())
+            .count();
         if (count == 0) {
             FlinkEffective effective = new FlinkEffective();
             effective.setAppId(appId);
@@ -79,8 +76,6 @@ public class FlinkEffectiveServiceImpl extends ServiceImpl<FlinkEffectiveMapper,
 
     @Override
     public void removeByAppId(Long appId) {
-        LambdaQueryWrapper<FlinkEffective> queryWrapper =
-            new LambdaQueryWrapper<FlinkEffective>().eq(FlinkEffective::getAppId, appId);
-        this.remove(queryWrapper);
+        this.lambdaUpdate().eq(FlinkEffective::getAppId, appId).remove();
     }
 }

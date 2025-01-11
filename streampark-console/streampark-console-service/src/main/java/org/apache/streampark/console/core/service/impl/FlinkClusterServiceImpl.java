@@ -42,7 +42,6 @@ import org.apache.streampark.flink.client.bean.ShutDownResponse;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
@@ -96,14 +95,12 @@ public class FlinkClusterServiceImpl extends ServiceImpl<FlinkClusterMapper, Fli
 
     @Override
     public List<FlinkCluster> listAvailableCluster() {
-        LambdaQueryWrapper<FlinkCluster> lambdaQueryWrapper = new LambdaQueryWrapper<>();
-        lambdaQueryWrapper.eq(FlinkCluster::getClusterState, ClusterState.RUNNING);
-        return this.list(lambdaQueryWrapper);
+        return this.lambdaQuery().eq(FlinkCluster::getClusterState, ClusterState.RUNNING.getState()).list();
     }
 
     @Override
-    public ResponseResult check(FlinkCluster cluster) {
-        ResponseResult result = new ResponseResult();
+    public ResponseResult<Void> check(FlinkCluster cluster) {
+        ResponseResult<Void> result = new ResponseResult<>();
         result.setStatus(0);
 
         // 1) Check name if already exists
@@ -290,9 +287,7 @@ public class FlinkClusterServiceImpl extends ServiceImpl<FlinkClusterMapper, Fli
 
     @Override
     public Boolean existsByFlinkEnvId(Long flinkEnvId) {
-        LambdaQueryWrapper<FlinkCluster> lambdaQueryWrapper = new LambdaQueryWrapper<FlinkCluster>()
-            .eq(FlinkCluster::getVersionId, flinkEnvId);
-        return getBaseMapper().exists(lambdaQueryWrapper);
+        return this.lambdaQuery().eq(FlinkCluster::getVersionId, flinkEnvId).exists();
     }
 
     @Override

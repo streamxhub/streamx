@@ -35,7 +35,6 @@ import org.apache.streampark.console.core.service.application.SparkApplicationBa
 import org.apache.streampark.console.core.service.application.SparkApplicationConfigService;
 import org.apache.streampark.console.core.service.application.SparkApplicationManageService;
 
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
@@ -147,9 +146,7 @@ public class SparkApplicationBackupServiceImpl
     @Override
     public void remove(SparkApplication appParam) {
         try {
-            baseMapper.delete(
-                new LambdaQueryWrapper<SparkApplicationBackup>()
-                    .eq(SparkApplicationBackup::getAppId, appParam.getId()));
+            this.lambdaUpdate().eq(SparkApplicationBackup::getAppId, appParam.getId()).remove();
             appParam
                 .getFsOperator()
                 .delete(
@@ -165,10 +162,10 @@ public class SparkApplicationBackupServiceImpl
 
     @Override
     public void rollbackSparkSql(SparkApplication appParam, SparkSql sparkSqlParam) {
-        LambdaQueryWrapper<SparkApplicationBackup> queryWrapper = new LambdaQueryWrapper<SparkApplicationBackup>()
+        SparkApplicationBackup backUp = this.lambdaQuery()
             .eq(SparkApplicationBackup::getAppId, appParam.getId())
-            .eq(SparkApplicationBackup::getSqlId, sparkSqlParam.getId());
-        SparkApplicationBackup backUp = baseMapper.selectOne(queryWrapper);
+            .eq(SparkApplicationBackup::getSqlId, sparkSqlParam.getId())
+            .one();
         ApiAlertException.throwIfNull(
             backUp, "Application backup can't be null. Rollback spark sql failed.");
         // rollback config and sql

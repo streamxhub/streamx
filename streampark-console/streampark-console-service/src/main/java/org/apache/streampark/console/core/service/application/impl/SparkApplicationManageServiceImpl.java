@@ -56,7 +56,6 @@ import org.apache.streampark.flink.packer.pipeline.PipelineStatusEnum;
 
 import org.apache.commons.lang3.StringUtils;
 
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
@@ -307,8 +306,7 @@ public class SparkApplicationManageServiceImpl
     }
 
     private boolean existsByAppName(String jobName) {
-        return baseMapper.exists(
-            new LambdaQueryWrapper<SparkApplication>().eq(SparkApplication::getAppName, jobName));
+        return this.lambdaQuery().eq(SparkApplication::getAppName, jobName).exists();
     }
 
     @SuppressWarnings("checkstyle:WhitespaceAround")

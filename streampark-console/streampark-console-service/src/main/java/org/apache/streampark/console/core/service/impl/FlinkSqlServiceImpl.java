@@ -35,9 +35,9 @@ import org.apache.streampark.console.core.service.application.FlinkApplicationBa
 import org.apache.streampark.flink.core.FlinkSqlValidationResult;
 import org.apache.streampark.flink.proxy.FlinkShimsProxy;
 
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.baomidou.mybatisplus.extension.conditions.query.LambdaQueryChainWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import lombok.extern.slf4j.Slf4j;
@@ -136,13 +136,12 @@ public class FlinkSqlServiceImpl extends ServiceImpl<FlinkSqlMapper, FlinkSql>
 
     @Override
     public FlinkSql getCandidate(Long appId, CandidateTypeEnum candidateTypeEnum) {
-        LambdaQueryWrapper<FlinkSql> queryWrapper = new LambdaQueryWrapper<FlinkSql>().eq(FlinkSql::getAppId, appId);
-        if (candidateTypeEnum == null) {
-            queryWrapper.gt(FlinkSql::getCandidate, CandidateTypeEnum.NONE.get());
-        } else {
-            queryWrapper.eq(FlinkSql::getCandidate, candidateTypeEnum.get());
+        LambdaQueryChainWrapper<FlinkSql> search = this.lambdaQuery().eq(FlinkSql::getAppId, appId);
+        if (candidateTypeEnum != null) {
+            search.eq(FlinkSql::getCandidate, candidateTypeEnum.get());
         }
-        return baseMapper.selectOne(queryWrapper);
+        return search.gt(candidateTypeEnum == null, FlinkSql::getCandidate, CandidateTypeEnum.NONE.get())
+            .one();
     }
 
     @Override
