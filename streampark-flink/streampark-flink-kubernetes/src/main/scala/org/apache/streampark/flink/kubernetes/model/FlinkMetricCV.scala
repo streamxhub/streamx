@@ -56,7 +56,7 @@ case class FlinkMetricCV(
 
   def equalsPayload(another: FlinkMetricCV): Boolean = {
     groupId == another.groupId &&
-    totalJmMemory == another.totalTmMemory &&
+    totalJmMemory == another.totalJmMemory &&
     totalTmMemory == another.totalTmMemory &&
     totalTm == another.totalTm &&
     totalSlot == another.totalSlot &&
