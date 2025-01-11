@@ -60,10 +60,10 @@ public class FlinkEnvServiceImpl extends ServiceImpl<FlinkEnvMapper, FlinkEnv>
     @Override
     public FlinkEnvCheckEnum check(FlinkEnv version) {
         // 1) check name
-        Long count = this.lambdaQuery().eq(FlinkEnv::getFlinkName,
+        boolean exists = this.lambdaQuery().eq(FlinkEnv::getFlinkName,
             version.getFlinkName())
-            .ne(version.getId() != null, FlinkEnv::getId, version.getId()).count();
-        if (count > 0) {
+            .ne(version.getId() != null, FlinkEnv::getId, version.getId()).exists();
+        if (exists) {
             return FlinkEnvCheckEnum.NAME_REPEATED;
         }
 
