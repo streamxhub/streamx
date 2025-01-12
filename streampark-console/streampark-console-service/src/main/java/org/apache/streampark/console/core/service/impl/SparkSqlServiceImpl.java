@@ -209,9 +209,10 @@ public class SparkSqlServiceImpl extends ServiceImpl<SparkSqlMapper, SparkSql>
 
     @Override
     public IPage<SparkSql> getPage(Long appId, RestRequest request) {
-        request.setSortField("version");
         Page<SparkSql> page = MybatisPager.getPage(request);
-        IPage<SparkSql> sqlList = this.lambdaQuery().eq(SparkSql::getAppId, appId).page(page);
+        IPage<SparkSql> sqlList = this.lambdaQuery().eq(SparkSql::getAppId, appId)
+            .orderByDesc(SparkSql::getVersion).page(page);
+
         SparkSql effectiveSql = baseMapper.getEffective(appId);
         if (effectiveSql != null) {
             for (SparkSql sql : sqlList.getRecords()) {

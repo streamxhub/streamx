@@ -22,8 +22,6 @@ import org.apache.streampark.console.core.entity.FlinkApplicationConfig;
 import org.apache.ibatis.annotations.Param;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import com.baomidou.mybatisplus.core.metadata.IPage;
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 
 public interface FlinkApplicationConfigMapper extends BaseMapper<FlinkApplicationConfig> {
 
@@ -33,6 +31,4 @@ public interface FlinkApplicationConfigMapper extends BaseMapper<FlinkApplicatio
 
     FlinkApplicationConfig selectLatest(@Param("appId") Long appId);
 
-    IPage<FlinkApplicationConfig> selectPageByAppId(
-                                                    Page<FlinkApplicationConfig> page, @Param("appId") Long appId);
 }

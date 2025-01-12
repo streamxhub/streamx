@@ -40,9 +40,4 @@
         and e.target_type = 3
     </select>
 
-    <select id="selectPageByAppId" resultType="org.apache.streampark.console.core.entity.SparkApplicationConfig" parameterType="java.lang.Long">
-        select * from t_spark_config
-        where app_id=#{appId}
-    </select>
-
 </mapper>

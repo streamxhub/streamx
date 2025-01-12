@@ -31,7 +31,6 @@ import org.apache.streampark.console.core.service.FlinkEffectiveService;
 import org.apache.streampark.console.core.service.application.FlinkApplicationConfigService;
 
 import com.baomidou.mybatisplus.core.metadata.IPage;
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -209,9 +208,10 @@ public class FlinkApplicationConfigServiceImpl
 
     @Override
     public IPage<FlinkApplicationConfig> getPage(FlinkApplicationConfig config, RestRequest request) {
-        request.setSortField("version");
-        Page<FlinkApplicationConfig> page = MybatisPager.getPage(request);
-        IPage<FlinkApplicationConfig> configList = this.baseMapper.selectPageByAppId(page, config.getAppId());
+        IPage<FlinkApplicationConfig> configList =
+            this.lambdaQuery().eq(FlinkApplicationConfig::getAppId, config.getAppId())
+                .orderByDesc(FlinkApplicationConfig::getVersion)
+                .page(MybatisPager.getPage(request));
         fillEffectiveField(config.getAppId(), configList.getRecords());
         return configList;
     }
