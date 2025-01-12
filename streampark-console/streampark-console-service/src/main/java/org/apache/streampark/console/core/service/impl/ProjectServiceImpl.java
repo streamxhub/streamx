@@ -217,15 +217,17 @@ public class ProjectServiceImpl extends ServiceImpl<ProjectMapper, Project>
                 "The number of running Build projects exceeds the maximum number: %d of max-build-num",
                 maxProjectBuildNum));
         Project project = getById(id);
-        this.baseMapper.updateBuildState(project.getId(), BuildStateEnum.BUILDING.get());
+
+        this.updateBuildState(project.getId(), BuildStateEnum.BUILDING.get());
+
         String logPath = getBuildLogPath(id);
         ProjectBuildTask projectBuildTask = new ProjectBuildTask(
             logPath,
             project,
             buildStateEnum -> {
-                baseMapper.updateBuildState(id, buildStateEnum.get());
+                this.updateBuildState(id, buildStateEnum.get());
                 if (buildStateEnum == BuildStateEnum.SUCCESSFUL) {
-                    baseMapper.updateBuildTime(id);
+                    this.updateBuildTime(id);
                 }
                 flinkAppHttpWatcher.init();
             },
@@ -443,6 +445,22 @@ public class ProjectServiceImpl extends ServiceImpl<ProjectMapper, Project>
         } catch (Exception e) {
             throw new ApiDetailException(e);
         }
+    }
+
+    @Override
+    public void updateBuildTime(Long id) {
+        this.lambdaUpdate()
+            .eq(Project::getId, id)
+            .set(Project::getLastBuild, new Date())
+            .update();
+    }
+
+    @Override
+    public void updateBuildState(Long id, int state) {
+        this.lambdaUpdate()
+            .eq(Project::getId, id)
+            .set(Project::getBuildState, state)
+            .update();
     }
 
     private Project remakeProject(Project project) {

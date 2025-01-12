@@ -124,7 +124,8 @@ public class SparkApplicationManageServiceImpl
 
     @PostConstruct
     public void resetOptionState() {
-        this.baseMapper.resetOptionState();
+        this.lambdaUpdate().set(SparkApplication::getOptionState, OptionStateEnum.NONE.getValue())
+            .update();
     }
 
     @Override

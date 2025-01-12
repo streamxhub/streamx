@@ -52,7 +52,5 @@ public interface SparkApplicationMapper extends BaseMapper<SparkApplication> {
 
     List<String> selectRecentK8sTmPodTemplates(@Param("limitSize") Integer limit);
 
-    void resetOptionState();
-
     List<SparkApplication> selectAppsByProjectId(@Param("projectId") Long id);
 }

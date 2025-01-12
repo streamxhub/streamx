@@ -329,7 +329,8 @@ public class FlinkClusterServiceImpl extends ServiceImpl<FlinkClusterMapper, Fli
     @Override
     public IPage<FlinkCluster> findPage(FlinkCluster flinkCluster, RestRequest restRequest) {
         Page<FlinkCluster> page = MybatisPager.getPage(restRequest);
-        return this.baseMapper.findPage(page, flinkCluster);
+        return this.lambdaQuery().like(StringUtils.isNotBlank(flinkCluster.getClusterName()),
+            FlinkCluster::getClusterName, flinkCluster.getClusterName()).page(page);
     }
 
     @Override

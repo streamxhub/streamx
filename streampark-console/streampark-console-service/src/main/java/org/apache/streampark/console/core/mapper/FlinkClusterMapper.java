@@ -22,8 +22,6 @@ import org.apache.streampark.console.core.entity.FlinkCluster;
 import org.apache.ibatis.annotations.Param;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import com.baomidou.mybatisplus.core.metadata.IPage;
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 
 public interface FlinkClusterMapper extends BaseMapper<FlinkCluster> {
 
@@ -31,6 +29,4 @@ public interface FlinkClusterMapper extends BaseMapper<FlinkCluster> {
 
     boolean existsByClusterName(@Param("clusterName") String clusterName, @Param("id") Long id);
 
-    IPage<FlinkCluster> findPage(
-                                 Page<FlinkCluster> page, @Param("cluster") FlinkCluster flinkCluster);
 }

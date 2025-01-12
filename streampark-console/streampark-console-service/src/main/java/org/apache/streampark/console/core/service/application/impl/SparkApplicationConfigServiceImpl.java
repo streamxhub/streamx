@@ -196,7 +196,9 @@ public class SparkApplicationConfigServiceImpl
 
     @Override
     public SparkApplicationConfig getLatest(Long appId) {
-        return baseMapper.selectLatest(appId);
+        return this.lambdaQuery().eq(SparkApplicationConfig::getAppId, appId)
+            .eq(SparkApplicationConfig::getLatest, true)
+            .one();
     }
 
     @Override
@@ -217,9 +219,13 @@ public class SparkApplicationConfigServiceImpl
 
     @Override
     public IPage<SparkApplicationConfig> getPage(SparkApplicationConfig config, RestRequest request) {
-        request.setSortField("version");
         Page<SparkApplicationConfig> page = MybatisPager.getPage(request);
-        IPage<SparkApplicationConfig> configList = this.baseMapper.selectPageByAppId(page, config.getAppId());
+
+        IPage<SparkApplicationConfig> configList = this.lambdaQuery()
+            .eq(SparkApplicationConfig::getAppId, config.getAppId())
+            .orderByDesc(SparkApplicationConfig::getVersion)
+            .page(page);
+
         fillEffectiveField(config.getAppId(), configList.getRecords());
         return configList;
     }

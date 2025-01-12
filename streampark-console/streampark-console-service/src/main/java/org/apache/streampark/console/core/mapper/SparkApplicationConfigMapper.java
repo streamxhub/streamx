@@ -22,8 +22,6 @@ import org.apache.streampark.console.core.entity.SparkApplicationConfig;
 import org.apache.ibatis.annotations.Param;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import com.baomidou.mybatisplus.core.metadata.IPage;
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 
 public interface SparkApplicationConfigMapper extends BaseMapper<SparkApplicationConfig> {
 
@@ -31,8 +29,4 @@ public interface SparkApplicationConfigMapper extends BaseMapper<SparkApplicatio
 
     SparkApplicationConfig selectEffective(@Param("appId") Long appId);
 
-    SparkApplicationConfig selectLatest(@Param("appId") Long appId);
-
-    IPage<SparkApplicationConfig> selectPageByAppId(
-                                                    Page<SparkApplicationConfig> page, @Param("appId") Long appId);
 }

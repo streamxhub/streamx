@@ -78,8 +78,12 @@ public class YarnQueueServiceImpl extends ServiceImpl<YarnQueueMapper, YarnQueue
         AssertUtils.notNull(yarnQueue, "Yarn queue query params mustn't be null.");
         AssertUtils.notNull(
             yarnQueue.getTeamId(), "Team id of yarn queue query params mustn't be null.");
+
         Page<YarnQueue> page = MybatisPager.getPage(request);
-        return this.baseMapper.selectPage(page, yarnQueue);
+        return this.lambdaQuery().eq(yarnQueue.getTeamId() != null, YarnQueue::getTeamId, yarnQueue.getTeamId())
+            .like(StringUtils.isNotBlank(yarnQueue.getQueueLabel()), YarnQueue::getQueueLabel,
+                yarnQueue.getQueueLabel())
+            .page(page);
     }
 
     /**

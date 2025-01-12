@@ -53,8 +53,6 @@ public interface FlinkApplicationMapper extends BaseMapper<FlinkApplication> {
 
     List<String> selectRecentK8sTmPodTemplates(@Param("limitSize") Integer limit);
 
-    void resetOptionState();
-
     List<FlinkApplication> selectAppsByProjectId(@Param("projectId") Long id);
 
     boolean existsRunningJobByClusterId(@Param("clusterId") Long clusterId);

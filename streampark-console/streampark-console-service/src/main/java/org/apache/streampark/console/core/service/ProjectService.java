@@ -166,4 +166,8 @@ public interface ProjectService extends IService<Project> {
     GitAuthorizedErrorEnum gitCheck(Project project);
 
     List<String> getAllTags(Project project);
+
+    void updateBuildTime(Long id);
+
+    void updateBuildState(Long id, int state);
 }

@@ -152,7 +152,7 @@ public class FlinkApplicationManageServiceImpl extends ServiceImpl<FlinkApplicat
 
     @PostConstruct
     public void resetOptionState() {
-        this.baseMapper.resetOptionState();
+        this.lambdaUpdate().set(FlinkApplication::getOptionState, OptionStateEnum.NONE.getValue()).update();
     }
 
     @Override

@@ -17,11 +17,6 @@
   -->
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="org.apache.streampark.console.core.mapper.SparkApplicationMapper">
-    <update id="resetOptionState">
-        update t_spark_app
-        set option_state = 0
-    </update>
-
 
     <select id="selectAppsByProjectId" resultType="org.apache.streampark.console.core.entity.SparkApplication" parameterType="java.lang.Long">
         select * from t_spark_app where project_id=#{projectId}

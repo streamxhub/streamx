@@ -44,18 +44,6 @@
         where team_id = #{teamId}
     </select>
 
-    <update id="updateBuildState" parameterType="java.util.Map">
-        update t_flink_project
-        set build_state = #{state}
-        where id = #{id}
-    </update>
-
-    <update id="updateBuildTime" parameterType="java.lang.Long">
-        update t_flink_project
-        set last_build = now()
-        where id = #{id}
-    </update>
-
     <select id="selectPage" resultType="org.apache.streampark.console.core.entity.Project" parameterType="org.apache.streampark.console.core.entity.Project">
         select *
         from t_flink_project t
