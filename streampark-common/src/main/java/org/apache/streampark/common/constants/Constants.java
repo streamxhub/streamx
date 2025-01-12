@@ -19,7 +19,9 @@ package org.apache.streampark.common.constants;
 
 import java.time.Duration;
 
-/** A constant class to hold the constants variables. */
+/**
+ * A constant class to hold the constants variables.
+ */
 public final class Constants {
 
     private Constants() {
@@ -50,6 +52,8 @@ public final class Constants {
     public static final String STREAMPARK_FLINKSQL_CLIENT_CLASS = "org.apache.streampark.flink.cli.SqlClient";
 
     public static final String STREAMPARK_SPARKSQL_CLIENT_CLASS = "org.apache.streampark.spark.cli.SqlClient";
+
+    public static final String STREAMPARK_FLINKCDC_CLIENT_CLASS = "org.apache.streampark.cdc.cli.CDCClient";
 
     public static final String PYTHON_EXECUTABLE = "venv.zip/venv/bin/python3";
 
