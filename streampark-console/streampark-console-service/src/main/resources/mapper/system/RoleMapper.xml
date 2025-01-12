@@ -17,24 +17,4 @@
   -->
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="org.apache.streampark.console.system.mapper.RoleMapper">
-    <select id="selectPage" resultType="org.apache.streampark.console.system.entity.Role" parameterType="org.apache.streampark.console.system.entity.Role">
-        select * from t_role
-        <where>
-            <if test="role.roleName != null and role.roleName != ''">
-                <if test="_databaseId == 'mysql'">
-                    and role_name like concat('%', #{role.roleName},'%')
-                </if>
-                <if test="_databaseId == 'pgsql'">
-                    and role_name like '%' || #{role.roleName} || '%'
-                </if>
-            </if>
-            <if test="role.createTimeFrom != null and role.createTimeFrom !=''">
-                and  create_time &gt; #{role.createTimeFrom}
-            </if>
-            <if test="role.createTimeTo!= null and role.createTimeTo !=''">
-                and  create_time &lt; #{role.createTimeTo}
-            </if>
-        </where>
-    </select>
-
 </mapper>

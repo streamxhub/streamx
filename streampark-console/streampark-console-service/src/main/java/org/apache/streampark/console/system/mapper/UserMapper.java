@@ -34,8 +34,4 @@ public interface UserMapper extends BaseMapper<User> {
     List<User> selectNoTokenUsers();
 
     List<User> selectUsersByAppOwner(@Param("teamId") Long teamId);
-
-    void clearLastTeamByUserId(@Param("userId") Long userId);
-
-    void clearLastTeamByTeamId(@Param("teamId") Long teamId);
 }

@@ -17,26 +17,6 @@
   -->
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="org.apache.streampark.console.system.mapper.TeamMapper">
-    <select id="selectPage" resultType="org.apache.streampark.console.system.entity.Team" parameterType="org.apache.streampark.console.system.entity.Team">
-        select * from t_team
-        <where>
-            <if test="team.teamName != null and team.teamName != ''">
-                <if test="_databaseId == 'mysql'">
-                    and team_name like concat('%', #{team.teamName},'%')
-                </if>
-                <if test="_databaseId == 'pgsql'">
-                    and team_name like '%' || #{team.teamName} || '%'
-                </if>
-            </if>
-            <if test="team.createTimeFrom != null and team.createTimeFrom !=''">
-                and create_time &gt; #{team.createTimeFrom}
-            </if>
-            <if test="team.createTimeTo!= null and team.createTimeTo !=''">
-                and create_time &lt; #{team.createTimeTo}
-            </if>
-        </where>
-    </select>
-
     <select id="selectTeamsByUserId" resultType="org.apache.streampark.console.system.entity.Team" parameterType="org.apache.streampark.console.system.entity.Team">
         select t.* from t_team t
         join t_member m

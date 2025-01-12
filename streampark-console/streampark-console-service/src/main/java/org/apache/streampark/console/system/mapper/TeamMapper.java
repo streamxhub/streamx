@@ -19,17 +19,11 @@ package org.apache.streampark.console.system.mapper;
 
 import org.apache.streampark.console.system.entity.Team;
 
-import org.apache.ibatis.annotations.Param;
-
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import com.baomidou.mybatisplus.core.metadata.IPage;
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 
 import java.util.List;
 
 public interface TeamMapper extends BaseMapper<Team> {
-
-    IPage<Team> selectPage(Page<Team> page, @Param("team") Team team);
 
     List<Team> selectTeamsByUserId(Long userId);
 }

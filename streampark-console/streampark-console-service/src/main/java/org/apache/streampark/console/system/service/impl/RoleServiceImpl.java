@@ -63,7 +63,9 @@ public class RoleServiceImpl extends ServiceImpl<RoleMapper, Role> implements Ro
     @Override
     public IPage<Role> getPage(Role role, RestRequest request) {
         Page<Role> page = MybatisPager.getPage(request);
-        return this.baseMapper.selectPage(page, role);
+        return this.lambdaQuery()
+            .like(StringUtils.isNotBlank(role.getRoleName()), Role::getRoleName, role.getRoleName())
+            .page(page);
     }
 
     @Override
