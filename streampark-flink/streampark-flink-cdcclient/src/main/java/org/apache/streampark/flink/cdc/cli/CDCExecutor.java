@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-package org.apache.streampark.cdc.cli;
+package org.apache.streampark.flink.cdc.cli;
 
 import org.apache.flink.cdc.cli.parser.PipelineDefinitionParser;
 import org.apache.flink.cdc.cli.parser.YamlPipelineDefinitionParser;
