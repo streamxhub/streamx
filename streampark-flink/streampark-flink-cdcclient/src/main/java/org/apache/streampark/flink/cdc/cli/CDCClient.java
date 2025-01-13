@@ -17,6 +17,10 @@
 
 package org.apache.streampark.flink.cdc.cli;
 
+import org.apache.streampark.common.conf.ConfigKeys;
+import org.apache.streampark.common.util.DeflaterUtils;
+import org.apache.streampark.common.util.PropertiesUtils;
+
 import org.apache.flink.api.java.utils.ParameterTool;
 import org.apache.flink.cdc.common.configuration.Configuration;
 import org.apache.flink.cdc.composer.PipelineExecution;
@@ -24,9 +28,7 @@ import org.apache.flink.configuration.CoreOptions;
 import org.apache.flink.runtime.jobgraph.SavepointRestoreSettings;
 import org.apache.flink.util.StringUtils;
 import org.apache.flink.yarn.configuration.YarnConfigOptions;
-import org.apache.streampark.common.conf.ConfigKeys;
-import org.apache.streampark.common.util.DeflaterUtils;
-import org.apache.streampark.common.util.PropertiesUtils;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -51,7 +53,7 @@ public class CDCClient {
         if (StringUtils.isNullOrWhitespaceOnly(cdcYamlDecode)
             || StringUtils.isNullOrWhitespaceOnly(appNameDecode)
             || StringUtils.isNullOrWhitespaceOnly(flinkConfigDecode)) {
-            LOG.error("--flink.conf or --app.name or --sql as cdc yaml must not be null.");
+            LOG.error("--flink.conf or --app.name or `cdc yaml` must not be null.");
             return;
         }
 

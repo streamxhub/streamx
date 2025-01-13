@@ -101,12 +101,6 @@ object PropertiesUtils extends Logger {
     }
   }
 
-  def fromYamlTextToJava(text: String): java.util.Map[String, String] = {
-    val scalaMap = fromYamlText(text)
-    val javaMap: java.util.Map[String, String] = scalaMap.asJava
-    javaMap
-  }
-
   def fromHoconText(conf: String): Map[String, String] = {
     require(conf != null, s"[StreamPark] fromHoconText: Hocon content must not be null")
     try parseHoconByReader(new StringReader(conf))
