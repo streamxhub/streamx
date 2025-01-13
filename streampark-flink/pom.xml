@@ -39,6 +39,7 @@
         <module>streampark-flink-kubernetes</module>
         <module>streampark-flink-catalog-store</module>
         <module>streampark-flink-connector-plugin</module>
+        <module>streampark-flink-cdcclient</module>
     </modules>
 
     <dependencies>
