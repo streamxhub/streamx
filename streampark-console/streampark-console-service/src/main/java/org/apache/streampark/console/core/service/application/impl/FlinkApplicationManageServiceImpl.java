@@ -92,6 +92,8 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
+import static org.apache.streampark.console.base.exception.ApiAlertException.validateCondition;
+
 @Slf4j
 @Service
 @Transactional(propagation = Propagation.SUPPORTS, readOnly = true, rollbackFor = Exception.class)
@@ -332,11 +334,11 @@ public class FlinkApplicationManageServiceImpl extends ServiceImpl<FlinkApplicat
         appParam.setCreateTime(date);
         appParam.setModifyTime(date);
         appParam.setDefaultModeIngress(settingService.getIngressModeDefault());
+        String jobName = appParam.getJobName();
+        // validate job application
+        validateCondition(!jobName.contains(" "), "The added job name `%s` is an invalid character and cannot contain Spaces", jobName);
+        validateCondition(validateQueueIfNeeded(appParam), ERROR_APP_QUEUE_HINT, appParam.getYarnQueue(), appParam.getTeamId());
 
-        boolean success = validateQueueIfNeeded(appParam);
-        ApiAlertException.throwIfFalse(
-            success,
-            String.format(ERROR_APP_QUEUE_HINT, appParam.getYarnQueue(), appParam.getTeamId()));
 
         appParam.doSetHotParams();
         if (appParam.isUploadJob()) {
