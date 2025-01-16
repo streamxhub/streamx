@@ -44,6 +44,7 @@ import org.apache.streampark.console.core.service.application.FlinkApplicationMa
 import org.apache.streampark.console.core.task.ProjectBuildTask;
 import org.apache.streampark.console.core.watcher.FlinkAppHttpWatcher;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.flink.configuration.MemorySize;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
@@ -195,22 +196,34 @@ public class ProjectServiceImpl extends ServiceImpl<ProjectMapper, Project>
     @Override
     public IPage<Project> getPage(Project project, RestRequest request) {
         Page<Project> page = MybatisPager.getPage(request);
-        return this.baseMapper.selectPage(page, project);
+        this.lambdaQuery()
+            .eq(Project::getTeamId, project.getTeamId())
+            .like(StringUtils.isNotBlank(project.getName()), Project::getName, project.getName())
+            .eq(project.getBuildState() != null, Project::getBuildState, project.getBuildState())
+            .page(page);
+        return page;
     }
 
     @Override
     public Boolean existsByTeamId(Long teamId) {
-        return this.baseMapper.existsByTeamId(teamId);
+        return this.lambdaQuery()
+            .eq(Project::getTeamId, teamId)
+            .exists();
     }
 
     @Override
     public List<Project> listByTeamId(Long teamId) {
-        return this.baseMapper.selectProjectsByTeamId(teamId);
+        return this.lambdaQuery().eq(Project::getTeamId, teamId)
+            .list();
     }
 
     @Override
     public void build(Long id) throws Exception {
-        Long currentBuildCount = this.baseMapper.getBuildingCount();
+
+        Long currentBuildCount = this.lambdaQuery()
+            .eq(Project::getBuildState, BuildStateEnum.BUILDING.get())
+            .count();
+
         ApiAlertException.throwIfTrue(
             maxProjectBuildNum > -1 && currentBuildCount > maxProjectBuildNum,
             String.format(

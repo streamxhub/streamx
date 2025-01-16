@@ -19,18 +19,9 @@ package org.apache.streampark.console.core.mapper;
 
 import org.apache.streampark.console.core.entity.FlinkCatalog;
 
-import org.apache.ibatis.annotations.Param;
-
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import com.baomidou.mybatisplus.core.metadata.IPage;
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 
 /** catalog mapper */
 public interface FlinkCatalogMapper extends BaseMapper<FlinkCatalog> {
 
-    boolean existsByCatalogName(@Param("catalogName") String catalogName);
-
-    FlinkCatalog selectByCatalogName(@Param("catalogName") String catalogName);
-
-    IPage<FlinkCatalog> selectPage(Page<FlinkCatalog> page, @Param("catalog") FlinkCatalog catalog);
 }

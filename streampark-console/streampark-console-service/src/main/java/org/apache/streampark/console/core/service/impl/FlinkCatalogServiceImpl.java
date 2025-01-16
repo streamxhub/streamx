@@ -26,6 +26,8 @@ import org.apache.streampark.console.core.entity.FlinkCatalog;
 import org.apache.streampark.console.core.mapper.FlinkCatalogMapper;
 import org.apache.streampark.console.core.service.FlinkCatalogService;
 
+import org.apache.commons.lang3.StringUtils;
+
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
@@ -79,7 +81,14 @@ public class FlinkCatalogServiceImpl extends ServiceImpl<FlinkCatalogMapper, Fli
             catalog.getTeamId(), "The teamId can't be null. List catalog failed.");
 
         Page<FlinkCatalog> page = MybatisPager.getPage(request);
-        this.baseMapper.selectPage(page, FlinkCatalog.of(catalog));
+
+        this.lambdaQuery()
+            .eq(FlinkCatalog::getTeamId, catalog.getTeamId())
+            .eq(StringUtils.isNotBlank(catalog.getCatalogName()), FlinkCatalog::getCatalogName,
+                catalog.getCatalogName())
+            .eq(catalog.getUserId() != null, FlinkCatalog::getUserId, catalog.getUserId())
+            .page(page);
+
         Page<FlinkCatalogParams> paramsPage = new Page<>();
         BeanUtils.copyProperties(page, paramsPage, "records");
         List<FlinkCatalogParams> paramList = new ArrayList<>();
@@ -99,7 +108,7 @@ public class FlinkCatalogServiceImpl extends ServiceImpl<FlinkCatalogMapper, Fli
 
     @Override
     public FlinkCatalog getCatalog(String catalogName) {
-        return this.baseMapper.selectByCatalogName(catalogName);
+        return this.lambdaQuery().eq(FlinkCatalog::getCatalogName, catalogName).one();
     }
 
     @Override
@@ -123,7 +132,9 @@ public class FlinkCatalogServiceImpl extends ServiceImpl<FlinkCatalogMapper, Fli
     }
 
     public Boolean existsByCatalogName(String catalogName) {
-        return this.baseMapper.existsByCatalogName(catalogName);
+        return this.lambdaQuery()
+            .eq(FlinkCatalog::getCatalogName, catalogName)
+            .exists();
     }
 
     /** validate catalog name */

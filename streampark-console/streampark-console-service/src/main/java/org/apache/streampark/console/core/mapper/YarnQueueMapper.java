@@ -19,12 +19,8 @@ package org.apache.streampark.console.core.mapper;
 
 import org.apache.streampark.console.core.entity.YarnQueue;
 
-import org.apache.ibatis.annotations.Param;
-
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 
 /** Yarn queue mapper definition. */
 public interface YarnQueueMapper extends BaseMapper<YarnQueue> {
-
-    boolean existsByQueueLabel(@Param("yarnQueue") YarnQueue yarnQueue);
 }

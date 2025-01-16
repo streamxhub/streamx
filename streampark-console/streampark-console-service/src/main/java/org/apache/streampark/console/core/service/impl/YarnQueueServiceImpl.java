@@ -112,7 +112,10 @@ public class YarnQueueServiceImpl extends ServiceImpl<YarnQueueMapper, YarnQueue
             return responseResult;
         }
 
-        boolean existed = this.baseMapper.existsByQueueLabel(yarnQueue);
+        boolean existed = this.lambdaQuery().eq(YarnQueue::getTeamId, yarnQueue.getTeamId())
+            .eq(YarnQueue::getQueueLabel, yarnQueue.getQueueLabel())
+            .ne(YarnQueue::getId, yarnQueue.getId())
+            .exists();
 
         if (existed) {
             responseResult.setStatus(1);

@@ -169,7 +169,11 @@ public class VariableServiceImpl extends ServiceImpl<VariableMapper, Variable>
      */
     @Override
     public List<Variable> listByTeamId(Long teamId, String keyword) {
-        return baseMapper.selectVarsByTeamId(teamId, keyword);
+        return this.lambdaQuery().eq(Variable::getTeamId, teamId)
+            .and(StringUtils.isNotBlank(keyword), c -> c.like(Variable::getVariableCode, keyword)
+                .or()
+                .like(Variable::getDescription, keyword))
+            .list();
     }
 
     /**
@@ -255,6 +259,7 @@ public class VariableServiceImpl extends ServiceImpl<VariableMapper, Variable>
 
     @Override
     public boolean existsByTeamId(Long teamId) {
-        return this.baseMapper.existsByTeamId(teamId);
+        return this.lambdaQuery().eq(Variable::getTeamId, teamId)
+            .exists();
     }
 }

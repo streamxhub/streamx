@@ -43,30 +43,4 @@
         </if>
     </select>
 
-    <select id="existsByTeamId" resultType="java.lang.Boolean" parameterType="java.lang.Long">
-        select
-            CASE
-                WHEN  count(1) > 0 THEN true ELSE false
-            END
-        from t_variable
-             where team_id = #{teamId}
-             limit 1
-    </select>
-
-    <select id="selectVarsByTeamId" resultType="org.apache.streampark.console.core.entity.Variable">
-        select *
-        from t_variable
-        <where>
-            team_id = #{teamId}
-            <if test="keyword != null and keyword != ''">
-                <if test="_databaseId == 'mysql'">
-                    and variable_code like concat('%', #{keyword}, '%') or description like concat('%', #{keyword}, '%')
-                </if>
-                <if test="_databaseId == 'pgsql'">
-                    and variable_code like '%' || #{keyword} || '%' or description like '%' || #{keyword} || '%'
-                </if>
-            </if>
-        </where>
-    </select>
-
 </mapper>

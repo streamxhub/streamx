@@ -17,34 +17,5 @@
   -->
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="org.apache.streampark.console.core.mapper.FlinkCatalogMapper">
-    <select id="existsByCatalogName" resultType="java.lang.Boolean" parameterType="java.lang.String">
-        select
-        CASE
-        WHEN  count(1) > 0 THEN true ELSE false
-        END
-        from t_flink_catalog
-        where catalog_name = #{catalogName}
-        limit 1
-    </select>
 
-    <select id="selectByCatalogName" resultType="org.apache.streampark.console.core.entity.FlinkCatalog" parameterType="java.lang.String">
-        select
-        *
-        from t_flink_catalog
-        where catalog_name = #{catalogName}
-        limit 1
-    </select>
-
-    <select id="selectPage" resultType="org.apache.streampark.console.core.entity.FlinkCatalog" parameterType="org.apache.streampark.console.core.entity.FlinkCatalog">
-        select * from t_flink_catalog
-        <where>
-            team_id = #{catalog.teamId}
-            <if test="catalog.catalogName != null and catalog.catalogName != ''">
-                and catalog_name = #{catalog.catalogName}
-            </if>
-            <if test="catalog.userId != null and catalog.userId != ''">
-                and user_id = #{catalog.userId}
-            </if>
-        </where>
-    </select>
 </mapper>

@@ -18,17 +18,6 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="org.apache.streampark.console.core.mapper.FlinkApplicationMapper">
 
-    <select id="existsRunningJobByClusterId" resultType="java.lang.Boolean" parameterType="java.lang.Long">
-        select
-            CASE
-                WHEN  count(1) > 0 THEN true ELSE false
-            END
-        from t_flink_app
-            where flink_cluster_id = #{clusterId}
-             and state = 5
-             limit 1
-    </select>
-
     <select id="countAffectedByClusterId" resultType="java.lang.Integer" parameterType="java.lang.Long">
         select
             count(1)
@@ -45,10 +34,6 @@
                 </when>
             </choose>
             limit 1
-    </select>
-
-    <select id="selectAppsByProjectId" resultType="org.apache.streampark.console.core.entity.FlinkApplication" parameterType="java.lang.Long">
-        select * from t_flink_app where project_id=#{projectId}
     </select>
 
     <select id="selectPage" resultType="org.apache.streampark.console.core.entity.FlinkApplication" parameterType="org.apache.streampark.console.core.entity.FlinkApplication">
@@ -199,22 +184,6 @@
         on t.user_id = u.user_id
         where t.team_id=#{teamId}
     </select>
-
-    <update id="mapping" parameterType="org.apache.streampark.console.core.entity.FlinkApplication">
-        update t_flink_app
-        <set>
-            <if test="app.clusterId != null">
-                cluster_id=#{app.clusterId},
-            </if>
-            <if test="app.jobId != null">
-                job_id=#{app.jobId},
-            </if>
-            end_time=null,
-            state=14,
-            tracking=1
-        </set>
-        where id=#{app.id}
-    </update>
 
     <select id="selectRecentK8sNamespaces" resultType="java.lang.String" parameterType="java.lang.Integer">
         select k8s_namespace
