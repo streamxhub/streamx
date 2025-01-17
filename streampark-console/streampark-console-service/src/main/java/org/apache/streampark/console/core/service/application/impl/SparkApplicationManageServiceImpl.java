@@ -152,7 +152,7 @@ public class SparkApplicationManageServiceImpl
 
     @Override
     public boolean mapping(SparkApplication appParam) {
-        this.lambdaUpdate()
+        return this.lambdaUpdate()
             .set(SparkApplication::getClusterId, appParam.getClusterId())
             .set(SparkApplication::getEndTime, null)
             .set(SparkApplication::getState, SparkAppStateEnum.MAPPING.getValue())
