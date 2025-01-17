@@ -189,7 +189,8 @@ public class SpringProperties {
     config.put("springdoc.api-docs.enabled", "true");
 
     // metrics
-    config.put("management.health.ldap.enabled", "false");
+    config.put("management.endpoints.enabled-by-default", "false");
+
     return config;
   }
 
