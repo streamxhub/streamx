@@ -8,11 +8,11 @@
   "packageManager": "pnpm@8.1.0",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/apache/incubator-streampark.git"
+    "url": "git+https://github.com/apache/streampark.git"
   },
   "license": "Apache-2.0 license",
   "bugs": {
-    "url": "https://github.com/apache/incubator-streampark/issues"
+    "url": "https://github.com/apache/streampark/issues"
   },
   "homepage": "https://streampark.apache.org",
   "scripts": {
