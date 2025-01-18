@@ -78,8 +78,12 @@ public class YarnQueueServiceImpl extends ServiceImpl<YarnQueueMapper, YarnQueue
         AssertUtils.notNull(yarnQueue, "Yarn queue query params mustn't be null.");
         AssertUtils.notNull(
             yarnQueue.getTeamId(), "Team id of yarn queue query params mustn't be null.");
+
         Page<YarnQueue> page = MybatisPager.getPage(request);
-        return this.baseMapper.selectPage(page, yarnQueue);
+        return this.lambdaQuery().eq(yarnQueue.getTeamId() != null, YarnQueue::getTeamId, yarnQueue.getTeamId())
+            .like(StringUtils.isNotBlank(yarnQueue.getQueueLabel()), YarnQueue::getQueueLabel,
+                yarnQueue.getQueueLabel())
+            .page(page);
     }
 
     /**
@@ -108,7 +112,10 @@ public class YarnQueueServiceImpl extends ServiceImpl<YarnQueueMapper, YarnQueue
             return responseResult;
         }
 
-        boolean existed = this.baseMapper.existsByQueueLabel(yarnQueue);
+        boolean existed = this.lambdaQuery().eq(YarnQueue::getTeamId, yarnQueue.getTeamId())
+            .eq(YarnQueue::getQueueLabel, yarnQueue.getQueueLabel())
+            .ne(yarnQueue.getId() != null, YarnQueue::getId, yarnQueue.getId())
+            .exists();
 
         if (existed) {
             responseResult.setStatus(1);

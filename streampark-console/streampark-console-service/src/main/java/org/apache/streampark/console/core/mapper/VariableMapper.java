@@ -25,13 +25,8 @@ import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 
-import java.util.List;
-
 public interface VariableMapper extends BaseMapper<Variable> {
 
     IPage<Variable> selectPage(Page<Variable> page, @Param("variable") Variable variable);
 
-    List<Variable> selectVarsByTeamId(@Param("teamId") Long teamId, @Param("keyword") String keyword);
-
-    boolean existsByTeamId(@Param("teamId") Long teamId);
 }

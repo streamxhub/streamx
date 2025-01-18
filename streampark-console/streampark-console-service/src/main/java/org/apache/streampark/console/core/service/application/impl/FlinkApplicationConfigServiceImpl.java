@@ -188,7 +188,9 @@ public class FlinkApplicationConfigServiceImpl
 
     @Override
     public FlinkApplicationConfig getLatest(Long appId) {
-        return baseMapper.selectLatest(appId);
+        return this.lambdaQuery().eq(FlinkApplicationConfig::getAppId, appId)
+            .eq(FlinkApplicationConfig::getLatest, true)
+            .one();
     }
 
     @Override
@@ -209,9 +211,13 @@ public class FlinkApplicationConfigServiceImpl
 
     @Override
     public IPage<FlinkApplicationConfig> getPage(FlinkApplicationConfig config, RestRequest request) {
-        request.setSortField("version");
         Page<FlinkApplicationConfig> page = MybatisPager.getPage(request);
-        IPage<FlinkApplicationConfig> configList = this.baseMapper.selectPageByAppId(page, config.getAppId());
+
+        IPage<FlinkApplicationConfig> configList = this.lambdaQuery()
+            .eq(FlinkApplicationConfig::getAppId, config.getAppId())
+            .orderByDesc(FlinkApplicationConfig::getVersion)
+            .page(page);
+
         fillEffectiveField(config.getAppId(), configList.getRecords());
         return configList;
     }

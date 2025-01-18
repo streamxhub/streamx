@@ -33,6 +33,8 @@ import org.apache.streampark.console.system.service.MemberService;
 import org.apache.streampark.console.system.service.TeamService;
 import org.apache.streampark.console.system.service.UserService;
 
+import org.apache.commons.lang3.StringUtils;
+
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
@@ -68,7 +70,9 @@ public class TeamServiceImpl extends ServiceImpl<TeamMapper, Team> implements Te
     @Override
     public IPage<Team> getPage(Team team, RestRequest request) {
         Page<Team> page = MybatisPager.getPage(request);
-        return this.baseMapper.selectPage(page, team);
+        return this.lambdaQuery()
+            .like(StringUtils.isNotBlank(team.getTeamName()), Team::getTeamName, team.getTeamName())
+            .page(page);
     }
 
     @Override

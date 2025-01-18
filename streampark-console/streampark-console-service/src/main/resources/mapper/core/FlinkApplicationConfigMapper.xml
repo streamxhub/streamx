@@ -19,13 +19,6 @@
 
 <mapper namespace="org.apache.streampark.console.core.mapper.FlinkApplicationConfigMapper">
 
-    <select id="selectLatest" resultType="org.apache.streampark.console.core.entity.FlinkApplicationConfig" parameterType="java.lang.Long">
-        select *
-        from t_flink_config
-        where app_id=#{appId}
-        and latest=true
-    </select>
-
     <select id="selectLastVersion" resultType="java.lang.Integer" parameterType="java.lang.Long">
         select max(`version`) as lastVersion
         from t_flink_config
@@ -41,9 +34,5 @@
         and e.target_type = 1
     </select>
 
-    <select id="selectPageByAppId" resultType="org.apache.streampark.console.core.entity.FlinkApplicationConfig" parameterType="java.lang.Long">
-        select * from t_flink_config
-        where app_id=#{appId}
-    </select>
 
 </mapper>

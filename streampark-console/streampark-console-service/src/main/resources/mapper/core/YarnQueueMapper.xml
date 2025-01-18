@@ -17,44 +17,5 @@
   -->
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="org.apache.streampark.console.core.mapper.YarnQueueMapper">
-    <select id="selectPage" resultType="org.apache.streampark.console.core.entity.YarnQueue">
-        select * from t_yarn_queue
-        <where>
-            <if test="yarnQueue.teamId != null">
-                team_id = #{yarnQueue.teamId}
-            </if>
-            <if test="yarnQueue.queueLabel != null and yarnQueue.queueLabel != ''">
-                <if test="_databaseId == 'mysql'">
-                    and queue_label like concat('%', #{yarnQueue.queueLabel},'%')
-                </if>
-                <if test="_databaseId == 'pgsql'">
-                    and queue_label like '%' || #{yarnQueue.queueLabel} || '%'
-                </if>
-            </if>
-            <if test="yarnQueue.createTimeFrom != null and yarnQueue.createTimeFrom !=''">
-                and create_time &gt; #{yarnQueue.createTimeFrom}
-            </if>
-            <if test="yarnQueue.createTimeTo!= null and yarnQueue.createTimeTo !=''">
-                and create_time &lt; #{yarnQueue.createTimeTo}
-            </if>
-        </where>
-    </select>
-
-    <select id="existsByQueueLabel" resultType="java.lang.Boolean" parameterType="org.apache.streampark.console.core.entity.YarnQueue">
-        select
-         CASE
-          WHEN  count(1) > 0 THEN true ELSE false
-         END
-        from t_yarn_queue
-        <where>
-            team_id = #{yarnQueue.teamId}
-            and
-            queue_label = #{yarnQueue.queueLabel}
-            <if test="yarnQueue.id != null">
-                and id &lt;&gt; #{yarnQueue.id}
-            </if>
-        </where>
-        limit 1
-    </select>
 
 </mapper>

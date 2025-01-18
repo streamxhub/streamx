@@ -19,13 +19,7 @@ package org.apache.streampark.console.system.mapper;
 
 import org.apache.streampark.console.system.entity.Role;
 
-import org.apache.ibatis.annotations.Param;
-
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import com.baomidou.mybatisplus.core.metadata.IPage;
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 
 public interface RoleMapper extends BaseMapper<Role> {
-
-    IPage<Role> selectPage(Page<Role> page, @Param("role") Role role);
 }

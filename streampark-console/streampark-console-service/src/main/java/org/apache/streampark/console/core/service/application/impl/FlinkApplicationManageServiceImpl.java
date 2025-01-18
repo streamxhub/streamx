@@ -152,7 +152,7 @@ public class FlinkApplicationManageServiceImpl extends ServiceImpl<FlinkApplicat
 
     @PostConstruct
     public void resetOptionState() {
-        this.baseMapper.resetOptionState();
+        this.lambdaUpdate().set(FlinkApplication::getOptionState, OptionStateEnum.NONE.getValue()).update();
     }
 
     @Override
@@ -179,7 +179,15 @@ public class FlinkApplicationManageServiceImpl extends ServiceImpl<FlinkApplicat
 
     @Override
     public boolean mapping(FlinkApplication appParam) {
-        boolean mapping = this.baseMapper.mapping(appParam);
+        boolean result = this.lambdaUpdate()
+            .eq(FlinkApplication::getId, appParam.getId())
+            .set(appParam.getClusterId() != null, FlinkApplication::getClusterId, appParam.getClusterId())
+            .set(appParam.getJobId() != null, FlinkApplication::getJobId, appParam.getJobId())
+            .set(FlinkApplication::getEndTime, null)
+            .set(FlinkApplication::getState, FlinkAppStateEnum.MAPPING.getValue())
+            .set(FlinkApplication::getTracking, 1)
+            .update();
+
         FlinkApplication application = getById(appParam.getId());
         if (application.isKubernetesModeJob()) {
             // todo mark
@@ -187,7 +195,7 @@ public class FlinkApplicationManageServiceImpl extends ServiceImpl<FlinkApplicat
         } else {
             FlinkAppHttpWatcher.doWatching(application);
         }
-        return mapping;
+        return result;
     }
 
     @Override
@@ -674,7 +682,7 @@ public class FlinkApplicationManageServiceImpl extends ServiceImpl<FlinkApplicat
 
     @Override
     public List<FlinkApplication> listByProjectId(Long id) {
-        return baseMapper.selectAppsByProjectId(id);
+        return this.lambdaQuery().eq(FlinkApplication::getProjectId, id).list();
     }
 
     @Override

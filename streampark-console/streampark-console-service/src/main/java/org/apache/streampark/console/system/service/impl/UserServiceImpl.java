@@ -216,12 +216,17 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         if (!teamId.equals(user.getLastTeamId())) {
             return;
         }
-        this.baseMapper.clearLastTeamByUserId(userId);
+        this.lambdaUpdate()
+            .eq(User::getUserId, userId)
+            .set(User::getLastTeamId, null)
+            .update();
     }
 
     @Override
     public void clearLastTeam(Long teamId) {
-        this.baseMapper.clearLastTeamByTeamId(teamId);
+        this.lambdaUpdate().eq(User::getLastTeamId, teamId)
+            .set(User::getLastTeamId, null)
+            .update();
     }
 
     @Override

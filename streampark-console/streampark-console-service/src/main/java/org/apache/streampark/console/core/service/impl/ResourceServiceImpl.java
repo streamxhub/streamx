@@ -123,7 +123,8 @@ public class ResourceServiceImpl extends ServiceImpl<ResourceMapper, Resource>
      */
     @Override
     public boolean existsByUserId(Long userId) {
-        return this.baseMapper.existsByUserId(userId);
+        return this.lambdaQuery().eq(Resource::getCreatorId, userId)
+            .exists();
     }
 
     @Override

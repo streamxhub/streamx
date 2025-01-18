@@ -277,12 +277,18 @@ public class FlinkClusterServiceImpl extends ServiceImpl<FlinkClusterMapper, Fli
 
     @Override
     public Boolean existsByClusterId(String clusterId, Long id) {
-        return this.baseMapper.existsByClusterId(clusterId, id);
+        return this.lambdaQuery()
+            .eq(FlinkCluster::getClusterId, clusterId)
+            .ne(id != null, FlinkCluster::getId, id)
+            .exists();
     }
 
     @Override
     public Boolean existsByClusterName(String clusterName, Long id) {
-        return this.baseMapper.existsByClusterName(clusterName, id);
+        return this.lambdaQuery()
+            .eq(FlinkCluster::getClusterName, clusterName)
+            .ne(id != null, FlinkCluster::getId, id)
+            .exists();
     }
 
     @Override
@@ -329,7 +335,8 @@ public class FlinkClusterServiceImpl extends ServiceImpl<FlinkClusterMapper, Fli
     @Override
     public IPage<FlinkCluster> findPage(FlinkCluster flinkCluster, RestRequest restRequest) {
         Page<FlinkCluster> page = MybatisPager.getPage(restRequest);
-        return this.baseMapper.findPage(page, flinkCluster);
+        return this.lambdaQuery().like(StringUtils.isNotBlank(flinkCluster.getClusterName()),
+            FlinkCluster::getClusterName, flinkCluster.getClusterName()).page(page);
     }
 
     @Override

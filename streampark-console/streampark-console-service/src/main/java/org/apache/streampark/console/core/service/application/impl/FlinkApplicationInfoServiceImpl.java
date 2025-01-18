@@ -260,12 +260,16 @@ public class FlinkApplicationInfoServiceImpl extends ServiceImpl<FlinkApplicatio
 
     @Override
     public boolean existsRunningByClusterId(Long clusterId) {
-        return baseMapper.existsRunningJobByClusterId(clusterId)
-            || FlinkAppHttpWatcher.getWatchingApps().stream()
-                .anyMatch(
-                    application -> clusterId.equals(application.getFlinkClusterId())
-                        && FlinkAppStateEnum.RUNNING == application
-                            .getStateEnum());
+        boolean exists = this.lambdaQuery()
+            .eq(FlinkApplication::getFlinkClusterId, clusterId)
+            .eq(FlinkApplication::getState, FlinkAppStateEnum.RUNNING.getValue())
+            .exists();
+
+        return exists || FlinkAppHttpWatcher.getWatchingApps().stream()
+            .anyMatch(
+                application -> clusterId.equals(application.getFlinkClusterId())
+                    && FlinkAppStateEnum.RUNNING == application
+                        .getStateEnum());
     }
 
     @Override

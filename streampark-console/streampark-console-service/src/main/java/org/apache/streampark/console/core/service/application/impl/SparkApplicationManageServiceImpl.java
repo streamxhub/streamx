@@ -124,7 +124,8 @@ public class SparkApplicationManageServiceImpl
 
     @PostConstruct
     public void resetOptionState() {
-        this.baseMapper.resetOptionState();
+        this.lambdaUpdate().set(SparkApplication::getOptionState, OptionStateEnum.NONE.getValue())
+            .update();
     }
 
     @Override
@@ -151,7 +152,13 @@ public class SparkApplicationManageServiceImpl
 
     @Override
     public boolean mapping(SparkApplication appParam) {
-        return this.baseMapper.mapping(appParam);
+        return this.lambdaUpdate()
+            .set(SparkApplication::getClusterId, appParam.getClusterId())
+            .set(SparkApplication::getEndTime, null)
+            .set(SparkApplication::getState, SparkAppStateEnum.MAPPING.getValue())
+            .set(SparkApplication::getTracking, 1)
+            .eq(SparkApplication::getId, appParam.getId())
+            .update();
     }
 
     @Override
@@ -565,7 +572,7 @@ public class SparkApplicationManageServiceImpl
 
     @Override
     public List<SparkApplication> listByProjectId(Long id) {
-        return baseMapper.selectAppsByProjectId(id);
+        return this.lambdaQuery().eq(SparkApplication::getProjectId, id).list();
     }
 
     @Override

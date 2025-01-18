@@ -17,48 +17,5 @@
   -->
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="org.apache.streampark.console.core.mapper.FlinkClusterMapper">
-    <select id="findPage" resultType="org.apache.streampark.console.core.entity.FlinkCluster">
-        select * from t_flink_cluster
-        <where>
-            <if test="cluster.clusterName != null and cluster.clusterName != ''">
-                <if test="_databaseId == 'mysql'">
-                    and cluster_name like concat('%', #{cluster.clusterName},'%')
-                </if>
-                <if test="_databaseId == 'pgsql'">
-                    and cluster_name like '%' || #{cluster.clusterName} || '%'
-                </if>
-            </if>
-        </where>
-    </select>
-
-    <select id="existsByClusterId" resultType="java.lang.Boolean" parameterType="java.lang.String">
-        select
-         CASE
-           WHEN  count(1) > 0 THEN true ELSE false
-         END
-        from t_flink_cluster
-        <where>
-            cluster_id=#{clusterId}
-            <if test="id != null">
-                and id &lt;&gt; #{id}
-            </if>
-        </where>
-        limit 1
-    </select>
-
-    <select id="existsByClusterName" resultType="java.lang.Boolean" parameterType="java.util.Map">
-        select
-         CASE
-           WHEN  count(1) > 0 THEN true ELSE false
-         END
-        from t_flink_cluster
-        <where>
-            cluster_name=#{clusterName}
-            <if test="id != null">
-                and id &lt;&gt; #{id}
-            </if>
-        </where>
-        limit 1
-    </select>
 
 </mapper>

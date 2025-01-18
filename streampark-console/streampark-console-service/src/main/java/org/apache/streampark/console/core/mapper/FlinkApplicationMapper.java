@@ -37,8 +37,6 @@ public interface FlinkApplicationMapper extends BaseMapper<FlinkApplication> {
 
     List<FlinkApplication> selectAppsByTeamId(@Param("teamId") Long teamId);
 
-    boolean mapping(@Param("app") FlinkApplication appParam);
-
     List<String> selectRecentK8sNamespaces(@Param("limitSize") Integer limit);
 
     List<String> selectRecentK8sClusterIds(
@@ -52,12 +50,6 @@ public interface FlinkApplicationMapper extends BaseMapper<FlinkApplication> {
     List<String> selectRecentK8sJmPodTemplates(@Param("limitSize") Integer limit);
 
     List<String> selectRecentK8sTmPodTemplates(@Param("limitSize") Integer limit);
-
-    void resetOptionState();
-
-    List<FlinkApplication> selectAppsByProjectId(@Param("projectId") Long id);
-
-    boolean existsRunningJobByClusterId(@Param("clusterId") Long clusterId);
 
     Integer countAffectedByClusterId(
                                      @Param("clusterId") Long clusterId, @Param("dbType") String dbType);

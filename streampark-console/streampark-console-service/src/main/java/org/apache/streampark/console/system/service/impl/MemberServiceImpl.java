@@ -58,13 +58,13 @@ public class MemberServiceImpl extends ServiceImpl<MemberMapper, Member> impleme
     @Override
     @Transactional
     public void removeByRoleIds(String[] roleIds) {
-        Arrays.stream(roleIds).forEach(id -> baseMapper.deleteByRoleId(Long.valueOf(id)));
+        this.lambdaUpdate().in(Member::getRoleId, Arrays.asList(roleIds)).remove();
     }
 
     @Override
     @Transactional
     public void removeByUserId(Long userId) {
-        baseMapper.deleteByUserId(userId);
+        this.lambdaUpdate().eq(Member::getUserId, userId).remove();
     }
 
     @Override
