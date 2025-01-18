@@ -32,7 +32,6 @@ import org.apache.streampark.console.base.exception.ApiDetailException;
 import org.apache.streampark.console.base.mybatis.pager.MybatisPager;
 import org.apache.streampark.console.base.util.GZipUtils;
 import org.apache.streampark.console.base.util.GitUtils;
-import org.apache.streampark.console.base.util.ObjectUtils;
 import org.apache.streampark.console.core.entity.FlinkApplication;
 import org.apache.streampark.console.core.entity.Project;
 import org.apache.streampark.console.core.enums.BuildStateEnum;
@@ -117,13 +116,6 @@ public class ProjectServiceImpl extends ServiceImpl<ProjectMapper, Project>
 
     @Override
     public boolean checkExists(Project project) {
-        if (project.getId() != null) {
-            Project proj = getById(project.getId());
-            if (proj != null && ObjectUtils.safeEquals(project.getName(), proj.getName())) {
-                return false;
-            }
-        }
-
         return this.lambdaQuery()
             .eq(Project::getName, project.getName())
             .eq(Project::getTeamId, project.getTeamId())
