@@ -20,6 +20,11 @@ package org.apache.streampark.console.core.entity;
 import org.apache.streampark.common.conf.ConfigKeys;
 import org.apache.streampark.common.conf.Workspace;
 import org.apache.streampark.common.constants.Constants;
+import org.apache.streampark.common.enums.ApplicationType;
+import org.apache.streampark.common.enums.FlinkDeployMode;
+import org.apache.streampark.common.enums.FlinkJobType;
+import org.apache.streampark.common.enums.FlinkK8sRestExposedType;
+import org.apache.streampark.common.enums.StorageType;
 import org.apache.streampark.common.fs.FsOperator;
 import org.apache.streampark.console.base.mybatis.entity.BaseEntity;
 import org.apache.streampark.console.base.util.JacksonUtils;
@@ -36,12 +41,24 @@ import org.apache.streampark.flink.packer.maven.DependencyInfo;
 import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang3.StringUtils;
 
+import com.baomidou.mybatisplus.annotation.FieldStrategy;
+import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableField;
+import com.baomidou.mybatisplus.annotation.TableId;
+import com.baomidou.mybatisplus.annotation.TableName;
 import com.baomidou.mybatisplus.core.toolkit.support.SFunction;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
+
+import java.util.Collections;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
 
 @Getter
 @Setter
@@ -458,15 +475,15 @@ public class FlinkApplication extends BaseEntity {
     }
 
     public String getMainClass() {
-        FlinkDevelopmentMode flinkDevelopmentMode = FlinkDevelopmentMode.of(deployMode);
-        if (flinkDevelopmentMode == FlinkDevelopmentMode.FLINK_SQL) {
+        FlinkJobType flinkJobType = FlinkJobType.of(jobType);
+        if (flinkJobType == FlinkJobType.FLINK_SQL) {
             return Constants.STREAMPARK_FLINKSQL_CLIENT_CLASS;
-        } else if (flinkDevelopmentMode == FlinkDevelopmentMode.FLINK_CDC) {
+        } else if (flinkJobType == FlinkJobType.FLINK_CDC) {
             return Constants.STREAMPARK_FLINKCDC_CLIENT_CLASS;
-        } else if (flinkDevelopmentMode == FlinkDevelopmentMode.PYFLINK) {
+        } else if (flinkJobType == FlinkJobType.PYFLINK) {
             return Constants.PYTHON_FLINK_DRIVER_CLASS_NAME; // Assuming this is the default behavior for other enum
             // values
-        } else if (flinkDevelopmentMode == FlinkDevelopmentMode.CUSTOM_CODE) {
+        } else if (flinkJobType == FlinkJobType.CUSTOM_CODE) {
             return mainClass;
         } else {
             return null;

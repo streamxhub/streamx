@@ -19,7 +19,6 @@ package org.apache.streampark.console.core.service.application.impl;
 
 import org.apache.streampark.common.conf.Workspace;
 import org.apache.streampark.common.constants.Constants;
-import org.apache.streampark.common.enums.ApplicationType;
 import org.apache.streampark.common.enums.FlinkDeployMode;
 import org.apache.streampark.common.enums.FlinkJobType;
 import org.apache.streampark.common.fs.FsOperator;
@@ -31,12 +30,52 @@ import org.apache.streampark.console.base.util.JacksonUtils;
 import org.apache.streampark.console.base.util.WebUtils;
 import org.apache.streampark.console.core.bean.Dependency;
 import org.apache.streampark.console.core.bean.DockerConfig;
+import org.apache.streampark.console.core.entity.ApplicationBuildPipeline;
+import org.apache.streampark.console.core.entity.ApplicationLog;
+import org.apache.streampark.console.core.entity.FlinkApplication;
+import org.apache.streampark.console.core.entity.FlinkApplicationConfig;
+import org.apache.streampark.console.core.entity.FlinkEnv;
+import org.apache.streampark.console.core.entity.FlinkSql;
+import org.apache.streampark.console.core.entity.Message;
+import org.apache.streampark.console.core.entity.Resource;
+import org.apache.streampark.console.core.enums.CandidateTypeEnum;
+import org.apache.streampark.console.core.enums.NoticeTypeEnum;
+import org.apache.streampark.console.core.enums.OptionStateEnum;
+import org.apache.streampark.console.core.enums.ReleaseStateEnum;
+import org.apache.streampark.console.core.enums.ResourceTypeEnum;
 import org.apache.streampark.console.core.mapper.ApplicationBuildPipelineMapper;
+import org.apache.streampark.console.core.service.FlinkEnvService;
+import org.apache.streampark.console.core.service.FlinkSqlService;
+import org.apache.streampark.console.core.service.MessageService;
+import org.apache.streampark.console.core.service.ResourceService;
+import org.apache.streampark.console.core.service.SettingService;
+import org.apache.streampark.console.core.service.application.ApplicationLogService;
+import org.apache.streampark.console.core.service.application.FlinkApplicationActionService;
+import org.apache.streampark.console.core.service.application.FlinkApplicationBackupService;
+import org.apache.streampark.console.core.service.application.FlinkApplicationBuildPipelineService;
+import org.apache.streampark.console.core.service.application.FlinkApplicationConfigService;
+import org.apache.streampark.console.core.service.application.FlinkApplicationInfoService;
+import org.apache.streampark.console.core.service.application.FlinkApplicationManageService;
 import org.apache.streampark.console.core.util.ServiceHelper;
 import org.apache.streampark.console.core.watcher.FlinkAppHttpWatcher;
 import org.apache.streampark.flink.packer.docker.DockerConf;
 import org.apache.streampark.flink.packer.maven.Artifact;
 import org.apache.streampark.flink.packer.maven.DependencyInfo;
+import org.apache.streampark.flink.packer.pipeline.BuildPipeline;
+import org.apache.streampark.flink.packer.pipeline.BuildResult;
+import org.apache.streampark.flink.packer.pipeline.DockerBuildSnapshot;
+import org.apache.streampark.flink.packer.pipeline.DockerProgressWatcher;
+import org.apache.streampark.flink.packer.pipeline.DockerPullSnapshot;
+import org.apache.streampark.flink.packer.pipeline.DockerPushSnapshot;
+import org.apache.streampark.flink.packer.pipeline.DockerResolvedSnapshot;
+import org.apache.streampark.flink.packer.pipeline.FlinkK8sApplicationBuildRequest;
+import org.apache.streampark.flink.packer.pipeline.FlinkK8sSessionBuildRequest;
+import org.apache.streampark.flink.packer.pipeline.FlinkRemotePerJobBuildRequest;
+import org.apache.streampark.flink.packer.pipeline.FlinkYarnApplicationBuildRequest;
+import org.apache.streampark.flink.packer.pipeline.PipeWatcher;
+import org.apache.streampark.flink.packer.pipeline.PipelineSnapshot;
+import org.apache.streampark.flink.packer.pipeline.PipelineStatusEnum;
+import org.apache.streampark.flink.packer.pipeline.PipelineTypeEnum;
 import org.apache.streampark.flink.packer.pipeline.impl.FlinkK8sApplicationBuildPipeline;
 import org.apache.streampark.flink.packer.pipeline.impl.FlinkK8sSessionBuildPipeline;
 import org.apache.streampark.flink.packer.pipeline.impl.FlinkRemoteBuildPipeline;
@@ -59,10 +98,18 @@ import org.springframework.transaction.annotation.Transactional;
 import javax.annotation.Nonnull;
 
 import java.io.File;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
+import static org.apache.streampark.common.enums.ApplicationType.APACHE_FLINK;
 import static org.apache.streampark.console.core.enums.OperationEnum.RELEASE;
 
 @Service
@@ -415,13 +462,13 @@ public class FlinkApplicationBuildPipelineServiceImpl
         }
 
         FlinkDeployMode deployModeEnum = app.getDeployModeEnum();
-        String mainClass = app.getMainClass();
+        String mainClass = Constants.STREAMPARK_FLINKSQL_CLIENT_CLASS;
         switch (deployModeEnum) {
             case YARN_APPLICATION:
                 String yarnProvidedPath = app.getAppLib();
                 String localWorkspace = app.getLocalAppHome().concat("/lib");
                 if (FlinkJobType.CUSTOM_CODE == app.getJobTypeEnum()
-                    && ApplicationType.APACHE_FLINK == app.getApplicationType()) {
+                    && APACHE_FLINK == app.getApplicationType()) {
                     yarnProvidedPath = app.getAppHome();
                     localWorkspace = app.getLocalAppHome();
                 }
