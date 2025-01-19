@@ -20,11 +20,6 @@ package org.apache.streampark.console.core.entity;
 import org.apache.streampark.common.conf.ConfigKeys;
 import org.apache.streampark.common.conf.Workspace;
 import org.apache.streampark.common.constants.Constants;
-import org.apache.streampark.common.enums.ApplicationType;
-import org.apache.streampark.common.enums.FlinkDeployMode;
-import org.apache.streampark.common.enums.FlinkJobType;
-import org.apache.streampark.common.enums.FlinkK8sRestExposedType;
-import org.apache.streampark.common.enums.StorageType;
 import org.apache.streampark.common.fs.FsOperator;
 import org.apache.streampark.console.base.mybatis.entity.BaseEntity;
 import org.apache.streampark.console.base.util.JacksonUtils;
@@ -41,24 +36,12 @@ import org.apache.streampark.flink.packer.maven.DependencyInfo;
 import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang3.StringUtils;
 
-import com.baomidou.mybatisplus.annotation.FieldStrategy;
-import com.baomidou.mybatisplus.annotation.IdType;
-import com.baomidou.mybatisplus.annotation.TableField;
-import com.baomidou.mybatisplus.annotation.TableId;
-import com.baomidou.mybatisplus.annotation.TableName;
 import com.baomidou.mybatisplus.core.toolkit.support.SFunction;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
-
-import java.util.Collections;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
 
 @Getter
 @Setter
@@ -71,38 +54,58 @@ public class FlinkApplication extends BaseEntity {
 
     private Long teamId;
 
-    /** 1) custom code 2) flink SQL */
+    /**
+     * 1) custom code 2) flink SQL
+     */
     private Integer jobType;
 
     private Long projectId;
-    /** creator */
+    /**
+     * creator
+     */
     private Long userId;
 
-    /** The name of the frontend and program displayed in yarn */
+    /**
+     * The name of the frontend and program displayed in yarn
+     */
     private String jobName;
 
     @TableField(updateStrategy = FieldStrategy.IGNORED)
     private String jobId;
 
-    /** The address of the jobmanager, that is, the direct access address of the Flink web UI */
+    /**
+     * The address of the jobmanager, that is, the direct access address of the Flink web UI
+     */
     @TableField(updateStrategy = FieldStrategy.IGNORED)
     private String jobManagerUrl;
 
-    /** flink version */
+    /**
+     * flink version
+     */
     private Long versionId;
 
-    /** 1. yarn application id(on yarn) 2. k8s application id (on k8s application) */
+    /**
+     * 1. yarn application id(on yarn) 2. k8s application id (on k8s application)
+     */
     private String clusterId;
 
-    /** flink docker base image */
+    /**
+     * flink docker base image
+     */
     private String flinkImage;
 
-    /** k8s namespace */
+    /**
+     * k8s namespace
+     */
     private String k8sNamespace = Constants.DEFAULT;
 
-    /** The exposed type of the rest service of K8s(kubernetes.rest-service.exposed.type) */
+    /**
+     * The exposed type of the rest service of K8s(kubernetes.rest-service.exposed.type)
+     */
     private Integer k8sRestExposedType;
-    /** flink kubernetes pod template */
+    /**
+     * flink kubernetes pod template
+     */
     private String k8sPodTemplate;
 
     private String k8sJmPodTemplate;
@@ -113,32 +116,46 @@ public class FlinkApplication extends BaseEntity {
     @Setter
     private String defaultModeIngress;
 
-    /** flink-hadoop integration on flink-k8s mode */
+    /**
+     * flink-hadoop integration on flink-k8s mode
+     */
     private Boolean k8sHadoopIntegration;
 
     private Integer state;
-    /** task release status */
+    /**
+     * task release status
+     */
     @TableField("`release`")
     private Integer release;
 
-    /** determine if a task needs to be built */
+    /**
+     * determine if a task needs to be built
+     */
     private Boolean build;
 
-    /** max restart retries after job failed */
+    /**
+     * max restart retries after job failed
+     */
     @TableField(updateStrategy = FieldStrategy.IGNORED)
     private Integer restartSize;
 
-    /** has restart count */
+    /**
+     * has restart count
+     */
     private Integer restartCount;
 
     private Integer optionState;
 
-    /** alert id */
+    /**
+     * alert id
+     */
     @TableField(updateStrategy = FieldStrategy.IGNORED)
     private Long alertId;
 
     private String args;
-    /** application module */
+    /**
+     * application module
+     */
     private String module;
 
     private String options;
@@ -155,7 +172,9 @@ public class FlinkApplication extends BaseEntity {
 
     private Integer appType;
 
-    /** determine if tracking status */
+    /**
+     * determine if tracking status
+     */
     private Integer tracking;
 
     private String jar;
@@ -176,19 +195,27 @@ public class FlinkApplication extends BaseEntity {
     @TableField(updateStrategy = FieldStrategy.IGNORED)
     private Long duration;
 
-    /** checkpoint max failure interval */
+    /**
+     * checkpoint max failure interval
+     */
     @TableField(updateStrategy = FieldStrategy.IGNORED)
     private Integer cpMaxFailureInterval;
 
-    /** checkpoint failure rate interval */
+    /**
+     * checkpoint failure rate interval
+     */
     @TableField(updateStrategy = FieldStrategy.IGNORED)
     private Integer cpFailureRateInterval;
 
-    /** Actions triggered after X minutes failed Y times: 1: send alert 2: restart */
+    /**
+     * Actions triggered after X minutes failed Y times: 1: send alert 2: restart
+     */
     @TableField(updateStrategy = FieldStrategy.IGNORED)
     private Integer cpFailureAction;
 
-    /** overview */
+    /**
+     * overview
+     */
     @TableField("TOTAL_TM")
     private Integer totalTM;
 
@@ -201,7 +228,9 @@ public class FlinkApplication extends BaseEntity {
     private Integer tmMemory;
     private Integer totalTask;
 
-    /** the cluster id bound to the task in remote mode */
+    /**
+     * the cluster id bound to the task in remote mode
+     */
     @TableField(updateStrategy = FieldStrategy.IGNORED)
     private Long flinkClusterId;
 
@@ -214,13 +243,17 @@ public class FlinkApplication extends BaseEntity {
 
     private Date modifyTime;
 
-    /** 1: cicd (build from csv) 2: upload (upload local jar job) */
+    /**
+     * 1: cicd (build from csv) 2: upload (upload local jar job)
+     */
     private Integer resourceFrom;
 
     @TableField(updateStrategy = FieldStrategy.IGNORED)
     private String tags;
 
-    /** running job */
+    /**
+     * running job
+     */
     private transient JobsOverview.Task overview;
 
     private transient String teamResource;
@@ -254,10 +287,14 @@ public class FlinkApplication extends BaseEntity {
     private transient String yarnQueue;
     private transient String serviceAccount;
 
-    /** Flink Web UI Url */
+    /**
+     * Flink Web UI Url
+     */
     private transient String flinkRestUrl;
 
-    /** refer to {@link org.apache.streampark.flink.packer.pipeline.BuildPipeline} */
+    /**
+     * refer to {@link org.apache.streampark.flink.packer.pipeline.BuildPipeline}
+     */
     private transient Integer buildStatus;
 
     private transient AppControl appControl;
@@ -367,15 +404,17 @@ public class FlinkApplication extends BaseEntity {
     }
 
     public boolean eqFlinkJob(FlinkApplication other) {
-        if (this.isFlinkSqlJob()
-            && other.isFlinkSqlJob()
+        if (this.isFlinkSqlJobOrCDC()
+            && other.isFlinkSqlJobOrCDC()
             && this.getFlinkSql().trim().equals(other.getFlinkSql().trim())) {
             return this.getDependencyObject().equals(other.getDependencyObject());
         }
         return false;
     }
 
-    /** Local compilation and packaging working directory */
+    /**
+     * Local compilation and packaging working directory
+     */
     @JsonIgnore
     public String getDistHome() {
         String path = String.format("%s/%s/%s", Workspace.APP_LOCAL_DIST(), projectId.toString(), getModule());
@@ -397,7 +436,9 @@ public class FlinkApplication extends BaseEntity {
         return path;
     }
 
-    /** Automatically identify remoteAppHome or localAppHome based on app FlinkDeployMode */
+    /**
+     * Automatically identify remoteAppHome or localAppHome based on app FlinkDeployMode
+     */
     @JsonIgnore
     public String getAppHome() {
         switch (this.getDeployModeEnum()) {
@@ -413,6 +454,22 @@ public class FlinkApplication extends BaseEntity {
             default:
                 throw new UnsupportedOperationException(
                     "unsupported deployMode ".concat(getDeployModeEnum().getName()));
+        }
+    }
+
+    public String getMainClass() {
+        FlinkDevelopmentMode flinkDevelopmentMode = FlinkDevelopmentMode.of(deployMode);
+        if (flinkDevelopmentMode == FlinkDevelopmentMode.FLINK_SQL) {
+            return Constants.STREAMPARK_FLINKSQL_CLIENT_CLASS;
+        } else if (flinkDevelopmentMode == FlinkDevelopmentMode.FLINK_CDC) {
+            return Constants.STREAMPARK_FLINKCDC_CLIENT_CLASS;
+        } else if (flinkDevelopmentMode == FlinkDevelopmentMode.PYFLINK) {
+            return Constants.PYTHON_FLINK_DRIVER_CLASS_NAME; // Assuming this is the default behavior for other enum
+            // values
+        } else if (flinkDevelopmentMode == FlinkDevelopmentMode.CUSTOM_CODE) {
+            return mainClass;
+        } else {
+            return null;
         }
     }
 
@@ -439,14 +496,16 @@ public class FlinkApplication extends BaseEntity {
     }
 
     @JsonIgnore
-    public boolean isFlinkSqlJob() {
-        return FlinkJobType.FLINK_SQL.getMode().equals(this.getJobType());
+    public boolean isFlinkSqlJobOrCDC() {
+        return FlinkJobType.FLINK_SQL.getMode().equals(this.getJobType()) ||
+            FlinkJobType.FLINK_CDC.getMode().equals(this.getJobType());
     }
 
     @JsonIgnore
-    public boolean isFlinkSqlJobOrPyFlinkJob() {
+    public boolean isFlinkSqlJobOrPyFlinkJobOrFlinkCDC() {
         return FlinkJobType.FLINK_SQL.getMode().equals(this.getJobType())
-            || FlinkJobType.PYFLINK.getMode().equals(this.getJobType());
+            || FlinkJobType.PYFLINK.getMode().equals(this.getJobType())
+            || FlinkJobType.FLINK_CDC.getMode().equals(this.getJobType());
     }
 
     @JsonIgnore

@@ -20,56 +20,12 @@ package org.apache.streampark.console.core.service.application.impl;
 import org.apache.streampark.common.conf.ConfigKeys;
 import org.apache.streampark.common.conf.Workspace;
 import org.apache.streampark.common.constants.Constants;
-import org.apache.streampark.common.enums.ApplicationType;
-import org.apache.streampark.common.enums.ClusterState;
-import org.apache.streampark.common.enums.FlinkDeployMode;
-import org.apache.streampark.common.enums.FlinkJobType;
-import org.apache.streampark.common.enums.FlinkK8sRestExposedType;
-import org.apache.streampark.common.enums.FlinkRestoreMode;
-import org.apache.streampark.common.enums.ResolveOrder;
 import org.apache.streampark.common.fs.FsOperator;
-import org.apache.streampark.common.util.AssertUtils;
-import org.apache.streampark.common.util.DeflaterUtils;
-import org.apache.streampark.common.util.ExceptionUtils;
-import org.apache.streampark.common.util.HadoopUtils;
-import org.apache.streampark.common.util.PropertiesUtils;
 import org.apache.streampark.console.base.exception.ApiAlertException;
 import org.apache.streampark.console.base.exception.ApplicationException;
 import org.apache.streampark.console.base.util.Tuple2;
 import org.apache.streampark.console.base.util.Tuple3;
-import org.apache.streampark.console.core.entity.ApplicationBuildPipeline;
-import org.apache.streampark.console.core.entity.ApplicationLog;
-import org.apache.streampark.console.core.entity.FlinkApplication;
-import org.apache.streampark.console.core.entity.FlinkApplicationConfig;
-import org.apache.streampark.console.core.entity.FlinkCluster;
-import org.apache.streampark.console.core.entity.FlinkEnv;
-import org.apache.streampark.console.core.entity.FlinkSavepoint;
-import org.apache.streampark.console.core.entity.FlinkSql;
-import org.apache.streampark.console.core.entity.Resource;
-import org.apache.streampark.console.core.enums.CheckPointTypeEnum;
-import org.apache.streampark.console.core.enums.ConfigFileTypeEnum;
-import org.apache.streampark.console.core.enums.DistributedTaskEnum;
-import org.apache.streampark.console.core.enums.EngineTypeEnum;
-import org.apache.streampark.console.core.enums.FlinkAppStateEnum;
-import org.apache.streampark.console.core.enums.OperationEnum;
-import org.apache.streampark.console.core.enums.OptionStateEnum;
-import org.apache.streampark.console.core.enums.ReleaseStateEnum;
 import org.apache.streampark.console.core.mapper.FlinkApplicationMapper;
-import org.apache.streampark.console.core.service.DistributedTaskService;
-import org.apache.streampark.console.core.service.FlinkClusterService;
-import org.apache.streampark.console.core.service.FlinkEnvService;
-import org.apache.streampark.console.core.service.FlinkSqlService;
-import org.apache.streampark.console.core.service.ResourceService;
-import org.apache.streampark.console.core.service.SavepointService;
-import org.apache.streampark.console.core.service.SettingService;
-import org.apache.streampark.console.core.service.VariableService;
-import org.apache.streampark.console.core.service.application.ApplicationLogService;
-import org.apache.streampark.console.core.service.application.FlinkApplicationActionService;
-import org.apache.streampark.console.core.service.application.FlinkApplicationBackupService;
-import org.apache.streampark.console.core.service.application.FlinkApplicationBuildPipelineService;
-import org.apache.streampark.console.core.service.application.FlinkApplicationConfigService;
-import org.apache.streampark.console.core.service.application.FlinkApplicationInfoService;
-import org.apache.streampark.console.core.service.application.FlinkApplicationManageService;
 import org.apache.streampark.console.core.util.ServiceHelper;
 import org.apache.streampark.console.core.watcher.FlinkAppHttpWatcher;
 import org.apache.streampark.console.core.watcher.FlinkClusterWatcher;
@@ -113,13 +69,6 @@ import javax.annotation.Nonnull;
 
 import java.io.File;
 import java.net.URI;
-import java.util.Date;
-import java.util.EnumSet;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
@@ -216,7 +165,7 @@ public class FlinkApplicationActionServiceImpl
         // 3) restore related status
         LambdaUpdateWrapper<FlinkApplication> updateWrapper = Wrappers.lambdaUpdate();
         updateWrapper.eq(FlinkApplication::getId, application.getId());
-        if (application.isFlinkSqlJob()) {
+        if (application.isFlinkSqlJobOrCDC()) {
             updateWrapper.set(FlinkApplication::getRelease, ReleaseStateEnum.FAILED.get());
         } else {
             updateWrapper.set(FlinkApplication::getRelease, ReleaseStateEnum.NEED_RELEASE.get());
@@ -452,7 +401,7 @@ public class FlinkApplicationActionServiceImpl
         applicationManageService.toEffective(application);
 
         Map<String, Object> extraParameter = new HashMap<>(0);
-        if (application.isFlinkSqlJob()) {
+        if (application.isFlinkSqlJobOrCDC()) {
             FlinkSql flinkSql = flinkSqlService.getEffective(application.getId(), true);
             // Get the sql of the replaced placeholder
             String realSql = variableService.replaceVariable(application.getTeamId(), flinkSql.getSql());
@@ -687,6 +636,24 @@ public class FlinkApplicationActionServiceImpl
                 if (FlinkDeployMode.YARN_APPLICATION == deployModeEnum) {
                     String clientPath = Workspace.remote().APP_CLIENT();
                     flinkUserJar = String.format("%s/%s", clientPath, sqlDistJar);
+                }
+                break;
+
+            case FLINK_CDC:
+                log.info("the current job id: {}", application.getId());
+                FlinkSql flinkCDC = flinkSqlService.getEffective(application.getId(), false);
+                AssertUtils.notNull(flinkCDC);
+                // 1) dist_userJar
+                String cdcDistJar = ServiceHelper.getFlinkCDCClientJar(flinkEnv);
+                // 2) appConfig
+                appConf =
+                    applicationConfig == null
+                        ? null
+                        : String.format("yaml://%s", applicationConfig.getContent());
+                // 3) client
+                if (FlinkDeployMode.YARN_APPLICATION == deployModeEnum) {
+                    String clientPath = Workspace.remote().APP_CLIENT();
+                    flinkUserJar = String.format("%s/%s", clientPath, cdcDistJar);
                 }
                 break;
 
