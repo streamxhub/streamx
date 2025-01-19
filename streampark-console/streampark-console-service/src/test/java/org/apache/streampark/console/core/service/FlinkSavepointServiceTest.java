@@ -104,14 +104,14 @@ class FlinkSavepointServiceTest extends SpringUnitTestBase {
         app.setAppType(ApplicationType.APACHE_FLINK.getType());
         assertThat(savepointServiceImpl.getSavepointFromConfig(app)).isNull();
         app.setAppType(ApplicationType.STREAMPARK_FLINK.getType());
-        app.setJobType(FlinkJobType.CUSTOM_CODE.getMode());
+        app.setJobType(FlinkJobType.FLINK_JAR.getMode());
         assertThat(savepointServiceImpl.getSavepointFromConfig(app)).isNull();
 
         // Test for (StreamPark job Or FlinkSQL job) without application config.
         app.setAppType(ApplicationType.STREAMPARK_FLINK.getType());
         assertThat(savepointServiceImpl.getSavepointFromConfig(app)).isNull();
         app.setAppType(ApplicationType.STREAMPARK_FLINK.getType());
-        app.setJobType(FlinkJobType.CUSTOM_CODE.getMode());
+        app.setJobType(FlinkJobType.FLINK_JAR.getMode());
         assertThat(savepointServiceImpl.getSavepointFromConfig(app)).isNull();
 
         // Test for (StreamPark job Or FlinkSQL job) with application config just disabled checkpoint.

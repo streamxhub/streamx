@@ -81,7 +81,7 @@ public class SparkApplication extends BaseEntity {
 
     private Integer deployMode;
 
-    /** 1: cicd (build from csv) 2: upload (upload local jar job) */
+    /** 1: build (build from csv) 2: upload (upload local jar job) */
     private Integer resourceFrom;
 
     private Long projectId;
@@ -426,15 +426,15 @@ public class SparkApplication extends BaseEntity {
     }
 
     @JsonIgnore
-    public boolean isUploadJob() {
+    public boolean isFromUploadJob() {
         return isSparkJarOrPySparkJob()
             && ResourceFromEnum.UPLOAD.getValue().equals(this.getResourceFrom());
     }
 
     @JsonIgnore
-    public boolean isCICDJob() {
+    public boolean isFromBuildJob() {
         return isSparkJarOrPySparkJob()
-            && ResourceFromEnum.CICD.getValue().equals(this.getResourceFrom());
+            && ResourceFromEnum.BUILD.getValue().equals(this.getResourceFrom());
     }
 
     public boolean isStreamParkJob() {

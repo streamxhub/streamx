@@ -192,14 +192,15 @@ public class FlinkApplicationBuildPipelineServiceImpl
             return true;
         }
         // rollback
-        if (app.isNeedRollback() && app.isFlinkSqlJobOrCDC()) {
+        if (app.isNeedRollback() && app.isJobTypeFlinkSqlOrCDC()) {
             flinkSqlService.rollback(app);
         }
 
         // 1) flink sql setDependency
         FlinkSql newFlinkSql = flinkSqlService.getCandidate(app.getId(), CandidateTypeEnum.NEW);
         FlinkSql effectiveFlinkSql = flinkSqlService.getEffective(app.getId(), false);
-        if (app.isFlinkSqlJobOrPyFlinkJobOrFlinkCDC()) {
+        FlinkJobType jobType = app.getJobTypeEnum();
+        if (jobType == FlinkJobType.FLINK_SQL || jobType == FlinkJobType.PYFLINK || jobType == FlinkJobType.FLINK_CDC) {
             FlinkSql flinkSql = newFlinkSql == null ? effectiveFlinkSql : newFlinkSql;
             AssertUtils.notNull(flinkSql);
             app.setDependency(flinkSql.getDependency());
@@ -235,12 +236,12 @@ public class FlinkApplicationBuildPipelineServiceImpl
                     // 2) some preparatory work
                     String appUploads = app.getWorkspace().APP_UPLOADS();
 
-                    if (app.isCustomCodeOrPyFlinkJob()) {
-                        // customCode upload jar to appHome...
+                    if (app.isJobTypeFlinkJarOrPyFlink()) {
+                        // flinkJar upload jar to appHome...
                         String appHome = app.getAppHome();
                         FsOperator fsOperator = app.getFsOperator();
                         fsOperator.delete(appHome);
-                        if (app.isUploadJob()) {
+                        if (app.isResourceFromUpload()) {
                             String uploadJar = appUploads.concat("/").concat(app.getJar());
                             File localJar = new File(
                                 String.format(
@@ -274,7 +275,7 @@ public class FlinkApplicationBuildPipelineServiceImpl
                                     break;
                                 default:
                                     throw new IllegalArgumentException(
-                                        "[StreamPark] unsupported ApplicationType of custom code: "
+                                        "[StreamPark] unsupported ApplicationType of FlinkJar: "
                                             + app.getApplicationType());
                             }
                         } else {
@@ -324,10 +325,10 @@ public class FlinkApplicationBuildPipelineServiceImpl
                             // If the current task is not running, or the task has just been added, directly
                             // set
                             // the candidate version to the official version
-                            if (app.isFlinkSqlJobOrCDC()) {
+                            if (app.isJobTypeFlinkSqlOrCDC()) {
                                 applicationManageService.toEffective(app);
                             } else {
-                                if (app.isStreamParkJob()) {
+                                if (app.isAppTypeStreamPark()) {
                                     FlinkApplicationConfig config =
                                         applicationConfigService.getLatest(app.getId());
                                     if (config != null) {
@@ -340,7 +341,7 @@ public class FlinkApplicationBuildPipelineServiceImpl
                         }
                         // backup.
                         if (!app.isNeedRollback()) {
-                            if (app.isFlinkSqlJobOrCDC() && newFlinkSql != null) {
+                            if (app.isJobTypeFlinkSqlOrCDC() && newFlinkSql != null) {
                                 backUpService.backup(app, newFlinkSql);
                             } else {
                                 backUpService.backup(app, null);
@@ -467,7 +468,7 @@ public class FlinkApplicationBuildPipelineServiceImpl
             case YARN_APPLICATION:
                 String yarnProvidedPath = app.getAppLib();
                 String localWorkspace = app.getLocalAppHome().concat("/lib");
-                if (FlinkJobType.CUSTOM_CODE == app.getJobTypeEnum()
+                if (FlinkJobType.FLINK_JAR == app.getJobTypeEnum()
                     && APACHE_FLINK == app.getApplicationType()) {
                     yarnProvidedPath = app.getAppHome();
                     localWorkspace = app.getLocalAppHome();
@@ -574,7 +575,7 @@ public class FlinkApplicationBuildPipelineServiceImpl
             app.getLocalAppHome(),
             mainClass,
             flinkUserJar,
-            app.isCustomCodeJob(),
+            app.isJobTypeFlinkJar(),
             app.getDeployModeEnum(),
             app.getJobTypeEnum(),
             flinkEnv.getFlinkVersion(),
@@ -586,7 +587,7 @@ public class FlinkApplicationBuildPipelineServiceImpl
      */
     private String retrieveFlinkUserJar(FlinkEnv flinkEnv, FlinkApplication app) {
         switch (app.getJobTypeEnum()) {
-            case CUSTOM_CODE:
+            case FLINK_JAR:
                 switch (app.getApplicationType()) {
                     case STREAMPARK_FLINK:
                         return String.format(
@@ -595,7 +596,7 @@ public class FlinkApplicationBuildPipelineServiceImpl
                         return String.format("%s/%s", app.getAppHome(), app.getJar());
                     default:
                         throw new IllegalArgumentException(
-                            "[StreamPark] unsupported ApplicationType of custom code: "
+                            "[StreamPark] unsupported ApplicationType of FlinkJar: "
                                 + app.getApplicationType());
                 }
             case PYFLINK:

@@ -280,7 +280,7 @@ public class SparkApplicationManageServiceImpl
                 appParam.setMainClass(Constants.STREAMPARK_SPARKSQL_CLIENT_CLASS);
             }
         }
-        if (appParam.isUploadJob()) {
+        if (appParam.isFromUploadJob()) {
             String jarPath = String.format(
                 "%s/%d/%s", Workspace.local().APP_UPLOADS(), appParam.getTeamId(), appParam.getJar());
             if (!new File(jarPath).exists()) {
@@ -412,7 +412,7 @@ public class SparkApplicationManageServiceImpl
         application.setRelease(ReleaseStateEnum.NEED_RELEASE.get());
 
         // 1) jar job jar file changed
-        if (application.isUploadJob()) {
+        if (application.isFromUploadJob()) {
             if (!Objects.equals(application.getJar(), appParam.getJar())) {
                 application.setBuild(true);
             } else {
@@ -640,7 +640,7 @@ public class SparkApplicationManageServiceImpl
             }
             sparkSql.setToApplication(application);
         } else {
-            if (application.isCICDJob()) {
+            if (application.isFromBuildJob()) {
                 String path = this.projectService.getAppConfPath(application.getProjectId(), application.getModule());
                 application.setConfPath(path);
             }

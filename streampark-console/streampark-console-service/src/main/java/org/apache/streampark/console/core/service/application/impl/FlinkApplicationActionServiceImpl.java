@@ -216,7 +216,7 @@ public class FlinkApplicationActionServiceImpl
         // 3) restore related status
         LambdaUpdateWrapper<FlinkApplication> updateWrapper = Wrappers.lambdaUpdate();
         updateWrapper.eq(FlinkApplication::getId, application.getId());
-        if (application.isFlinkSqlJobOrCDC()) {
+        if (application.isJobTypeFlinkSqlOrCDC()) {
             updateWrapper.set(FlinkApplication::getRelease, ReleaseStateEnum.FAILED.get());
         } else {
             updateWrapper.set(FlinkApplication::getRelease, ReleaseStateEnum.NEED_RELEASE.get());
@@ -452,7 +452,7 @@ public class FlinkApplicationActionServiceImpl
         applicationManageService.toEffective(application);
 
         Map<String, Object> extraParameter = new HashMap<>(0);
-        if (application.isFlinkSqlJobOrCDC()) {
+        if (application.isJobTypeFlinkSqlOrCDC()) {
             FlinkSql flinkSql = flinkSqlService.getEffective(application.getId(), true);
             // Get the sql of the replaced placeholder
             String realSql = variableService.replaceVariable(application.getTeamId(), flinkSql.getSql());
@@ -725,8 +725,8 @@ public class FlinkApplicationActionServiceImpl
                 flinkUserJar = resource.getFilePath();
                 break;
 
-            case CUSTOM_CODE:
-                if (application.isUploadJob()) {
+            case FLINK_JAR:
+                if (application.isResourceFromUpload()) {
                     appConf =
                         String.format(
                             "json://{\"%s\":\"%s\"}",

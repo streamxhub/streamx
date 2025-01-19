@@ -510,7 +510,7 @@ export const useCreateAndEditSchema = (
                     icon: 'ant-design:code-outlined',
                     style: { color: '#108ee9' },
                   }),
-                  h('span', { class: 'pl-8px' }, 'Custom Code'),
+                  h('span', { class: 'pl-8px' }, 'Flink JAR'),
                 ],
               },
             );

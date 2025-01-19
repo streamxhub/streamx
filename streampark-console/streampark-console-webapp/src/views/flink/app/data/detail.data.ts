@@ -42,7 +42,7 @@ export const getDescSchema = (): DescItem[] => {
           'div',
           { class: 'bold-tag' },
           h(Tag, { color: curVal === 1 ? '#545454' : '#0C7EF2', class: 'mr-8px' }, () =>
-            curVal === 1 ? 'Custom Code' : 'Flink SQL',
+            curVal === 1 ? 'Flink JAR' : 'Flink SQL',
           ),
         ),
     },

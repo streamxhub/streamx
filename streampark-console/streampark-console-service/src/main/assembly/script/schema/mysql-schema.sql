@@ -593,7 +593,7 @@ drop table if exists `t_spark_app`;
 create table `t_spark_app` (
   `id` bigint not null auto_increment,
   `team_id` bigint not null,
-  `job_type` tinyint default null comment '(1)custom code(2)spark SQL',
+  `job_type` tinyint default null comment '(1) spark Jar(2) spark SQL',
   `app_type` tinyint default null comment '(1)Apache Spark(2)StreamPark Spark',
   `version_id` bigint default null comment 'spark version',
   `app_name` varchar(255) collate utf8mb4_general_ci default null comment 'spark.app.name',

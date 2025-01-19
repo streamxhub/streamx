@@ -189,7 +189,7 @@ public class SparkApplicationBackupServiceImpl
     @Override
     public void backup(SparkApplication appParam, SparkSql sparkSqlParam) {
         // basic configuration file backup
-        String appHome = (appParam.isCICDJob())
+        String appHome = (appParam.isFromBuildJob())
             ? appParam.getDistHome()
             : appParam.getAppHome();
         FsOperator fsOperator = appParam.getFsOperator();
