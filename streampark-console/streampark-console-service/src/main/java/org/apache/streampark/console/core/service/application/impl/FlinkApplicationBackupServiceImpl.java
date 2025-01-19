@@ -89,7 +89,7 @@ public class FlinkApplicationBackupServiceImpl
         // If necessary, perform the backup first
         if (bakParam.isBackup()) {
             application.setBackUpDescription(bakParam.getDescription());
-            if (application.isFlinkSqlJob()) {
+            if (application.isFlinkSqlJobOrCDC()) {
                 FlinkSql flinkSql = flinkSqlService.getEffective(application.getId(), false);
                 backup(application, flinkSql);
             } else {
@@ -107,7 +107,7 @@ public class FlinkApplicationBackupServiceImpl
             effectiveService.saveOrUpdate(
                 bakParam.getAppId(), EffectiveTypeEnum.CONFIG, bakParam.getId());
             // if flink sql task, will be rollback sql and dependencies
-            if (application.isFlinkSqlJob()) {
+            if (application.isFlinkSqlJobOrCDC()) {
                 effectiveService.saveOrUpdate(
                     bakParam.getAppId(), EffectiveTypeEnum.FLINKSQL, bakParam.getSqlId());
             }

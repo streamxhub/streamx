@@ -162,7 +162,7 @@ public class FlinkApplicationManageServiceImpl extends ServiceImpl<FlinkApplicat
         if (config != null) {
             this.configService.toEffective(appParam.getId(), config.getId());
         }
-        if (appParam.isFlinkSqlJob()) {
+        if (appParam.isFlinkSqlJobOrCDC()) {
             FlinkSql flinkSql = flinkSqlService.getCandidate(appParam.getId(), null);
             if (flinkSql != null) {
                 flinkSqlService.toEffective(appParam.getId(), flinkSql.getId());
@@ -365,7 +365,7 @@ public class FlinkApplicationManageServiceImpl extends ServiceImpl<FlinkApplicat
 
         boolean saveSuccess = save(appParam);
         if (saveSuccess) {
-            if (appParam.isFlinkSqlJobOrPyFlinkJob()) {
+            if (appParam.isFlinkSqlJobOrPyFlinkJobOrFlinkCDC()) {
                 FlinkSql flinkSql = new FlinkSql(appParam);
                 flinkSqlService.create(flinkSql);
             }
@@ -449,7 +449,7 @@ public class FlinkApplicationManageServiceImpl extends ServiceImpl<FlinkApplicat
 
         boolean saved = save(newApp);
         if (saved) {
-            if (newApp.isFlinkSqlJob()) {
+            if (newApp.isFlinkSqlJobOrCDC()) {
                 FlinkSql copyFlinkSql = flinkSqlService.getLatestFlinkSql(appParam.getId(), true);
                 newApp.setFlinkSql(copyFlinkSql.getSql());
                 newApp.setDependency(copyFlinkSql.getDependency());
@@ -584,7 +584,7 @@ public class FlinkApplicationManageServiceImpl extends ServiceImpl<FlinkApplicat
         }
 
         // Flink Sql job...
-        if (application.isFlinkSqlJob()) {
+        if (application.isFlinkSqlJobOrCDC()) {
             updateFlinkSqlJob(application, appParam);
             return true;
         }
@@ -721,7 +721,7 @@ public class FlinkApplicationManageServiceImpl extends ServiceImpl<FlinkApplicat
             this.update(update);
 
             // backup
-            if (appParam.isFlinkSqlJob()) {
+            if (appParam.isFlinkSqlJobOrCDC()) {
                 FlinkSql newFlinkSql = flinkSqlService.getCandidate(appParam.getId(), CandidateTypeEnum.NEW);
                 if (!appParam.isNeedRollback() && newFlinkSql != null) {
                     backUpService.backup(appParam, newFlinkSql);
@@ -752,7 +752,7 @@ public class FlinkApplicationManageServiceImpl extends ServiceImpl<FlinkApplicat
         if (config != null) {
             config.setToApplication(application);
         }
-        if (application.isFlinkSqlJob()) {
+        if (application.isFlinkSqlJobOrCDC()) {
             FlinkSql flinkSql = flinkSqlService.getEffective(application.getId(), true);
             if (flinkSql == null) {
                 flinkSql = flinkSqlService.getCandidate(application.getId(), CandidateTypeEnum.NEW);
@@ -823,7 +823,7 @@ public class FlinkApplicationManageServiceImpl extends ServiceImpl<FlinkApplicat
      *
      * @param application application entity.
      * @return If the deployMode is (Yarn PerJob or application mode) and the queue label is not
-     *     (empty or default), return true, false else.
+     * (empty or default), return true, false else.
      */
     private boolean isYarnNotDefaultQueue(FlinkApplication application) {
         return FlinkDeployMode.isYarnPerJobOrAppMode(application.getDeployModeEnum())

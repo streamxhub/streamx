@@ -342,7 +342,7 @@ public class FlinkSavepointServiceImpl extends ServiceImpl<FlinkSavepointMapper,
     @VisibleForTesting
     @Nullable
     public String getSavepointFromConfig(FlinkApplication application) {
-        if (!application.isStreamParkJob() && !application.isFlinkSqlJob()) {
+        if (!application.isStreamParkJob() && !application.isFlinkSqlJobOrCDC()) {
             return null;
         }
         FlinkApplicationConfig applicationConfig = configService.getEffective(application.getId());
@@ -384,7 +384,9 @@ public class FlinkSavepointServiceImpl extends ServiceImpl<FlinkSavepointMapper,
         return config.isEmpty() ? null : config.get(SAVEPOINT_DIRECTORY.key());
     }
 
-    /** Try get the 'state.checkpoints.num-retained' from the dynamic properties. */
+    /**
+     * Try get the 'state.checkpoints.num-retained' from the dynamic properties.
+     */
     private Optional<Integer> tryGetChkNumRetainedFromDynamicProps(String dynamicProps) {
         String rawCfgValue = extractDynamicPropertiesAsJava(dynamicProps).get(MAX_RETAINED_CHECKPOINTS.key());
         if (StringUtils.isBlank(rawCfgValue)) {
@@ -404,7 +406,9 @@ public class FlinkSavepointServiceImpl extends ServiceImpl<FlinkSavepointMapper,
         return Optional.empty();
     }
 
-    /** Try get the 'state.checkpoints.num-retained' from the flink env. */
+    /**
+     * Try get the 'state.checkpoints.num-retained' from the flink env.
+     */
     private int getChkNumRetainedFromFlinkEnv(
                                               @Nonnull FlinkEnv flinkEnv, @Nonnull FlinkApplication application) {
         String flinkConfNumRetained = flinkEnv.convertFlinkYamlAsMap().get(MAX_RETAINED_CHECKPOINTS.key());
