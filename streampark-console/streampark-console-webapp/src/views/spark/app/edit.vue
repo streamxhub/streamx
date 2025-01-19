@@ -86,6 +86,7 @@
       appArgs: values.args,
       hadoopUser: values.hadoopUser,
       description: values.description,
+      sparkClusterId: values.sparkClusterId,
     };
     await handleUpdateAction(params);
   }
@@ -109,6 +110,7 @@
       appArgs: values.args,
       hadoopUser: values.hadoopUser,
       description: values.description,
+      sparkClusterId: values.sparkClusterId,
     });
   }
   /* Submit to create */
@@ -162,7 +164,7 @@
       createMessage.warning(t('spark.app.appidCheck'));
       return;
     }
-    //get flinkEnv
+    //get sparkEnv
     fetchSparkEnvList().then((res) => {
       sparkEnvs.value = res;
     });

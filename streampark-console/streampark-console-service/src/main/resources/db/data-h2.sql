@@ -118,6 +118,10 @@ insert into `t_menu` values (120300, 120000, 'spark.createApplication', '/spark/
 insert into `t_menu` values (120400, 120000, 'spark.updateApplication', '/spark/app/edit', 'spark/app/edit', 'app:update', '', '0', 0, null, now(), now());
 insert into `t_menu` values (120500, 120000, 'spark.applicationDetail', '/spark/app/detail', 'spark/app/detail', 'app:detail', '', '0', 0, null, now(), now());
 
+insert into `t_menu` values (130300, 120000, 'spark.cluster', '/spark/cluster', 'spark/cluster/View', 'menu:view', null, '0', 1, 4, now(), now());
+insert into `t_menu` values (130301, 130300, 'cluster add', '/spark/add_cluster', 'spark/cluster/Add', 'cluster:create', '', '0', 0, null, now(), now());
+insert into `t_menu` values (130302, 130300, 'cluster edit', '/spark/edit_cluster', 'spark/cluster/Edit', 'cluster:update', '', '0', 0, null, now(), now());
+
 insert into `t_menu` values (130100, 130000, 'resource.project', '/resource/project', 'resource/project/View', null, 'github', '0', 1, 2, now(), now());
 insert into `t_menu` values (130200, 130000, 'resource.variable', '/resource/variable', 'resource/variable/View', null, null, '0', 1, 3, now(), now());
 insert into `t_menu` values (130300, 130000, 'resource.upload', '/resource/upload', 'resource/upload/View', null, null, '0', 1, 1, now(), now());

@@ -36,6 +36,7 @@ import org.apache.streampark.console.core.entity.ApplicationLog;
 import org.apache.streampark.console.core.entity.Resource;
 import org.apache.streampark.console.core.entity.SparkApplication;
 import org.apache.streampark.console.core.entity.SparkApplicationConfig;
+import org.apache.streampark.console.core.entity.SparkCluster;
 import org.apache.streampark.console.core.entity.SparkEnv;
 import org.apache.streampark.console.core.entity.SparkSql;
 import org.apache.streampark.console.core.enums.ConfigFileTypeEnum;
@@ -48,6 +49,7 @@ import org.apache.streampark.console.core.enums.SparkOptionStateEnum;
 import org.apache.streampark.console.core.mapper.SparkApplicationMapper;
 import org.apache.streampark.console.core.service.DistributedTaskService;
 import org.apache.streampark.console.core.service.ResourceService;
+import org.apache.streampark.console.core.service.SparkClusterService;
 import org.apache.streampark.console.core.service.SparkEnvService;
 import org.apache.streampark.console.core.service.SparkSqlService;
 import org.apache.streampark.console.core.service.VariableService;
@@ -135,6 +137,9 @@ public class SparkApplicationActionServiceImpl
     @Autowired
     private DistributedTaskService distributedTaskService;
 
+    @Autowired
+    private SparkClusterService sparkClusterService;
+
     private final Map<Long, CompletableFuture<SubmitResponse>> startJobFutureMap = new ConcurrentHashMap<>();
 
     private final Map<Long, CompletableFuture<CancelResponse>> cancelJobFutureMap = new ConcurrentHashMap<>();
@@ -200,6 +205,12 @@ public class SparkApplicationActionServiceImpl
         if (startFuture == null && stopFuture == null) {
             this.doStopped(id);
         }
+    }
+
+    @Override
+    public List<SparkApplication> getByClusterId(String clusterId) {
+        return this.baseMapper
+            .selectList(Wrappers.<SparkApplication>lambdaQuery().eq(SparkApplication::getClusterId, clusterId));
     }
 
     @Override
@@ -338,10 +349,15 @@ public class SparkApplicationActionServiceImpl
             if (StringUtils.isNotBlank(application.getYarnQueueLabel())) {
                 extraParameter.put(ConfigKeys.KEY_SPARK_YARN_QUEUE_LABEL(), application.getYarnQueueLabel());
             }
+        } else if (SparkDeployMode.isRemoteMode(application.getDeployModeEnum().getMode())) {
+            buildResult = new ShadedBuildResponse(null, sparkUserJar, true);
         }
 
         // Get the args after placeholder replacement
         String applicationArgs = variableService.replaceVariable(application.getTeamId(), application.getAppArgs());
+        if (SparkDeployMode.isRemoteMode(application.getDeployModeEnum())) {
+            handleMaster(application, extraParameter);
+        }
 
         SubmitRequest submitRequest = new SubmitRequest(
             sparkEnv.getSparkVersion(),
@@ -408,6 +424,12 @@ public class SparkApplicationActionServiceImpl
             });
     }
 
+    private void handleMaster(SparkApplication appParam, Map<String, Object> extraParameter) {
+        SparkCluster sparkCluster = sparkClusterService.getById(appParam.getSparkClusterId());
+        extraParameter.put(ConfigKeys.MASTER_URl(), sparkCluster.getMasterUrl());
+        extraParameter.put(ConfigKeys.MASTER_WEB_URl(), sparkCluster.getMasterWebUrl());
+    }
+
     /**
      * Check whether a job with the same name is running in the yarn queue
      *
@@ -463,6 +485,10 @@ public class SparkApplicationActionServiceImpl
                 // 3) client
                 if (SparkDeployMode.YARN_CLUSTER == deployModeEnum) {
                     String clientPath = Workspace.remote().APP_CLIENT();
+                    sparkUserJar = String.format("%s/%s", clientPath, sqlDistJar);
+                }
+                if (SparkDeployMode.REMOTE == deployModeEnum) {
+                    String clientPath = Workspace.local().APP_CLIENT();
                     sparkUserJar = String.format("%s/%s", clientPath, sqlDistJar);
                 }
                 break;

@@ -21,6 +21,11 @@ import org.apache.streampark.common.util._
 import org.apache.streampark.common.util.Implicits._
 import org.apache.streampark.spark.client.bean._
 
+import org.apache.commons.lang3.StringUtils
+import org.apache.spark.launcher.{SparkAppHandle, SparkLauncher}
+
+import java.util.concurrent.CountDownLatch
+
 import scala.util.{Failure, Success, Try}
 
 trait SparkClientTrait extends Logger {
@@ -78,6 +83,52 @@ trait SparkClientTrait extends Logger {
 
   @throws[Exception]
   def doCancel(cancelRequest: CancelRequest): CancelResponse
+
+  protected def launch(sparkLauncher: SparkLauncher): SparkAppHandle = {
+    logger.info("[StreamPark][Spark] The spark job start submitting")
+    val submitFinished: CountDownLatch = new CountDownLatch(1)
+    val sparkAppHandle = sparkLauncher.startApplication(new SparkAppHandle.Listener() {
+      override def infoChanged(sparkAppHandle: SparkAppHandle): Unit = {}
+      override def stateChanged(handle: SparkAppHandle): Unit = {
+        if (handle.getAppId != null) {
+          logger.info(s"${handle.getAppId} stateChanged : ${handle.getState.toString}")
+        } else {
+          logger.info("stateChanged : {}", handle.getState.toString)
+        }
+        if (handle.getAppId != null && submitFinished.getCount != 0) {
+          // Task submission succeeded
+          submitFinished.countDown()
+        }
+        if (handle.getState.isFinal) {
+          if (StringUtils.isNotBlank(handle.getAppId)) {
+            removeHandle(handle.getAppId)
+          }
+          if (submitFinished.getCount != 0) {
+            // Task submission failed
+            submitFinished.countDown()
+          }
+          logger.info("Task is end, final state : {}", handle.getState.toString)
+        }
+      }
+    })
+    submitFinished.await()
+    sparkAppHandle
+  }
+  protected def removeHandle(appId: String): Unit
+  protected def setSparkConfig(submitRequest: SubmitRequest, sparkLauncher: SparkLauncher): Unit = {
+    // 1) set spark conf
+    submitRequest.appProperties.foreach(prop => {
+      val k = prop._1
+      val v = prop._2
+      logInfo(s"| $k  : $v")
+      sparkLauncher.setConf(k, v)
+    })
+    // 3) set spark args
+    submitRequest.appArgs.foreach(sparkLauncher.addAppArgs(_))
+    if (submitRequest.hasExtra("sql")) {
+      sparkLauncher.addAppArgs("--sql", submitRequest.getExtra("sql").toString)
+    }
+  }
 
   private def prepareConfig(submitRequest: SubmitRequest): Unit = {
     // 1) filter illegal configuration key

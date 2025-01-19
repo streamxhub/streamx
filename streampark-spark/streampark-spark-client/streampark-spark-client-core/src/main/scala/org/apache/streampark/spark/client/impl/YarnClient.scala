@@ -28,7 +28,7 @@ import org.apache.commons.lang3.StringUtils
 import org.apache.hadoop.yarn.api.records.ApplicationId
 import org.apache.spark.launcher.{SparkAppHandle, SparkLauncher}
 
-import java.util.concurrent.{ConcurrentHashMap, CountDownLatch}
+import java.util.concurrent.ConcurrentHashMap
 
 import scala.util.{Failure, Success, Try}
 
@@ -90,37 +90,6 @@ object YarnClient extends SparkClientTrait {
     }
   }
 
-  private def launch(sparkLauncher: SparkLauncher): SparkAppHandle = {
-    logger.info("[StreamPark][Spark][YarnClient] The spark job start submitting")
-    val submitFinished: CountDownLatch = new CountDownLatch(1)
-    val sparkAppHandle = sparkLauncher.startApplication(new SparkAppHandle.Listener() {
-      override def infoChanged(sparkAppHandle: SparkAppHandle): Unit = {}
-      override def stateChanged(handle: SparkAppHandle): Unit = {
-        if (handle.getAppId != null) {
-          logger.info(s"${handle.getAppId} stateChanged : ${handle.getState.toString}")
-        } else {
-          logger.info("stateChanged : {}", handle.getState.toString)
-        }
-        if (handle.getAppId != null && submitFinished.getCount != 0) {
-          // Task submission succeeded
-          submitFinished.countDown()
-        }
-        if (handle.getState.isFinal) {
-          if (StringUtils.isNotBlank(handle.getAppId) && sparkHandles.containsKey(handle.getAppId)) {
-            sparkHandles.remove(handle.getAppId)
-          }
-          if (submitFinished.getCount != 0) {
-            // Task submission failed
-            submitFinished.countDown()
-          }
-          logger.info("Task is end, final state : {}", handle.getState.toString)
-        }
-      }
-    })
-    submitFinished.await()
-    sparkAppHandle
-  }
-
   private def prepareSparkLauncher(submitRequest: SubmitRequest) = {
     val env = new JavaHashMap[String, String]()
     if (StringUtils.isNotBlank(submitRequest.hadoopUser)) {
@@ -143,26 +112,14 @@ object YarnClient extends SparkClientTrait {
       })
   }
 
-  private def setSparkConfig(submitRequest: SubmitRequest, sparkLauncher: SparkLauncher): Unit = {
+  override def setSparkConfig(submitRequest: SubmitRequest, sparkLauncher: SparkLauncher): Unit = {
     logger.info("[StreamPark][Spark][YarnClient] set spark configuration.")
     // 1) put yarn queue
     if (SparkDeployMode.isYarnMode(submitRequest.deployMode)) {
       setYarnQueue(submitRequest)
     }
-
     // 2) set spark conf
-    submitRequest.appProperties.foreach(prop => {
-      val k = prop._1
-      val v = prop._2
-      logInfo(s"| $k  : $v")
-      sparkLauncher.setConf(k, v)
-    })
-
-    // 3) set spark args
-    submitRequest.appArgs.foreach(sparkLauncher.addAppArgs(_))
-    if (submitRequest.hasExtra("sql")) {
-      sparkLauncher.addAppArgs("--sql", submitRequest.getExtra("sql").toString)
-    }
+    super.setSparkConfig(submitRequest, sparkLauncher)
   }
 
   private def setYarnQueue(submitRequest: SubmitRequest): Unit = {
@@ -173,5 +130,9 @@ object YarnClient extends SparkClientTrait {
       submitRequest.appProperties.put(KEY_SPARK_YARN_AM_NODE_LABEL, submitRequest.getExtra(KEY_SPARK_YARN_QUEUE_LABEL).asInstanceOf[String])
       submitRequest.appProperties.put(KEY_SPARK_YARN_EXECUTOR_NODE_LABEL, submitRequest.getExtra(KEY_SPARK_YARN_QUEUE_LABEL).asInstanceOf[String])
     }
+  }
+
+  override def removeHandle(appId: String): Unit = {
+    sparkHandles.remove(appId)
   }
 }

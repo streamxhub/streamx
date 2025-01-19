@@ -107,6 +107,7 @@ export interface SparkApplication {
   appControl?: AppControl;
   canBeStart?: boolean;
   streamParkJob?: boolean;
+  sparkClusterId?: string;
 }
 interface AppControl {
   allowStart: boolean;

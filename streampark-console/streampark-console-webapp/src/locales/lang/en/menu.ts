@@ -40,6 +40,7 @@ export default {
     createApplication: 'Create Application',
     updateApplication: 'Update Application',
     applicationDetail: 'Application Detail',
+    sparkCluster: 'Clusters',
   },
   setting: {
     menu: 'Settings',

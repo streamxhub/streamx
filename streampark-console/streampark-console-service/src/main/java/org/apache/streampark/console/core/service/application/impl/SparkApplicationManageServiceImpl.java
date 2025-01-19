@@ -465,6 +465,7 @@ public class SparkApplicationManageServiceImpl
         application.setAlertId(appParam.getAlertId());
         application.setRestartSize(appParam.getRestartSize());
         application.setTags(appParam.getTags());
+        application.setSparkClusterId(appParam.getSparkClusterId());
 
         switch (appParam.getDeployModeEnum()) {
             case YARN_CLUSTER:
