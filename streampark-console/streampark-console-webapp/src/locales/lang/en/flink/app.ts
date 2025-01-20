@@ -281,7 +281,7 @@ export default {
     appNameValid: 'The job name is invalid',
     appNameRole: 'The job name must follow these rules: ',
     appNameNotValid:
-      'The job name is invalid, must be (Chinese or English or "-" or "_"), Spaces are not allowed.Please check',
+      'The job name is invalid, must be (Chinese or English or "-" or "_"), Spaces are not allowed. Please check',
     K8sSessionClusterIdRole: 'The Kubernetes clusterId must follow the following rules:',
     appNameK8sClusterIdRole:
       'The current deployment mode is kubernetes application mode, and the job name will be used as the clusterId in kubernetes. Therefore, the job name must follow the following rules:',
