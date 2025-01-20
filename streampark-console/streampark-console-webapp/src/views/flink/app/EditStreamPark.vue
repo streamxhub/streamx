@@ -166,12 +166,18 @@
       submitLoading.value = true;
       if (app.jobType == JobTypeEnum.SQL || app.jobType == JobTypeEnum.CDC) {
         if (values.flinkSql == null || values.flinkSql.trim() === '') {
-          const errorMsg = app.jobType == JobTypeEnum.SQL ? t('flink.app.editStreamPark.flinkSqlRequired') : t('flink.app.editStreamPark.yamlRequired')
+          const errorMsg =
+            app.jobType == JobTypeEnum.SQL
+              ? t('flink.app.editStreamPark.flinkSqlRequired')
+              : t('flink.app.editStreamPark.yamlRequired');
           createMessage.warning(errorMsg);
         } else {
           const access = await flinkSql?.value?.handleVerifySql();
           if (!access) {
-            const errorMsg = app.jobType == JobTypeEnum.SQL ? t('flink.app.editStreamPark.sqlCheck') : t('flink.app.editStreamPark.yamlCheck')
+            const errorMsg =
+              app.jobType == JobTypeEnum.SQL
+                ? t('flink.app.editStreamPark.sqlCheck')
+                : t('flink.app.editStreamPark.yamlCheck');
             createMessage.warning(errorMsg);
             throw new Error(access);
           }
@@ -370,7 +376,7 @@
       <template #args="{ model }">
         <ProgramArgs
           ref="programArgRef"
-          v-if="model.args != null && model.args != undefined"
+          v-if="model.args != null"
           v-model:value="model.args"
           :suggestions="suggestions"
           @preview="(value) => openReviewDrawer(true, { value, suggestions })"
@@ -385,6 +391,7 @@
           v-model:value="model[field]"
           :versionId="model['versionId']"
           :suggestions="suggestions"
+          :jobType="Number(model['jobType'])"
           @preview="(value) => openReviewDrawer(true, { value, suggestions })"
         />
       </template>

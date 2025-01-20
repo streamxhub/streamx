@@ -68,8 +68,8 @@
       default: () => [],
     },
     jobType: {
-      type: Number
-    }
+      type: Number,
+    },
   });
   const defaultValue = '';
 
@@ -84,7 +84,6 @@
       createMessage.error(t('flink.app.dependencyError'));
       return false;
     } else {
-      console.log(props.jobType)
       if (props.jobType === JobTypeEnum.CDC) {
         try {
           YAML.load(props.value);
@@ -101,37 +100,37 @@
         }
       } else {
         try {
-        const { data } = await fetchFlinkSqlVerify({
-          sql: props.value,
-          versionId: props.versionId,
-        });
-        const success = data.data === true || data.data === 'true';
-        if (success) {
-          verifyRes.verified = true;
-          verifyRes.errorMsg = '';
-          syntaxError();
-          return true;
-        } else {
-          verifyRes.errorStart = parseInt(data.start);
-          verifyRes.errorEnd = parseInt(data.end);
-          switch (data.type) {
-            case 4:
-              verifyRes.errorMsg = 'Unsupported sql';
-              break;
-            case 5:
-              verifyRes.errorMsg = "SQL is not endWith ';'";
-              break;
-            default:
-              verifyRes.errorMsg = data.message;
-              break;
+          const { data } = await fetchFlinkSqlVerify({
+            sql: props.value,
+            versionId: props.versionId,
+          });
+          const success = data.data === true || data.data === 'true';
+          if (success) {
+            verifyRes.verified = true;
+            verifyRes.errorMsg = '';
+            syntaxError();
+            return true;
+          } else {
+            verifyRes.errorStart = parseInt(data.start);
+            verifyRes.errorEnd = parseInt(data.end);
+            switch (data.type) {
+              case 4:
+                verifyRes.errorMsg = 'Unsupported sql';
+                break;
+              case 5:
+                verifyRes.errorMsg = "SQL is not endWith ';'";
+                break;
+              default:
+                verifyRes.errorMsg = data.message;
+                break;
+            }
+            syntaxError();
+            return false;
           }
-          syntaxError();
+        } catch (error) {
+          console.error(error);
           return false;
         }
-      } catch (error) {
-        console.error(error);
-        return false;
-      }
       }
     }
   }
@@ -243,7 +242,13 @@
         <Icon icon="ant-design:eye-outlined" />
         {{ t('flink.app.flinkSql.preview') }}
       </a-button>
-      <a-button class="flinksql-tool-item" size="small" type="default" @click="handleFormatSql">
+      <a-button
+        v-if="props.jobType === JobTypeEnum.SQL"
+        class="flinksql-tool-item"
+        size="small"
+        type="default"
+        @click="handleFormatSql"
+      >
         <Icon icon="ant-design:thunderbolt-outlined" />
         {{ t('flink.app.flinkSql.format') }}
       </a-button>

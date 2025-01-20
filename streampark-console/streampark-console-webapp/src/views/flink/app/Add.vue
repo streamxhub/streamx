@@ -245,7 +245,7 @@
 
     handleCluster(values);
     const params = {
-      jobType: JobTypeEnum.SQL,
+      jobType: values.jobType,
       flinkSql: values.flinkSql,
       appType: AppTypeEnum.STREAMPARK_FLINK,
       config,
@@ -265,12 +265,18 @@
       submitLoading.value = true;
       if (formValue.jobType == JobTypeEnum.SQL || formValue.jobType == JobTypeEnum.CDC) {
         if (formValue.flinkSql == null || formValue.flinkSql.trim() === '') {
-          const errorMsg = formValue.jobType == JobTypeEnum.SQL ? t('flink.app.editStreamPark.flinkSqlRequired') : t('flink.app.editStreamPark.yamlRequired')
+          const errorMsg =
+            formValue.jobType == JobTypeEnum.SQL
+              ? t('flink.app.editStreamPark.flinkSqlRequired')
+              : t('flink.app.editStreamPark.yamlRequired');
           createMessage.warning(errorMsg);
         } else {
           const access = await flinkSql?.value?.handleVerifySql();
           if (!access) {
-            const errorMsg = formValue.jobType == JobTypeEnum.SQL ? t('flink.app.editStreamPark.sqlCheck') : t('flink.app.editStreamPark.yamlCheck')
+            const errorMsg =
+              formValue.jobType == JobTypeEnum.SQL
+                ? t('flink.app.editStreamPark.sqlCheck')
+                : t('flink.app.editStreamPark.yamlCheck');
             createMessage.warning(errorMsg);
             throw new Error(access);
           }
