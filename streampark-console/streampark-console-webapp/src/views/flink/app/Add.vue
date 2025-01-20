@@ -263,13 +263,15 @@
   async function handleAppCreate(formValue: Recordable) {
     try {
       submitLoading.value = true;
-      if (formValue.jobType == JobTypeEnum.SQL) {
+      if (formValue.jobType == JobTypeEnum.SQL || formValue.jobType == JobTypeEnum.CDC) {
         if (formValue.flinkSql == null || formValue.flinkSql.trim() === '') {
-          createMessage.warning(t('flink.app.editStreamPark.flinkSqlRequired'));
+          const errorMsg = formValue.jobType == JobTypeEnum.SQL ? t('flink.app.editStreamPark.flinkSqlRequired') : t('flink.app.editStreamPark.yamlRequired')
+          createMessage.warning(errorMsg);
         } else {
           const access = await flinkSql?.value?.handleVerifySql();
           if (!access) {
-            createMessage.warning(t('flink.app.editStreamPark.sqlCheck'));
+            const errorMsg = formValue.jobType == JobTypeEnum.SQL ? t('flink.app.editStreamPark.sqlCheck') : t('flink.app.editStreamPark.yamlCheck')
+            createMessage.warning(errorMsg);
             throw new Error(access);
           }
         }
@@ -316,6 +318,7 @@
           v-model:value="model[field]"
           :versionId="model['versionId']"
           :suggestions="suggestions"
+          :jobType="Number(model['jobType'])"
           @preview="(value) => openReviewDrawer(true, { value, suggestions })"
         />
       </template>

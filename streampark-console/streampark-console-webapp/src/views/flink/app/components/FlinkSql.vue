@@ -35,6 +35,8 @@
   import { format } from '../FlinkSqlFormatter';
   import { useI18n } from '/@/hooks/web/useI18n';
   import { useFullContent } from '/@/hooks/event/useFullscreen';
+  import { JobTypeEnum } from '/@/enums/flinkEnum';
+  import YAML from 'js-yaml';
   const ButtonGroup = Button.Group;
   const { t } = useI18n();
 
@@ -65,6 +67,9 @@
       type: Array as PropType<Array<{ text: string; description: string }>>,
       default: () => [],
     },
+    jobType: {
+      type: Number
+    }
   });
   const defaultValue = '';
 
@@ -79,7 +84,23 @@
       createMessage.error(t('flink.app.dependencyError'));
       return false;
     } else {
-      try {
+      console.log(props.jobType)
+      if (props.jobType === JobTypeEnum.CDC) {
+        try {
+          YAML.load(props.value);
+          verifyRes.verified = true;
+          verifyRes.errorMsg = '';
+          syntaxError();
+          return true;
+        } catch (error) {
+          verifyRes.errorStart = 0;
+          verifyRes.errorEnd = 0;
+          verifyRes.errorMsg = `${error.name}: ${error.reason} at line ${error.mark.line},cloumn ${error.mark.column}`;
+          syntaxError();
+          return false;
+        }
+      } else {
+        try {
         const { data } = await fetchFlinkSqlVerify({
           sql: props.value,
           versionId: props.versionId,
@@ -111,6 +132,7 @@
         console.error(error);
         return false;
       }
+      }
     }
   }
 
@@ -140,6 +162,9 @@
   /* format */
   function handleFormatSql() {
     if (isEmpty(props.value)) return;
+    if (props.jobType === JobTypeEnum.CDC) {
+      return false;
+    }
     const formatSql = format(props.value);
     setContent(formatSql);
   }
