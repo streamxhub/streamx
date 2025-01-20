@@ -109,7 +109,7 @@ export const useCreateAndEditSchema = (
         label: 'Flink SQL',
         component: 'Input',
         slot: 'flinkSql',
-        ifShow: ({ values }) => values?.jobType == JobTypeEnum.SQL,
+        ifShow: ({ values }) => values?.jobType == JobTypeEnum.SQL || values?.jobType == JobTypeEnum.CDC,
         rules: [{ required: true, message: t('flink.app.addAppTips.flinkSqlIsRequiredMessage') }],
       },
       {
@@ -117,7 +117,7 @@ export const useCreateAndEditSchema = (
         label: t('flink.app.resource'),
         component: 'Select',
         render: ({ model }) => renderStreamParkResource({ model, resources: unref(teamResource) }),
-        ifShow: ({ values }) => values.jobType == JobTypeEnum.SQL,
+        ifShow: ({ values }) => values.jobType == JobTypeEnum.SQL || values.jobType == JobTypeEnum.CDC,
       },
       {
         field: 'dependency',
@@ -132,7 +132,7 @@ export const useCreateAndEditSchema = (
         label: t('flink.app.appConf'),
         component: 'Switch',
         ifShow: ({ values }) =>
-          values?.jobType == JobTypeEnum.SQL && !isK8sDeployMode(values.deployMode),
+          (values?.jobType == JobTypeEnum.SQL || values?.jobType == JobTypeEnum.CDC) && !isK8sDeployMode(values.deployMode),
         render({ model, field }) {
           return renderIsSetConfig(model, field, registerConfDrawer, openConfDrawer);
         },
@@ -477,7 +477,7 @@ export const useCreateAndEditSchema = (
         component: 'InputTextArea',
         defaultValue: '',
         slot: 'args',
-        ifShow: ({ values }) => (edit?.mode ? true : values.jobType != JobTypeEnum.SQL),
+        ifShow: ({ values }) => (edit?.mode ? true : (values.jobType != JobTypeEnum.SQL && values.jobType != JobTypeEnum.CDC)),
       },
       {
         field: 'hadoopUser',
@@ -510,10 +510,12 @@ export const useCreateAndEditSchema = (
                     icon: 'ant-design:code-outlined',
                     style: { color: '#108ee9' },
                   }),
-                  h('span', { class: 'pl-8px' }, 'Flink JAR'),
+                  h('span', { class: 'pl-8px' }, 'Custom Code'),
                 ],
               },
             );
+          } else if(model.jobType == JobTypeEnum.CDC) {
+            return getAlertSvgIcon('fql', 'Flink CDC');
           } else {
             return getAlertSvgIcon('fql', 'Flink SQL');
           }

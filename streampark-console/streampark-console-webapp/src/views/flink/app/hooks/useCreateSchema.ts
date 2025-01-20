@@ -39,8 +39,8 @@ const getJobTypeOptions = () => {
   return [
     {
       label: h('div', {}, [
-        h(SvgIcon, { name: 'fjar', color: '#108ee9' }, ''),
-        h('span', { class: 'pl-10px' }, 'Flink JAR'),
+        h(SvgIcon, { name: 'code', color: '#108ee9' }, ''),
+        h('span', { class: 'pl-10px' }, 'Custom Code'),
       ]),
       value: String(JobTypeEnum.JAR),
     },
@@ -57,6 +57,13 @@ const getJobTypeOptions = () => {
         h('span', { class: 'pl-10px' }, 'Python Flink'),
       ]),
       value: String(JobTypeEnum.PYFLINK),
+    },
+    {
+      label: h('div', {}, [
+        h(SvgIcon, { name: 'fql', color: '#108ee9' }, ''),
+        h('span', { class: 'pl-10px' }, 'Flink CDC'),
+      ]),
+      value: String(JobTypeEnum.CDC),
     },
   ];
 };
@@ -108,7 +115,7 @@ export const useCreateSchema = (dependencyRef: Ref) => {
             placeholder: t('flink.app.addAppTips.jobTypePlaceholder'),
             options: getJobTypeOptions(),
             onChange: (value) => {
-              if (value != JobTypeEnum.SQL) {
+              if (value != JobTypeEnum.SQL && value != JobTypeEnum.CDC) {
                 formModel.resourceFrom = String(ResourceFromEnum.PROJECT);
               }
             },
@@ -126,7 +133,7 @@ export const useCreateSchema = (dependencyRef: Ref) => {
         component: 'Select',
         render: ({ model }) => renderResourceFrom(model),
         rules: [{ required: true, message: t('flink.app.addAppTips.resourceFromMessage') }],
-        show: ({ values }) => values?.jobType != JobTypeEnum.SQL,
+        show: ({ values }) => values?.jobType != JobTypeEnum.SQL && values?.jobType != JobTypeEnum.CDC,
       },
       {
         field: 'uploadJobJar',
@@ -134,7 +141,7 @@ export const useCreateSchema = (dependencyRef: Ref) => {
         component: 'Select',
         render: ({ model }) => renderStreamParkJarApp({ model, resources: unref(teamResource) }),
         ifShow: ({ values }) =>
-          values?.jobType != JobTypeEnum.SQL && values?.resourceFrom == ResourceFromEnum.UPLOAD,
+          values?.jobType != JobTypeEnum.SQL && values?.jobType != JobTypeEnum.CDC && values?.resourceFrom == ResourceFromEnum.UPLOAD,
       },
       {
         field: 'mainClass',
@@ -142,7 +149,7 @@ export const useCreateSchema = (dependencyRef: Ref) => {
         component: 'Input',
         componentProps: { placeholder: t('flink.app.addAppTips.mainClassPlaceholder') },
         ifShow: ({ values }) =>
-          values?.jobType != JobTypeEnum.SQL && values?.resourceFrom == ResourceFromEnum.UPLOAD,
+          values?.jobType != JobTypeEnum.SQL && values?.jobType != JobTypeEnum.CDC && values?.resourceFrom == ResourceFromEnum.UPLOAD,
         rules: [{ required: true, message: t('flink.app.addAppTips.mainClassIsRequiredMessage') }],
       },
       {
@@ -170,7 +177,7 @@ export const useCreateSchema = (dependencyRef: Ref) => {
           },
         },
         ifShow: ({ values }) =>
-          values?.jobType != JobTypeEnum.SQL && values.resourceFrom != ResourceFromEnum.UPLOAD,
+          values?.jobType != JobTypeEnum.SQL && values?.jobType != JobTypeEnum.CDC && values.resourceFrom != ResourceFromEnum.UPLOAD,
         rules: [{ required: true, message: t('flink.app.addAppTips.projectIsRequiredMessage') }],
       },
       {
@@ -193,8 +200,8 @@ export const useCreateSchema = (dependencyRef: Ref) => {
             },
           };
         },
-        ifShow: ({ values }) =>
-          values?.jobType != JobTypeEnum.SQL && values?.resourceFrom != ResourceFromEnum.UPLOAD,
+        ifShow: ({ values }) => 
+          values?.jobType != JobTypeEnum.SQL && values?.jobType != JobTypeEnum.CDC && values?.resourceFrom != ResourceFromEnum.UPLOAD,
         rules: [{ required: true, message: t('flink.app.addAppTips.projectIsRequiredMessage') }],
       },
       {
@@ -225,7 +232,7 @@ export const useCreateSchema = (dependencyRef: Ref) => {
           };
         },
         ifShow: ({ values }) =>
-          values?.jobType != JobTypeEnum.SQL && values?.resourceFrom != ResourceFromEnum.UPLOAD,
+          values?.jobType != JobTypeEnum.SQL && values?.jobType != JobTypeEnum.CDC && values?.resourceFrom != ResourceFromEnum.UPLOAD,
         dynamicRules: () => [
           { required: true, message: t('flink.app.addAppTips.appTypeIsRequiredMessage') },
         ],
@@ -251,6 +258,7 @@ export const useCreateSchema = (dependencyRef: Ref) => {
         },
         ifShow: ({ values }) =>
           values?.jobType != JobTypeEnum.SQL &&
+          values?.jobType != JobTypeEnum.CDC &&
           values?.resourceFrom != ResourceFromEnum.UPLOAD &&
           values.appType == String(AppTypeEnum.APACHE_FLINK),
         rules: [{ required: true, message: t('flink.app.addAppTips.programJarIsRequiredMessage') }],
@@ -262,6 +270,7 @@ export const useCreateSchema = (dependencyRef: Ref) => {
         componentProps: { placeholder: t('flink.app.addAppTips.mainClassPlaceholder') },
         ifShow: ({ values }) =>
           values?.jobType != JobTypeEnum.SQL &&
+          values?.jobType != JobTypeEnum.CDC &&
           values?.resourceFrom != ResourceFromEnum.UPLOAD &&
           values.appType == String(AppTypeEnum.APACHE_FLINK),
         rules: [{ required: true, message: t('flink.app.addAppTips.mainClassIsRequiredMessage') }],
@@ -289,6 +298,7 @@ export const useCreateSchema = (dependencyRef: Ref) => {
         },
         ifShow: ({ values }) =>
           values?.jobType != JobTypeEnum.SQL &&
+          values?.jobType != JobTypeEnum.CDC &&
           values?.resourceFrom != ResourceFromEnum.UPLOAD &&
           values.appType == String(AppTypeEnum.STREAMPARK_FLINK),
         dynamicRules: () => [{ required: true, validator: handleCheckConfig }],
