@@ -336,9 +336,10 @@ public class FlinkApplicationManageServiceImpl extends ServiceImpl<FlinkApplicat
         appParam.setDefaultModeIngress(settingService.getIngressModeDefault());
         String jobName = appParam.getJobName();
         // validate job application
-        validateCondition(!jobName.contains(" "), "The added job name `%s` is an invalid character and cannot contain Spaces", jobName);
-        validateCondition(validateQueueIfNeeded(appParam), ERROR_APP_QUEUE_HINT, appParam.getYarnQueue(), appParam.getTeamId());
-
+        validateCondition(!jobName.contains(" "),
+            "The added job name `%s` is an invalid character and cannot contain Spaces", jobName);
+        validateCondition(validateQueueIfNeeded(appParam), ERROR_APP_QUEUE_HINT, appParam.getYarnQueue(),
+            appParam.getTeamId());
 
         appParam.doSetHotParams();
         if (appParam.isUploadJob()) {

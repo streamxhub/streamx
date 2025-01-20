@@ -79,7 +79,6 @@ public class ApiAlertException extends AbstractApiException {
         }
     }
 
-
     /**
      * Validates a given condition and throws an ApiAlertException if the condition is false.
      * This method is used to enforce business rules and ensure the validity of input parameters or states.
