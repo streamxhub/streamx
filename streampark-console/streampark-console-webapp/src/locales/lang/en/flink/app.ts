@@ -289,7 +289,7 @@ export default {
     appNameK8sClusterIdRoleRegexp:
       'must only contain lowercase alphanumeric characters and "-"，The required format is [a-z]([-a-z0-9]*[a-z0-9])',
     appNameRoleContent:
-      'must be (Chinese or English or "-" or "_"), Spaces are not allowed.Please check',
+      'must be (Chinese or English or "-" or "_"), Spaces are not allowed. Please check',
     flinkClusterIsRequiredMessage: 'Flink Cluster is required',
     flinkSqlIsRequiredMessage: 'Flink SQL is required',
     tagsPlaceholder: 'Please enter tags,if more than one, separate them with commas(,)',
