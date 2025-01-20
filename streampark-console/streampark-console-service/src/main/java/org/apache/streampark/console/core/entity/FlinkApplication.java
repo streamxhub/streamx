@@ -46,7 +46,6 @@ import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
-import com.baomidou.mybatisplus.core.toolkit.support.SFunction;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Getter;
 import lombok.Setter;
@@ -72,7 +71,7 @@ public class FlinkApplication extends BaseEntity {
     private Long teamId;
 
     /**
-     * 1) custom code 2) flink SQL
+     * 1) flink jar 2) flink SQL
      */
     private Integer jobType;
 
@@ -130,6 +129,7 @@ public class FlinkApplication extends BaseEntity {
 
     @Getter
     private String ingressTemplate;
+
     @Setter
     private String defaultModeIngress;
 
@@ -261,7 +261,7 @@ public class FlinkApplication extends BaseEntity {
     private Date modifyTime;
 
     /**
-     * 1: cicd (build from csv) 2: upload (upload local jar job)
+     * 1: build (build from csv) 2: upload (upload local jar job)
      */
     private Integer resourceFrom;
 
@@ -420,15 +420,6 @@ public class FlinkApplication extends BaseEntity {
             && this.cpFailureAction != null;
     }
 
-    public boolean eqFlinkJob(FlinkApplication other) {
-        if (this.isFlinkSqlJobOrCDC()
-            && other.isFlinkSqlJobOrCDC()
-            && this.getFlinkSql().trim().equals(other.getFlinkSql().trim())) {
-            return this.getDependencyObject().equals(other.getDependencyObject());
-        }
-        return false;
-    }
-
     /**
      * Local compilation and packaging working directory
      */
@@ -475,18 +466,19 @@ public class FlinkApplication extends BaseEntity {
     }
 
     public String getMainClass() {
-        FlinkJobType flinkJobType = FlinkJobType.of(jobType);
-        if (flinkJobType == FlinkJobType.FLINK_SQL) {
-            return Constants.STREAMPARK_FLINKSQL_CLIENT_CLASS;
-        } else if (flinkJobType == FlinkJobType.FLINK_CDC) {
-            return Constants.STREAMPARK_FLINKCDC_CLIENT_CLASS;
-        } else if (flinkJobType == FlinkJobType.PYFLINK) {
-            return Constants.PYTHON_FLINK_DRIVER_CLASS_NAME; // Assuming this is the default behavior for other enum
-            // values
-        } else if (flinkJobType == FlinkJobType.CUSTOM_CODE) {
-            return mainClass;
-        } else {
-            return null;
+        FlinkJobType flinkJobType = this.getJobTypeEnum();
+        switch (flinkJobType) {
+            case FLINK_SQL:
+                return Constants.STREAMPARK_FLINKSQL_CLIENT_CLASS;
+            case FLINK_CDC:
+                return Constants.STREAMPARK_FLINKCDC_CLIENT_CLASS;
+            case PYFLINK:
+                return Constants.PYTHON_FLINK_DRIVER_CLASS_NAME;
+            case FLINK_JAR:
+                return mainClass;
+            case UNKNOWN:
+            default:
+                return null;
         }
     }
 
@@ -513,42 +505,35 @@ public class FlinkApplication extends BaseEntity {
     }
 
     @JsonIgnore
-    public boolean isFlinkSqlJobOrCDC() {
+    public boolean isJobTypeFlinkSqlOrCDC() {
         return FlinkJobType.FLINK_SQL.getMode().equals(this.getJobType()) ||
             FlinkJobType.FLINK_CDC.getMode().equals(this.getJobType());
     }
 
     @JsonIgnore
-    public boolean isFlinkSqlJobOrPyFlinkJobOrFlinkCDC() {
-        return FlinkJobType.FLINK_SQL.getMode().equals(this.getJobType())
-            || FlinkJobType.PYFLINK.getMode().equals(this.getJobType())
-            || FlinkJobType.FLINK_CDC.getMode().equals(this.getJobType());
+    public boolean isJobTypeFlinkJar() {
+        return FlinkJobType.FLINK_JAR.getMode().equals(this.getJobType());
     }
 
     @JsonIgnore
-    public boolean isCustomCodeJob() {
-        return FlinkJobType.CUSTOM_CODE.getMode().equals(this.getJobType());
-    }
-
-    @JsonIgnore
-    public boolean isCustomCodeOrPyFlinkJob() {
-        return FlinkJobType.CUSTOM_CODE.getMode().equals(this.getJobType())
+    public boolean isJobTypeFlinkJarOrPyFlink() {
+        return FlinkJobType.FLINK_JAR.getMode().equals(this.getJobType())
             || FlinkJobType.PYFLINK.getMode().equals(this.getJobType());
     }
 
     @JsonIgnore
-    public boolean isUploadJob() {
-        return isCustomCodeOrPyFlinkJob()
+    public boolean isResourceFromUpload() {
+        return isJobTypeFlinkJarOrPyFlink()
             && ResourceFromEnum.UPLOAD.getValue().equals(this.getResourceFrom());
     }
 
     @JsonIgnore
-    public boolean isCICDJob() {
-        return isCustomCodeOrPyFlinkJob()
-            && ResourceFromEnum.CICD.getValue().equals(this.getResourceFrom());
+    public boolean isResourceFromBuild() {
+        return isJobTypeFlinkJarOrPyFlink()
+            && ResourceFromEnum.BUILD.getValue().equals(this.getResourceFrom());
     }
 
-    public boolean isStreamParkJob() {
+    public boolean isAppTypeStreamPark() {
         return this.getAppType() == ApplicationType.STREAMPARK_FLINK.getType();
     }
 
@@ -671,25 +656,6 @@ public class FlinkApplication extends BaseEntity {
 
     public boolean isKubernetesModeJob() {
         return FlinkDeployMode.isKubernetesMode(this.getDeployModeEnum());
-    }
-
-    public static class SFunc {
-
-        public static final SFunction<FlinkApplication, Long> ID = FlinkApplication::getId;
-        public static final SFunction<FlinkApplication, String> JOB_ID = FlinkApplication::getJobId;
-        public static final SFunction<FlinkApplication, Date> START_TIME = FlinkApplication::getStartTime;
-        public static final SFunction<FlinkApplication, Date> END_TIME = FlinkApplication::getEndTime;
-        public static final SFunction<FlinkApplication, Long> DURATION = FlinkApplication::getDuration;
-        public static final SFunction<FlinkApplication, Integer> TOTAL_TASK = FlinkApplication::getTotalTask;
-        public static final SFunction<FlinkApplication, Integer> TOTAL_TM = FlinkApplication::getTotalTM;
-        public static final SFunction<FlinkApplication, Integer> TOTAL_SLOT = FlinkApplication::getTotalSlot;
-        public static final SFunction<FlinkApplication, Integer> JM_MEMORY = FlinkApplication::getJmMemory;
-        public static final SFunction<FlinkApplication, Integer> TM_MEMORY = FlinkApplication::getTmMemory;
-        public static final SFunction<FlinkApplication, Integer> STATE = FlinkApplication::getState;
-        public static final SFunction<FlinkApplication, String> OPTIONS = FlinkApplication::getOptions;
-        public static final SFunction<FlinkApplication, Integer> AVAILABLE_SLOT = FlinkApplication::getAvailableSlot;
-        public static final SFunction<FlinkApplication, Integer> EXECUTION_MODE = FlinkApplication::getDeployMode;
-        public static final SFunction<FlinkApplication, String> JOB_MANAGER_URL = FlinkApplication::getJobManagerUrl;
     }
 
 }

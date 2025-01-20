@@ -31,9 +31,9 @@ public enum FlinkJobType {
     UNKNOWN("Unknown", -1),
 
     /**
-     * custom code
+     * Flink Jar
      */
-    CUSTOM_CODE("Custom Code", 1),
+    FLINK_JAR("Flink JAR", 1),
 
     /**
      * Flink SQL

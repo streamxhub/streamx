@@ -100,7 +100,7 @@
     :height="600"
   >
     <template #title>
-      <SvgIcon name="code" style="color: red" />
+      <SvgIcon name="fjar" style="color: red" />
       {{ t('flink.app.detail.exceptionModal.title') }}
     </template>
     <div class="startExp h-540px" ref="startExp"></div>

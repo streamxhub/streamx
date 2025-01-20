@@ -96,9 +96,9 @@ public final class ApplicationForm {
         new WebDriverWait(driver, Constants.DEFAULT_WEBDRIVER_WAIT_DURATION)
             .until(ExpectedConditions.visibilityOfAllElements(selectJobType));
         switch (jobType) {
-            case CUSTOM_CODE:
+            case FLINK_JAR:
                 selectJobType.stream()
-                    .filter(e -> e.getText().equalsIgnoreCase(FlinkJobType.CUSTOM_CODE.desc))
+                    .filter(e -> e.getText().equalsIgnoreCase(FlinkJobType.FLINK_JAR.desc))
                     .findFirst()
                     .orElseThrow(
                         () -> new IllegalArgumentException(
@@ -250,7 +250,7 @@ public final class ApplicationForm {
     @Getter
     public enum FlinkJobType {
 
-        CUSTOM_CODE("custom code"),
+        FLINK_JAR("flink jar"),
         FLINK_SQL("flink sql"),
         PYTHON_FLINK("python flink");
 

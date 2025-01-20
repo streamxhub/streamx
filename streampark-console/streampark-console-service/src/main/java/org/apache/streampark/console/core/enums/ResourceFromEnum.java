@@ -24,8 +24,8 @@ import java.util.Arrays;
 @Getter
 public enum ResourceFromEnum {
 
-    /** cicd(build from cvs) */
-    CICD(1),
+    /** build from cvs */
+    BUILD(1),
 
     /** upload local jar */
     UPLOAD(2);

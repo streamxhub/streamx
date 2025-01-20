@@ -214,7 +214,7 @@ public class SparkApplicationBuildPipelineServiceImpl
                         String appHome = app.getAppHome();
                         FsOperator fsOperator = app.getFsOperator();
                         fsOperator.delete(appHome);
-                        if (app.isUploadJob()) {
+                        if (app.isFromUploadJob()) {
                             String uploadJar = appUploads.concat("/").concat(app.getJar());
                             File localJar = new File(
                                 String.format(
@@ -244,7 +244,7 @@ public class SparkApplicationBuildPipelineServiceImpl
                                     break;
                                 default:
                                     throw new IllegalArgumentException(
-                                        "[StreamPark] unsupported ApplicationType of custom code: "
+                                        "[StreamPark] unsupported ApplicationType of FlinkJar: "
                                             + app.getApplicationType());
                             }
                         } else {
@@ -453,7 +453,7 @@ public class SparkApplicationBuildPipelineServiceImpl
                         return String.format("%s/%s", app.getAppHome(), app.getJar());
                     default:
                         throw new IllegalArgumentException(
-                            "[StreamPark] unsupported ApplicationType of custom code: "
+                            "[StreamPark] unsupported ApplicationType of FlinkJar: "
                                 + app.getApplicationType());
                 }
             case PYSPARK:

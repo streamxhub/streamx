@@ -487,7 +487,7 @@ public class SparkApplicationActionServiceImpl
                 break;
 
             case SPARK_JAR:
-                if (application.isUploadJob()) {
+                if (application.isFromUploadJob()) {
                     appConf = applicationConfig == null
                         ? null
                         : String.format("yaml://%s", applicationConfig.getContent());

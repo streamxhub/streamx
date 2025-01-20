@@ -39,8 +39,8 @@ const getJobTypeOptions = () => {
   return [
     {
       label: h('div', {}, [
-        h(SvgIcon, { name: 'code', color: '#108ee9' }, ''),
-        h('span', { class: 'pl-10px' }, 'Custom Code'),
+        h(SvgIcon, { name: 'fjar', color: '#108ee9' }, ''),
+        h('span', { class: 'pl-10px' }, 'Flink JAR'),
       ]),
       value: String(JobTypeEnum.JAR),
     },
