@@ -49,12 +49,12 @@ export const getDescSchema = (): DescItem[] => {
     {
       field: 'module',
       label: t('flink.app.module'),
-      show: (data) => data.jobType != JobTypeEnum.SQL,
+      show: (data) => data.jobType == JobTypeEnum.JAR,
     },
     {
       field: 'projectName',
       label: t('flink.app.project'),
-      show: (data) => data.jobType != JobTypeEnum.SQL,
+      show: (data) => data.jobType == JobTypeEnum.JAR,
     },
     {
       field: 'appType',

@@ -232,7 +232,7 @@ export const useAppTableAction = (
     sessionStorage.setItem('appPageNo', String(currentPageNo || 1));
     flinkAppStore.setApplicationId(app.id);
     if (app.appType == AppTypeEnum.STREAMPARK_FLINK) {
-      // jobType( 1 custom code 2: flinkSQL)
+      // jobType( 1 flinkJAR 2: flinkSQL)
       router.push({ path: '/flink/app/edit_streampark', query: { appId: app.id } });
     } else if (app.appType == AppTypeEnum.APACHE_FLINK) {
       //Apache Flink
